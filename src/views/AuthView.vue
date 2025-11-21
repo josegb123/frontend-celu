@@ -12,8 +12,15 @@
             <label for="inputEmail" class="form-label fw-semibold text-secondary">
               <i class="bi bi-envelope me-2"></i>Correo Electrónico
             </label>
-            <input type="email" class="form-control form-control-lg rounded-3 border-primary" id="inputEmail"
-              placeholder="nombre@ejemplo.com" aria-describedby="emailHelp" v-model="email" required />
+            <input
+              type="email"
+              class="form-control form-control-lg rounded-3 border-primary"
+              id="inputEmail"
+              placeholder="nombre@ejemplo.com"
+              aria-describedby="emailHelp"
+              v-model="email"
+              required
+            />
           </div>
 
           <div class="mb-4">
@@ -22,28 +29,46 @@
             </label>
 
             <div class="input-group input-group-lg">
-              <input :type="passwordVisible ? 'text' : 'password'"
-                class="form-control form-control-lg rounded-3 border-primary me-2" id="inputPassword"
-                placeholder="Ingresa tu contraseña" v-model="password" required />
+              <input
+                :type="passwordVisible ? 'text' : 'password'"
+                class="form-control form-control-lg rounded-3 border-primary me-2"
+                id="inputPassword"
+                placeholder="Ingresa tu contraseña"
+                v-model="password"
+                required
+              />
 
-              <button class="btn btn-outline-secondary rounded-3" type="button" @click="togglePasswordVisibility"
-                style="border-color: #0d6efd">
-                <i :class="passwordVisible ? 'bi bi-eye-slash' : 'bi bi-eye'" class="text-primary"></i>
+              <button
+                class="btn btn-outline-secondary rounded-3"
+                type="button"
+                @click="togglePasswordVisibility"
+                style="border-color: #0d6efd"
+              >
+                <i
+                  :class="passwordVisible ? 'bi bi-eye-slash' : 'bi bi-eye'"
+                  class="text-primary"
+                ></i>
               </button>
             </div>
           </div>
 
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg bg-gradient rounded-3 text-uppercase fw-bold shadow-sm"
-              :disabled="!email || !password">
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg bg-gradient rounded-3 text-uppercase fw-bold shadow-sm"
+              :disabled="!email || !password"
+            >
               Acceder al Sistema
             </button>
           </div>
 
-          <div v-if="authMessage" :class="[
-            'alert mt-3 text-center',
-            authMessageType === 'success' ? 'alert-success' : 'alert-danger',
-          ]">
+          <div
+            v-if="authMessage"
+            :class="[
+              'alert mt-3 text-center',
+              authMessageType === 'success' ? 'alert-success' : 'alert-danger',
+            ]"
+          >
             {{ authMessage }}
           </div>
         </form>
@@ -83,7 +108,6 @@ const authUser = async () => {
 
   const authResponse = await authStore.login(email.value, password.value)
 
-
   if (authResponse.success) {
     authMessage.value = '¡Éxito! Redirigiendo al panel de control...'
     authMessageType.value = 'success'
@@ -102,20 +126,8 @@ const authUser = async () => {
 <style scoped>
 .login-background {
   height: 100%;
-  background-color: #0d47a1;
-  background-image: radial-gradient(circle at 1px 1px,
-      rgba(255, 255, 255, 0.05) 1px,
-      transparent 0);
-  background-size: 20px 20px;
-  background-image:
-    linear-gradient(to bottom right, rgba(20, 100, 200, 0.2), rgba(0, 0, 0, 0.4)),
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
-  background-size:
-    cover,
-    20px 20px;
-  background-attachment: fixed;
+  background-color: #343a40;
 }
-
 
 .input-group-lg .btn {
   border-color: #ced4da;

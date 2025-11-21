@@ -1,28 +1,21 @@
 <template>
   <div id="app" class="app-layout">
     <NavBar />
-
-    <RouterView class="main-content-area" />
+    <div class="main-container">
+      <AsideMenu />
+      <main class="app-content">
+        <RouterView />
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import AsideMenu from './components/AsideMenu.vue'
 import NavBar from './components/NavBar.vue'
 </script>
 
 <style>
-.app-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.main-content-area {
-  flex-grow: 1;
-  overflow-y: auto;
-  height: 100%;
-}
-
 html,
 body {
   margin: 0;

@@ -13,6 +13,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'auth',
     component: AuthView,
     meta: {
+      title: 'Iniciar Sesión',
       requireAuth: false,
       isGuest: true,
     },
@@ -31,7 +32,8 @@ const routes: Array<RouteRecordRaw> = [
     name: 'home',
     component: HomeView,
     meta: {
-      requireAuth: false,
+      title: 'Pantalla de bienvenida',
+      requireAuth: true,
     },
   },
   {
