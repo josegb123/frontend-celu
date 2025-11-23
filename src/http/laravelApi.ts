@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore' // ⬅️ Importar Pinia
 const laravelApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL, // Asegúrate de que esta URL sea correcta
   headers: {
-    'Content-Type': 'application/json',
+    //'Content-Type': 'application/json',
     Accept: 'application/json',
   },
   // YA NO NECESITAS: withCredentials: true

@@ -56,7 +56,6 @@ class RegisterService {
 
       // ÉXITO (Respuesta 201)
       this.jwt.value = response.access_token
-      console.log('Token obtenido:', this.jwt.value)
 
       return true
     } catch (error) {

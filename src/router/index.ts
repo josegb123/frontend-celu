@@ -63,6 +63,11 @@ const routes: Array<RouteRecordRaw> = [
       title: 'Nueva Venta',
     },
   },
+  {
+    path: '/productos',
+    name: 'Productos',
+    component: () => import('@/views/ProductAdminView.vue'),
+  },
 ]
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

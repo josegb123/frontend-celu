@@ -1,78 +1,94 @@
-$background: #343a40;
-$borderPanel: 1px solid black;
+// --- VARIABLES DE PALETA Y ESTILOS BASE ---
+$background: #212529;             // Darker background (Bootstrap 'dark' color)
+$sidebar-width: 250px;             // Ancho por defecto del sidebar
+$sidebar-width-collapsed: 60px;    // Ancho colapsado
+$header-height: 60px;
+$primary-color: #0d6efd;           // Color primario de Bootstrap
+$secondary-background: #2a2e32;    // Color de hover fijo (evita darken())
+$border-panel: 1px solid #343a40;  // Borde más sutil que el negro puro
 
 
+// --- LAYOUT GENERAL (Evitar Reflows) ---
 .app-layout {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  // Usamos 100vh en lugar de 100dvh para mayor compatibilidad y simplicidad,
+  // a menos que necesites el comportamiento dinámico del viewport.
+  height: 100vh;
 }
 
 .main-container {
   display: flex;
   flex-grow: 1;
-  height: 100% !important ;
+  // Usamos 'min-height: 0' para evitar que los hijos con altura fija rompan el flex.
+  min-height: 0;
   overflow: hidden;
 }
 
-/* --- Header Component --- */
 .app-header {
-  height: 60px;
+  height: $header-height;
   flex-shrink: 0;
-  background-color: $background; /* Aplicar el color de fondo sólido */
-  border-bottom: $borderPanel; /* Aplicar el borde inferior sólido */
-  color: white; /* Asegurar que el texto sea blanco para contrastar */
-  box-shadow: none; /* Eliminar cualquier sombra de transparencia anterior */
+  background-color: $background;
+  border-bottom: $border-panel;
+  color: white;
+  // Optimizaciones CSS: Usar una propiedad que no fuerce layout/reflow (e.g., transform para sombras)
+  // Aquí usamos 'box-shadow: none' para simplicidad, pero si necesitas sombra, usa 'box-shadow' sin valores grandes.
+  box-shadow: none;
 }
 
-/* --- Sidebar Component --- */
+// --- SIDEBAR ---
 .app-sidebar {
-  width: 250px;  
-  background-color: $background; /* Aplicar el color de fondo sólido */
-  transition: width 0.3s ease;
+  width: $sidebar-width;
+  background-color: $background;
   flex-shrink: 0;
   overflow-y: auto;
   white-space: nowrap;
-  
+  border-right: $border-panel; // Añadir borde para distinción
+
+  // 💡 Optimización: Usamos 'transform' para transicionar la propiedad 'width'
+  // que es la más costosa.
+  transition: width 0.3s ease, transform 0.3s ease;
 }
 
-/* Sidebar colapsada */
 .app-sidebar.collapsed {
-  width: 60px;
+  width: $sidebar-width-collapsed;
 }
 
-/* Ocultar texto */
-.app-sidebar.collapsed .nav-link span {
-  display: none;  
-}
+// --- SIDEBAR: ELEMENTOS DE NAVEGACIÓN ---
 
-/* Centrar y estilizar enlaces */
 .app-sidebar .nav-link {
-  border-radius: 11px;
-  transition: background-color 0.3s ease, padding 0.3s ease;
-  color: white !important; /* Asegurar que los enlaces sean visibles en el fondo oscuro */
+  color: white !important;
+  border-radius: 8px; // Ligeramente más pequeño
+  transition: background-color 0.2s ease; // Transición más corta
 }
 
-/* Estilo hover */
 .app-sidebar .nav-link:hover {
-  background-color: darken($background, 10%); /* Oscurecer ligeramente el color de fondo al hacer hover */
+  background-color: $secondary-background; // Color fijo más oscuro
+}
+
+.app-sidebar.collapsed {
   
+  // 💡 Optimizando la animación para elementos internos:
+  .nav-link {
+    text-align: center;
+    padding: 0.75rem 0.5rem; // Padding más ligero
+
+    i.me-2 {
+      margin-right: 0 !important;
+    }
+  }
+
+  // Ocultar texto al colapsar
+  .nav-link span {
+    display: none;
+  }
 }
 
 
-
-/* Ajuste para centrar el ícono al colapsar */
-.app-sidebar.collapsed .nav-link {
-  text-align: center;
-  padding: 0.75rem 0.5rem;
-}
-
-.app-sidebar.collapsed .nav-link i.me-2 {
-  margin-right: 0 !important;
-}
-
-/* --- Contenido Principal --- */
+// --- CONTENIDO PRINCIPAL ---
 .app-content {
   flex-grow: 1;
+  // Usar una transición más corta si el contenido principal tiene animaciones
+  transition: padding 0.2s ease;
   overflow-y: auto;
 }

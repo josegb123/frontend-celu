@@ -16,8 +16,8 @@
           >
         </li>
         <li class="nav-item">
-          <a class="nav-link text-white" href="#productos"
-            ><i class="bi bi-box me-2"></i><span>Productos</span></a
+          <router-link :to="{ name: 'Productos' }" class="nav-link text-white"
+            ><i class="bi bi-box me-2"></i><span>Productos</span></router-link
           >
         </li>
       </ul>

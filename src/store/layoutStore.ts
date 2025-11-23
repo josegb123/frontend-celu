@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 export const useLayoutStore = defineStore('layout', () => {
   // Estado para saber si la sidebar está colapsada (true) o expandida (false)
-  const isSidebarCollapsed = ref(false)
+  const isSidebarCollapsed = ref(true)
 
   // Acción (Mutación) para cambiar el estado
   function toggleSidebar() {
