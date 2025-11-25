@@ -2,44 +2,29 @@
   <div class="container-fluid py-4">
     <h1 class="mb-4">Gestión de Inventario 🛍️</h1>
 
-    <div class="row">
-      <div class="col-lg-4 order-lg-2">
-        <ProductForm
-          :product-to-edit="productToEdit"
-          :categories="categories"
-          @product-saved="handleProductSaved"
-          @open-category-modal="openCategoryModal"
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <label for="search" class="form-label">Buscar por Nombre/Código</label>
+        <input
+          type="text"
+          id="search"
+          class="form-control"
+          placeholder="Ej. Teclado mecánico"
+          v-model="searchQuery"
         />
       </div>
 
-      <div class="col-lg-8 order-lg-1">
-        <div class="d-flex mb-4 gap-3 align-items-end">
-          <div class="flex-grow-1">
-            <label for="search" class="form-label">Buscar por Nombre/Código</label>
-            <input
-              type="text"
-              id="search"
-              class="form-control"
-              placeholder="Ej. Teclado mecánico"
-              v-model="searchQuery"
-            />
-          </div>
-
-          <categoriaFilter
-            :categories="categorias"
-            @categoria-selected="handleCategoriaSelected"
-            class="w-50"
-          />
-        </div>
-
-        <ProductGrid
-          :search-query="searchQuery"
-          :categoria-id="selectedCategoriaId"
-          @edit-product="startEditing"
-          @products-updated="handleGridUpdate"
-        />
-      </div>
+      <button class="btn btn-primary" @click="openProductFormModal">
+        <i class="bi bi-plus-circle me-2"></i> Crear Producto
+      </button>
     </div>
+
+    <ProductGrid
+      :search-query="searchQuery"
+      :categoria-id="selectedCategoriaId"
+      @edit-product="startEditing"
+      @products-updated="handleGridUpdate"
+    />
   </div>
 
   <NotificationModal
@@ -54,15 +39,23 @@
     @close="closeCategoryModal"
     @categories-updated="loadCategories"
   />
+
+  <ProductFormModal
+    :isVisible="productFormModalVisible"
+    :product-to-edit="productToEdit"
+    :categories="categories"
+    @close="closeProductFormModal"
+    @product-saved="handleProductSaved"
+    @open-category-modal="openCategoryModal"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 
 // Componentes
-import ProductForm from '@/components/products/ProductForm.vue'
+import ProductFormModal from '@/components/products/ProductFormModal.vue'
 import ProductGrid from '@/components/products/ProductGrid.vue'
-import categoriaFilter from '@/components/products/CategoriaFilter.vue'
 import NotificationModal from '@/components/NotificationModal.vue'
 import CategoryManagerModal from '@/components/products/CategoryManagerModal.vue'
 
@@ -81,7 +74,6 @@ const selectedCategoriaId = ref<number | null>(null) // Corregido el nombre de l
 // Datos y Edición
 const categories: Ref<ICategoria[]> = ref([])
 const productToEdit = ref<Producto | null>(null)
-const categorias = computed(() => categories.value)
 
 // Modales
 const notification = ref({
@@ -90,6 +82,7 @@ const notification = ref({
   isError: false,
 })
 const categoryModalVisible = ref(false) // Nuevo estado para el modal de categorías
+const productFormModalVisible = ref(false) // Estado para el modal del formulario de productos
 
 // --- MÉTODOS DE MANEJO DE ESTADO ---
 
@@ -135,6 +128,21 @@ const closeCategoryModal = () => {
   loadCategories()
 }
 
+/**
+ * Abre el modal del formulario de productos.
+ */
+const openProductFormModal = () => {
+  productFormModalVisible.value = true
+}
+
+/**
+ * Cierra el modal del formulario de productos.
+ */
+const closeProductFormModal = () => {
+  productFormModalVisible.value = false
+  productToEdit.value = null
+}
+
 // --- CICLO DE VIDA ---
 onMounted(() => {
   loadCategories()
@@ -143,17 +151,11 @@ onMounted(() => {
 // --- HANDLERS ---
 
 /**
- * Recibe el ID de la categoría seleccionada del CategoriaFilter.
- */
-const handleCategoriaSelected = (categoriaId: number | null) => {
-  selectedCategoriaId.value = categoriaId
-}
-
-/**
  * Inicia el proceso de edición al recibir el producto de ProductCard.
  */
 const startEditing = (product: Producto) => {
   productToEdit.value = product
+  openProductFormModal()
 }
 
 /**
@@ -163,7 +165,7 @@ const startEditing = (product: Producto) => {
 const handleProductSaved = (result: { success: boolean; message: string }) => {
   showNotification(result.message, !result.success)
   if (result.success) {
-    productToEdit.value = null
+    closeProductFormModal()
   }
 }
 
@@ -174,8 +176,6 @@ const handleProductSaved = (result: { success: boolean; message: string }) => {
 const handleGridUpdate = () => {
   // Este método es un placeholder, lo mantenemos por si se necesita lógica post-grid.
 }
-
-// ... (Lista de TODO)
 </script>
 
 <style scoped>

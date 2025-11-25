@@ -1,6 +1,13 @@
 <template>
   <div class="product-grid-container">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div
+      class="row g-4"
+      :class="{
+        'row-cols-1': windowWidth < 576,
+        'row-cols-2': windowWidth >= 576 && windowWidth < 992,
+        'row-cols-3': windowWidth >= 992,
+      }"
+    >
       <div v-if="isLoading" class="col-12 text-center my-5">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Cargando productos...</span>
@@ -187,6 +194,19 @@ watch([() => props.searchQuery, () => props.categoriaId], () => {
 
 // --- CICLO DE VIDA ---
 onMounted(fetchProducts)
+
+// --- RESIZE WINDOW ---
+const windowWidth = ref(window.innerWidth)
+
+const updateWindowWidth = () => {
+  windowWidth.value = window.innerWidth
+}
+
+window.addEventListener('resize', updateWindowWidth)
+
+onMounted(() => {
+  updateWindowWidth()
+})
 </script>
 
 <style scoped>
