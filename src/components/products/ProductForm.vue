@@ -6,12 +6,12 @@
     <div class="card-body">
       <form @submit.prevent="submitForm" method="POST">
         <div class="row mb-3">
-          <div class="col-md-7">
+          <div class="col-md-12">
             <label for="nombre" class="form-label">Nombre del Producto</label>
             <input type="text" id="nombre" class="form-control" v-model="form.nombre" required />
             <div v-if="errors.nombre" class="text-danger small">{{ errors.nombre[0] }}</div>
           </div>
-          <div class="col-md-5">
+          <div class="col-md-12">
             <label for="codigo_barra" class="form-label">Código de Barras</label>
             <input type="text" id="codigo_barra" class="form-control" v-model="form.codigo_barra" />
           </div>
@@ -47,41 +47,43 @@
             </div>
           </div>
         </div>
+        <div class="row">
+          <div class="row mb-3">
+            <div class="col-6">
+              <label for="stock_actual" class="form-label">Stock Actual</label>
+              <input
+                type="number"
+                id="stock_actual"
+                class="form-control"
+                v-model.number="form.stock_actual"
+                required
+              />
+            </div>
+            <div class="col-6">
+              <label for="stock_reservado" class="form-label">Stock Reservado</label>
+              <input
+                type="number"
+                id="stock_reservado"
+                class="form-control"
+                v-model.number="form.stock_reservado"
+                required
+              />
+            </div>
 
-        <div class="row mb-3">
-          <div class="col-md-3">
-            <label for="stock_actual" class="form-label">Stock Actual</label>
-            <input
-              type="number"
-              id="stock_actual"
-              class="form-control"
-              v-model.number="form.stock_actual"
-              required
-            />
-          </div>
-          <div class="col-md-3">
-            <label for="stock_reservado" class="form-label">Stock Reservado</label>
-            <input
-              type="number"
-              id="stock_reservado"
-              class="form-control"
-              v-model.number="form.stock_reservado"
-              required
-            />
-          </div>
-          <div class="col-md-3">
-            <label for="stock_minimo" class="form-label">Stock Mínimo</label>
-            <input
-              type="number"
-              id="stock_minimo"
-              class="form-control"
-              v-model.number="form.stock_minimo"
-              required
-            />
+            <div class="col-6">
+              <label for="stock_minimo" class="form-label">Stock Mínimo</label>
+              <input
+                type="number"
+                id="stock_minimo"
+                class="form-control"
+                v-model.number="form.stock_minimo"
+                required
+              />
+            </div>
           </div>
 
-          <div class="col-md-3">
-            <label for="categoria_id" class="form-label">Categoría</label>
+          <div class="row">
+            <label for="categoria_id" class="form-label text-truncate">Categoría</label>
             <div class="input-group">
               <select
                 id="categoria_id"
@@ -97,7 +99,7 @@
               <button
                 type="button"
                 class="btn btn-outline-secondary"
-                @click="showCategoryModal = true"
+                @click="$emit('openCategoryModal')"
                 title="Administrar Categorías"
               >
                 <i class="bi bi-gear-fill"></i>
@@ -108,7 +110,6 @@
             </div>
           </div>
         </div>
-
         <div class="mb-3">
           <label for="descripcion" class="form-label">Descripción</label>
           <textarea
@@ -147,6 +148,18 @@
             ⚠️ La imagen será eliminada al guardar. Sube un archivo nuevo para anular.
           </p>
 
+          <div class="mb-3">
+            <label for="imagen_url_input" class="form-label">O Pegar URL de la Imagen</label>
+            <input
+              type="url"
+              id="imagen_url_input"
+              class="form-control"
+              v-model="form.imagen_input_url"
+              placeholder="https://ejemplo.com/mi-producto.jpg"
+              :disabled="imageFile !== null"
+            />
+            <p class="small text-muted mt-1">Si pegas una URL, el campo de archivo se ignora.</p>
+          </div>
           <div :class="{ 'mt-3': currentImageURL }">
             <input
               type="file"
@@ -224,6 +237,7 @@ interface ProductFormData {
   stock_minimo: number | null
   categoria_id: number | null
   descripcion: string | null
+  imagen_input_url: string | null
 }
 
 // ⬅️ Se mantiene para controlar el modal de categoría en el componente padre
@@ -240,6 +254,7 @@ const initialFormState: ProductFormData = {
   stock_minimo: null,
   categoria_id: null,
   descripcion: null,
+  imagen_input_url: null,
 }
 
 const form = ref<ProductFormData>({ ...initialFormState })
@@ -270,11 +285,16 @@ watch(showCategoryModal, (newValue) => {
  * Establece el estado para que la imagen actual sea eliminada al enviar el formulario.
  */
 const clearCurrentImage = () => {
-  // 1. Marcar para eliminación
+  // 1. Marcar para eliminación (alerta al usuario)
   imageURLisBeingCleared.value = true
-  // 2. Anular la subida de cualquier archivo nuevo
+
+  // 2. 💥 CORRECCIÓN CRÍTICA: Limpiar el campo de entrada de URL en el formulario.
+  form.value.imagen_input_url = null
+
+  // 3. Anular la subida de cualquier archivo nuevo
   imageFile.value = null
-  // 3. Ocultar la miniatura (ya que se va a eliminar)
+
+  // 4. Ocultar la miniatura (ya que se va a eliminar)
   currentImageURL.value = null
 }
 
@@ -311,12 +331,22 @@ const createFormData = (): FormData => {
     }
   }
 
-  // LÓGICA CLAVE PARA LA IMAGEN
   if (imageFile.value) {
+    // Opción 1: Se sube un nuevo archivo. (Máxima prioridad)
     formData.append('imagen', imageFile.value)
+    formData.append('imagen_url', 'null') // Asegurar que Laravel no use la URL existente
   } else if (imageURLisBeingCleared.value) {
+    // Opción 2: Se pide eliminar la imagen. (La URL que enviamos es 'null' para el backend)
+    // El backend debe interpretar 'null' como solicitud de borrado.
     formData.append('imagen_url', 'null')
+  } else if (form.value.imagen_input_url) {
+    // Opción 3: Se ingresó o se mantuvo una URL (ya sea la existente o una nueva pegada).
+    formData.append('imagen_url', form.value.imagen_input_url)
+    // No anexamos 'imagen'
   } else if (currentImageURL.value) {
+    // Opción 4: Reutilizar la URL de cache (Si es edición y no se tocó nada, y no es un borrado).
+    // Esto es técnicamente innecesario si la URL ya está en form.value.imagen_input_url
+    // Pero lo mantendremos como respaldo.
     formData.append('imagen_url', currentImageURL.value)
   }
 
@@ -405,7 +435,9 @@ watch(
         stock_minimo: newProduct.stock_minimo,
         categoria_id: newProduct.categoria_id,
         descripcion: newProduct.descripcion,
+        imagen_input_url: newProduct.imagen_url,
       }
+      form.value.imagen_input_url = newProduct.imagen_url
       imageFile.value = null
       currentImageURL.value = newProduct.imagen_url
     } else {

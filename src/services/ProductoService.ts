@@ -1,4 +1,4 @@
-import laravelApi from '@/http/laravelApi'
+import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
 
 // 1. Interfaz Extendida para Administración (Se mantiene igual)

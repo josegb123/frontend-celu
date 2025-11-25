@@ -17,25 +17,27 @@
       </p>
 
       <div class="prices mb-3">
-        <span class="price-tag bg-success text-white">Venta: ${{ product.precio_venta }}</span>
-        <span class="price-tag bg-secondary text-white ms-2"
-          >Compra: ${{ product.precio_compra }}</span
-        >
+        <div class="mb-1">
+          <span class="price-tag bg-success text-white">Venta: ${{ product.precio_venta }}</span>
+        </div>
+        <div>
+          <span class="price-tag bg-secondary text-white"
+            >Compra: ${{ product.precio_compra }}</span
+          >
+        </div>
       </div>
 
-      <div class="stocks small mb-3 mt-auto">
-        <p class="mb-1">
-          <span :class="stockBadgeClass">Stock: {{ product.stock_actual }}</span>
-          <span class="text-warning ms-2">Reservado: {{ product.stock_reservado }}</span>
-        </p>
-        <p class="mb-0 text-danger">Mínimo: {{ product.stock_minimo }}</p>
+      <div class="d-flex flex-row flex-lg-column gap-1 align-items-start">
+        <span :class="stockBadgeClass">Stock: {{ product.stock_actual }}</span>
+        <span class="price-tag text-bg-warning">Reservado: {{ product.stock_reservado }}</span>
+        <span class="price-tag text-bg-danger">Mínimo: {{ product.stock_minimo }}</span>
       </div>
 
       <div class="card-actions d-flex justify-content-between mt-2">
         <button class="btn btn-sm btn-outline-primary" @click="$emit('edit', product)">
           <i class="bi bi-pencil-square"></i> Editar
         </button>
-        <button class="btn btn-sm btn-outline-danger" @click="confirmDelete">
+        <button class="btn btn-sm btn-outline-danger" @click="requestDelete">
           <i class="bi bi-trash"></i> Eliminar
         </button>
       </div>
@@ -65,36 +67,38 @@ const emit = defineEmits<{
  */
 const stockBadgeClass = computed(() => {
   return props.product.stock_actual <= props.product.stock_minimo
-    ? 'badge bg-danger'
-    : 'badge bg-info'
+    ? 'price-tag text-bg-danger '
+    : 'price-tag text-bg-info '
 })
 
 /**
- * Genera la URL de la imagen, usando un placeholder si no hay imagen_url.
+ * Genera la URL de la imagen, usando un placeholder si hay error o no hay URL.
  */
 const imageUrl = computed(() => {
-  return props.product.imagen_url ? props.product.imagen_url : 'https://picsum.photos/200/300.webp' // Placeholder
+  // Usar el placeholder si: 1) no hay URL, O 2) hubo error de carga (isImageError.value)
+  if (!props.product.imagen_url || isImageError.value) {
+    return '/public/no_image.webp'
+  }
+  return props.product.imagen_url
 })
 
 // --- MÉTODOS ---
 
 /**
- * Muestra un diálogo de confirmación antes de emitir la acción de eliminación.
+ * 💥 CORRECCIÓN CLAVE: Elimina el confirm() y solo emite el ID.
+ * Delega la confirmación modal al componente padre (ProductGrid).
  */
-const confirmDelete = () => {
-  if (confirm(`¿Está seguro de que desea eliminar el producto "${props.product.nombre}"?`)) {
-    emit('delete', props.product.id)
-  }
+const requestDelete = () => {
+  // Ya no necesitamos 'if (confirm(...))'
+  emit('delete', props.product.id)
 }
 
 /**
  * Maneja el error de carga de la imagen (ej. 404) y la reemplaza con el placeholder.
  */
 const handleImageError = () => {
-  // Al dispararse el error, simplemente cambiamos el estado
+  // Cambiamos el estado, lo que forzará a la computed property 'imageUrl' a reevaluarse.
   isImageError.value = true
-  // Vue/el computed property se encargará de actualizar el src del <img>.
-  // NO MANIPULAMOS EL DOM DIRECTAMENTE.
 }
 </script>
 

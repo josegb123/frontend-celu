@@ -92,3 +92,16 @@ $border-panel: 1px solid #343a40;  // Borde más sutil que el negro puro
   transition: padding 0.2s ease;
   overflow-y: auto;
 }
+
+.truncate-text {
+  /* 1. Definir el comportamiento de bloque */
+  display: block; /* o display: inline-block; si necesitas flujo inline */
+  /* 2. Forzar una sola línea */
+  white-space: nowrap; 
+  /* 3. Ocultar lo que sobra */
+  overflow: hidden; 
+  /* 4. Mostrar los puntos suspensivos */
+  text-overflow: ellipsis; 
+  /* OPCIONAL: Asegura que tenga un ancho fijo o máximo */
+  max-width: 250px; 
+}

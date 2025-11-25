@@ -13,6 +13,7 @@
 <script setup lang="ts">
 import AsideMenu from './components/AsideMenu.vue'
 import NavBar from './components/NavBar.vue'
+import 'vue-draggable-resizable/style.css'
 </script>
 
 <style>
