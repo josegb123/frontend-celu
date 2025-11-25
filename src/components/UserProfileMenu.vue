@@ -12,8 +12,8 @@
         :src="defaultAvatar"
         alt="Avatar"
         class="rounded-circle profile-avatar me-2"
-        width="10%"
-        height="10%"
+        width="25px"
+        height="25px"
       />
       <span class="d-none d-sm-inline text-dark fw-semibold">{{ user.name || 'Usuario' }}</span>
     </a>
@@ -59,7 +59,7 @@ import { useAuthStore } from '@/store/authStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const defaultAvatar = '/path/to/default/avatar.png' // ⬅️ Reemplaza con tu placeholder real
+const defaultAvatar = '/public/avatar.webp' // ⬅️ Reemplaza con tu placeholder real
 
 // Datos del usuario (reactivos desde Pinia)
 const user = computed(() => authStore.user)

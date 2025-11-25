@@ -12,19 +12,12 @@
             <i class="bi bi-list"></i>
           </button>
         </div>
-        <router-link
-          v-if="$route.name === 'PostDetail'"
-          :to="{ name: 'PostList' }"
-          class="me-3 py-1"
-        >
-          <i class="bi bi-arrow-left fs-5 text-white"></i>
-        </router-link>
 
         <router-link :to="{ name: 'home' }" class="navbar-brand p-0 fw-bold fs-6 text-uppercase"
           >E-Store Admin</router-link
         >
 
-        <span class="text-white-50 ms-3 d-none d-sm-inline fs-6">{{
+        <span class="text-white-50 ms-3 d-none d-sm-inline fs-6" v-if="isAuthenticated">{{
           $route.meta.title || 'Panel Principal'
         }}</span>
       </div>
@@ -43,14 +36,6 @@
 
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav align-items-center">
-          <li class="nav-item me-2" v-if="isAuthenticated">
-            <router-link
-              :to="{ name: 'PostList' }"
-              class="btn btn-sm btn-outline-light nav-link py-1"
-              >Posts</router-link
-            >
-          </li>
-
           <li class="nav-item me-2" v-if="!isAuthenticated">
             <router-link
               :to="{ name: 'register' }"

@@ -110,7 +110,7 @@ const authUser = async () => {
     authMessage.value = '¡Éxito! Redirigiendo al panel de control...'
     authMessageType.value = 'success'
 
-    router.push({ name: 'PostList' })
+    router.push({ name: 'home' })
   } else {
     const errorMessage = authResponse.message || 'Fallo de conexión o credenciales inválidas.'
 

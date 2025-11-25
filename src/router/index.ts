@@ -1,6 +1,4 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import PostListView from '@/views/PostListView.vue'
-import PostDetailView from '@/views/PostDetailView.vue'
 import AuthView from '@/views/AuthView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import HomeView from '@/views/HomeView.vue'
@@ -37,24 +35,6 @@ const routes: Array<RouteRecordRaw> = [
     component: HomeView,
     meta: {
       title: 'Pantalla de bienvenida',
-      requireAuth: true,
-    },
-  },
-  {
-    path: '/post',
-    name: 'PostList',
-    component: PostListView,
-    meta: {
-      title: 'Listado de Posts',
-      requireAuth: true,
-    },
-  },
-  {
-    path: '/post/:id',
-    name: 'PostDetail',
-    component: PostDetailView,
-    meta: {
-      title: 'Detalle del Post',
       requireAuth: true,
     },
   },

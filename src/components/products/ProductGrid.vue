@@ -54,9 +54,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import ProductCard from '@/components/products/ProductCard.vue'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import ProductoService, { type Producto } from '@/services/ProductoService.js'
-import ProductCard from './ProductCard.vue'
-import ConfirmationModal from '../ConfirmationModal.vue'
 
 // --- PROPS y EMITS ---
 const props = defineProps<{

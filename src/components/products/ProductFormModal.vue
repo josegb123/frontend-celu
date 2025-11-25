@@ -17,8 +17,8 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue'
-import ProductForm from './ProductForm.vue'
 import BaseModal from '@/components/shared/BaseModal.vue'
+import ProductForm from '@/components/products/ProductForm.vue'
 import type { Producto } from '@/services/ProductoService'
 import type { ICategoria } from '@/interfaces/ICategoria'
 
