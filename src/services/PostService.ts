@@ -25,8 +25,6 @@ class PostService {
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        console.log(`Intentando buscar el post ${id} (Intento ${attempt}/${MAX_RETRIES})...`)
-
         const response = await fetch(url)
 
         if (!response.ok) {
@@ -36,13 +34,8 @@ class PostService {
         const json: IPost = await response.json()
         this.post.value = json
 
-        console.log('Post obtenido con éxito.')
-        console.log(json)
-
         return
-      } catch (error) {
-        console.error(`Error en el intento ${attempt}:`, error)
-
+      } catch {
         if (attempt === MAX_RETRIES) {
           console.error(
             'El número máximo de reintentos fue alcanzado. La solicitud falló permanentemente.',
@@ -51,8 +44,6 @@ class PostService {
         }
 
         const waitTime = Math.pow(2, attempt - 1) * BASE_DELAY_MS
-        console.log(`Esperando ${waitTime / 1000} segundos antes del próximo intento...`)
-
         await this.delay(waitTime)
       }
     }
@@ -67,8 +58,6 @@ class PostService {
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        console.log(`Intentando buscar posts (Intento ${attempt}/${MAX_RETRIES})...`)
-
         const response = await fetch(url)
 
         if (!response.ok) {
@@ -78,21 +67,13 @@ class PostService {
         const json: IPost[] = await response.json()
         this.posts.value = json
 
-        console.log('Posts obtenidos con éxito.')
         return
-      } catch (error) {
-        console.error(`Error en el intento ${attempt}:`, error)
-
+      } catch {
         if (attempt === MAX_RETRIES) {
-          console.error(
-            'El número máximo de reintentos fue alcanzado. La solicitud falló permanentemente.',
-          )
           throw new Error('Fallo al obtener posts después de varios reintentos.')
         }
 
         const waitTime = Math.pow(2, attempt - 1) * BASE_DELAY_MS
-        console.log(`Esperando ${waitTime / 1000} segundos antes del próximo intento...`)
-
         await this.delay(waitTime)
       }
     }

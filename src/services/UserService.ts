@@ -51,8 +51,10 @@ class UserService {
       const queryString = params.toString() ? `?${params.toString()}` : ''
 
       const response = await apiClient.get(`${this.API_URL}${queryString}`)
+
       return response.data
     } catch (error) {
+      console.error('Error in getUsers:', error)
       throw error
     }
   }

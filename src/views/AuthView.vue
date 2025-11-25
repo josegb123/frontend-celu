@@ -104,14 +104,11 @@ const authUser = async () => {
     return
   }
 
-  console.log(`[DEBUG] Intentando autenticar usuario: ${email.value}`)
-
   const authResponse = await authStore.login(email.value, password.value)
 
   if (authResponse.success) {
     authMessage.value = '¡Éxito! Redirigiendo al panel de control...'
     authMessageType.value = 'success'
-    console.log('[DEBUG] Autenticación exitosa.')
 
     router.push({ name: 'PostList' })
   } else {
@@ -119,7 +116,6 @@ const authUser = async () => {
 
     authMessage.value = errorMessage
     authMessageType.value = 'danger'
-    console.error(`[DEBUG] Autenticación fallida: ${errorMessage}`)
   }
 }
 </script>

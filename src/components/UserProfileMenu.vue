@@ -1,8 +1,20 @@
 <template>
   <div class="user-menu dropdown">
-    <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button"
-      data-bs-toggle="dropdown" aria-expanded="false" id="userDropdown">
-      <img :src="defaultAvatar" alt="Avatar" class="rounded-circle profile-avatar me-2" width="10%" height="10%" />
+    <a
+      class="d-flex align-items-center text-decoration-none dropdown-toggle"
+      href="#"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+      id="userDropdown"
+    >
+      <img
+        :src="defaultAvatar"
+        alt="Avatar"
+        class="rounded-circle profile-avatar me-2"
+        width="10%"
+        height="10%"
+      />
       <span class="d-none d-sm-inline text-dark fw-semibold">{{ user.name || 'Usuario' }}</span>
     </a>
 
@@ -12,7 +24,7 @@
         <small class="text-muted">{{ user.email }}</small>
       </li>
       <li>
-        <hr class="dropdown-divider">
+        <hr class="dropdown-divider" />
       </li>
 
       <li>
@@ -28,7 +40,7 @@
       </li>
 
       <li>
-        <hr class="dropdown-divider">
+        <hr class="dropdown-divider" />
       </li>
 
       <li>
@@ -41,30 +53,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/authStore';
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/authStore'
 
-const router = useRouter();
-const authStore = useAuthStore();
-const defaultAvatar = '/path/to/default/avatar.png'; // ⬅️ Reemplaza con tu placeholder real
+const router = useRouter()
+const authStore = useAuthStore()
+const defaultAvatar = '/path/to/default/avatar.png' // ⬅️ Reemplaza con tu placeholder real
 
 // Datos del usuario (reactivos desde Pinia)
-const user = computed(() => authStore.user);
+const user = computed(() => authStore.user)
 
 // Manejar navegación a otras rutas
 const goToRoute = (routeName: string) => {
   // Implementa la lógica de enrutamiento aquí.
   // Necesitarás definir estas rutas en tu router/index.ts.
-  // router.push({ name: routeName });
-  console.log(`Navegando a la ruta: ${routeName}`);
+  router.push({ name: routeName })
 }
 
 // Manejar el cierre de sesión
 const handleLogout = async () => {
-  await authStore.logout();
-  router.push({ name: 'auth' });
-};
+  await authStore.logout()
+  router.push({ name: 'auth' })
+}
 </script>
 
 <style scoped>

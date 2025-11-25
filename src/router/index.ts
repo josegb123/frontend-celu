@@ -111,7 +111,6 @@ router.beforeEach(async (to, from, next) => {
       next()
     } else {
       // ❌ No autenticado y ruta segura: Redirigir a login
-      console.log('Redirigiendo a /auth: Requiere autenticación.')
       next({ name: 'auth' })
     }
     return // Salir del guardián
@@ -121,7 +120,6 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.isGuest) {
     if (isAuthenticated) {
       // ❌ Autenticado y ruta de invitado: Redirigir a home
-      console.log('Redirigiendo a /: Ya está autenticado.')
       next({ name: 'home' })
     } else {
       // ✅ No autenticado y ruta de invitado: Continuar

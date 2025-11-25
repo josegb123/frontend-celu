@@ -99,7 +99,6 @@ const categoryModalVisible = ref(false) // Nuevo estado para el modal de categor
 const loadCategories = async () => {
   try {
     categories.value = await CategoriaService.getCategorias()
-    console.log('[DEBUG] Categorías recargadas exitosamente.')
   } catch (error) {
     console.error('Error al cargar categorías:', error)
     showNotification('Error al cargar las categorías.', true)
@@ -147,8 +146,6 @@ onMounted(() => {
  * Recibe el ID de la categoría seleccionada del CategoriaFilter.
  */
 const handleCategoriaSelected = (categoriaId: number | null) => {
-  // Corregido el nombre del handler
-  console.log('[DEBUG] Categoría seleccionada:', categoriaId)
   selectedCategoriaId.value = categoriaId
 }
 
@@ -156,7 +153,6 @@ const handleCategoriaSelected = (categoriaId: number | null) => {
  * Inicia el proceso de edición al recibir el producto de ProductCard.
  */
 const startEditing = (product: Producto) => {
-  console.log('[DEBUG] Editando producto:', product)
   productToEdit.value = product
 }
 
@@ -165,20 +161,9 @@ const startEditing = (product: Producto) => {
  * Se llama cuando un producto es creado o actualizado.
  */
 const handleProductSaved = (result: { success: boolean; message: string }) => {
-  console.log('[DEBUG] Producto guardado/actualizado. Limpiando selección...')
-
-  // 1. Mostrar la notificación delegada del formulario
   showNotification(result.message, !result.success)
-
-  // 2. Limpiar el formulario solo si la operación fue exitosa
   if (result.success) {
     productToEdit.value = null
-
-    // 3. Forzar la recarga de categorías, por si la categoría fue creada justo antes.
-    loadCategories()
-
-    // 4. Se confía en que ProductGrid actualizará sus datos por eventos internos
-    // o por el watcher de los filtros (si es que la operación de guardado no afectó los filtros).
   }
 }
 
@@ -187,7 +172,6 @@ const handleProductSaved = (result: { success: boolean; message: string }) => {
  * Útil para manejar errores o mensajes post-recarga.
  */
 const handleGridUpdate = () => {
-  console.log('[DEBUG] Grid de productos actualizado.')
   // Este método es un placeholder, lo mantenemos por si se necesita lógica post-grid.
 }
 

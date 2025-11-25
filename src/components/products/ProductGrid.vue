@@ -121,7 +121,6 @@ const fetchProducts = async () => {
   if (props.categoriaId !== null) {
     params.categoria_id = props.categoriaId
   }
-  console.log('[DEBUG ProductGrid] Parámetros enviados a getProductos:', params)
 
   try {
     const data = await ProductoService.getProductos(params)

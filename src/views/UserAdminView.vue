@@ -40,7 +40,10 @@
           @delete="openConfirmationModal"
         />
 
-        <div class="d-flex justify-content-center mt-3" v-if="paginatedUsers.meta.total > 0">
+        <div
+          class="d-flex justify-content-center mt-3"
+          v-if="paginatedUsers.meta && paginatedUsers.meta.total > 0"
+        >
           <nav>
             <ul class="pagination">
               <li class="page-item" :class="{ disabled: paginatedUsers.meta.current_page === 1 }">
@@ -227,7 +230,6 @@ const fetchUsers = async () => {
   loading.value = true
 
   try {
-    // 💥 CORRECCIÓN: Pasar filtros y página al servicio 💥
     const response = await UserService.getUsers({
       page: currentPage.value || 1,
       search: searchQuery.value || null,
@@ -237,8 +239,15 @@ const fetchUsers = async () => {
     paginatedUsers.value = response
   } catch (error) {
     let message = 'Error al cargar los usuarios.'
-    if (isAxiosError(error) && (error.response?.status === 403 || error.response?.status === 401)) {
-      message = 'No tienes permiso para ver esta sección (Rol Admin requerido).'
+    if (isAxiosError(error)) {
+      console.error('API Error:', error.response)
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        message = 'No tienes permiso para ver esta sección (Rol Admin requerido).'
+      } else if (error.response?.data?.message) {
+        message = error.response.data.message
+      }
+    } else {
+      console.error('Unexpected Error:', error)
     }
     showNotification({ message, isError: true })
 
@@ -345,7 +354,8 @@ const deleteUserConfirmed = async () => {
     closeConfirmationModal()
   } catch (error) {
     showNotification({
-      message: 'Error al eliminar el usuario. Revisa los permisos o si hay registros asociados.',
+      message:
+        'Error al eliminar el usuario. Revisa los permisos o si hay registros asociados.' + error,
       isError: true,
     })
     closeConfirmationModal()
@@ -382,7 +392,7 @@ const closeNotification = () => {
  */
 watch(
   [currentPage, searchQuery, selectedRole],
-  ([newPage, newSearch, newRole], [oldPage, oldSearch, oldRole]) => {
+  ([, newSearch, newRole], [, oldSearch, oldRole]) => {
     // Si la búsqueda o el rol cambian, forzamos la página a 1 para empezar la búsqueda.
     if (newSearch !== oldSearch || newRole !== oldRole) {
       if (currentPage.value !== 1) {

@@ -8,7 +8,6 @@ export const useInventoryStore = defineStore('inventory', () => {
   // Método para ser llamado por el componente VentaForm
   function notifySaleCompleted() {
     saleUpdateCounter.value++
-    console.log(`Inventario notificado. Contador: ${saleUpdateCounter.value}`)
   }
 
   return { saleUpdateCounter, notifySaleCompleted }

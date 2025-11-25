@@ -80,6 +80,21 @@ class ProductoService {
     }
   }
 
+  /**
+   * Obtiene un producto por su ID.
+   * @param id ID del producto a buscar.
+   * @returns Una promesa que resuelve con el producto encontrado.
+   */
+  public async getProductoById(id: number): Promise<Producto | null> {
+    try {
+      const response: AxiosResponse<Producto> = await laravelApi.get(`${this.endpoint}/${id}`)
+      return response.data
+    } catch (error) {
+      console.error(`Error al obtener el producto con ID ${id}:`, error)
+      return null // Retornar null si no se encuentra el producto o hay un error
+    }
+  }
+
   // --- MÉTODO DE GUARDADO (Creación/Actualización) ---
 
   /**
