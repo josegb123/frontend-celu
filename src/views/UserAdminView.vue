@@ -125,16 +125,19 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import UserService from '@/services/UserService'
 import type { IUser, IPaginatedUsers } from '@/interfaces/IUser'
-// Componentes
-import UserList from '../components/users/UserList.vue' // Asegúrate de que la ruta sea correcta
+import UserList from '../components/users/UserList.vue'
 import UserForm from '@/components/users/UserForm.vue'
 import NotificationModal from '@/components/NotificationModal.vue'
-import ConfirmationModal from '@/components/ConfirmationModal.vue' // El modal de confirmación
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import { isAxiosError } from 'axios'
 
 // --- ESTADO ---
 
 const userToDelete = ref<IUser | null>(null)
+
+/**
+ * Estado y configuración del modal de confirmación.
+ */
 const confirmation = ref({
   visible: false,
   title: '',
@@ -142,6 +145,9 @@ const confirmation = ref({
   isProcessing: false,
 })
 
+/**
+ * Datos paginados de usuarios obtenidos de la API.
+ */
 const paginatedUsers = ref<IPaginatedUsers>({
   data: [],
   links: {},
@@ -164,6 +170,9 @@ const modalVisible = ref(false)
 const userToEdit = ref<IUser | null>(null)
 
 // Notificaciones
+/**
+ * Estado y contenido del modal de notificación.
+ */
 const notification = ref({
   visible: false,
   message: '',
@@ -173,17 +182,16 @@ const notification = ref({
 // --- CÁLCULOS ---
 
 /**
- * Propiedad computada para generar los números de página visibles
+ * Propiedad computada para generar los números de página visibles en la paginación.
  */
 const visiblePages = computed(() => {
   const current = paginatedUsers.value.meta.current_page
   const last = paginatedUsers.value.meta.last_page
-  const delta = 2 // Mostrar 2 páginas antes y 2 después
+  const delta = 2
 
-  if (last <= 1) return [] // No mostrar paginación si solo hay una página o menos
+  if (last <= 1) return []
 
   if (last <= 5) {
-    // Si hay 5 o menos páginas, mostrar todas
     return Array.from({ length: last }, (_, i) => i + 1)
   }
 
@@ -213,21 +221,28 @@ const visiblePages = computed(() => {
 // --- MÉTODOS CRUD y FETCH ---
 
 /**
- * Obtiene la lista de usuarios desde el backend.
+ * Obtiene la lista de usuarios desde el backend, aplicando filtros y paginación.
  */
 const fetchUsers = async () => {
   loading.value = true
+
   try {
-    const response = await UserService.getUsers(currentPage.value)
-    // 💥 CORREGIDO: response ya tiene la estructura {data, links, meta} 💥
+    // 💥 CORRECCIÓN: Pasar filtros y página al servicio 💥
+    const response = await UserService.getUsers({
+      page: currentPage.value || 1,
+      search: searchQuery.value || null,
+      role: selectedRole.value || null,
+    })
+
     paginatedUsers.value = response
   } catch (error) {
-    console.error('Error fetching users:', error)
     let message = 'Error al cargar los usuarios.'
     if (isAxiosError(error) && (error.response?.status === 403 || error.response?.status === 401)) {
       message = 'No tienes permiso para ver esta sección (Rol Admin requerido).'
     }
     showNotification({ message, isError: true })
+
+    // Limpiar lista en caso de error
     paginatedUsers.value = {
       data: [],
       links: {},
@@ -240,6 +255,7 @@ const fetchUsers = async () => {
 
 /**
  * Navega a una página específica de la lista.
+ * @param page El número de página a la que navegar.
  */
 const goToPage = (page: number) => {
   if (page >= 1 && page <= paginatedUsers.value.meta.last_page) {
@@ -249,32 +265,52 @@ const goToPage = (page: number) => {
 
 // --- MÉTODOS DEL MODAL ---
 
+/**
+ * Abre el modal en modo creación.
+ */
 const openCreateModal = () => {
   userToEdit.value = null
   modalVisible.value = true
 }
 
+/**
+ * Prepara y abre el modal en modo edición.
+ * @param user El objeto de usuario a editar.
+ */
 const startEditingUser = (user: IUser) => {
   userToEdit.value = user
   modalVisible.value = true
 }
 
+/**
+ * Cierra el modal de formulario.
+ */
 const closeModal = () => {
   modalVisible.value = false
   userToEdit.value = null
 }
 
+/**
+ * Maneja el evento después de que un usuario es guardado o falla al guardar.
+ * @param success Indica si la operación fue exitosa.
+ * @param message Mensaje de resultado de la operación.
+ */
 const handleUserSaved = (success: boolean, message: string) => {
   closeModal()
   showNotification({ message, isError: !success })
 
   if (success) {
+    // Recargar la lista para mostrar el nuevo/editado usuario
     fetchUsers()
   }
 }
 
 // --- MÉTODOS DE CONFIRMACIÓN ---
 
+/**
+ * Abre el modal de confirmación para eliminar un usuario.
+ * @param user El objeto de usuario a eliminar.
+ */
 const openConfirmationModal = (user: IUser) => {
   userToDelete.value = user
   confirmation.value = {
@@ -285,11 +321,17 @@ const openConfirmationModal = (user: IUser) => {
   }
 }
 
+/**
+ * Cierra el modal de confirmación.
+ */
 const closeConfirmationModal = () => {
   confirmation.value.visible = false
   userToDelete.value = null
 }
 
+/**
+ * Ejecuta la eliminación del usuario tras la confirmación.
+ */
 const deleteUserConfirmed = async () => {
   if (!userToDelete.value) return
 
@@ -302,9 +344,8 @@ const deleteUserConfirmed = async () => {
     fetchUsers()
     closeConfirmationModal()
   } catch (error) {
-    console.error('Error deleting user:', error)
     showNotification({
-      message: 'Error al eliminar el usuario. Revisa los permisos.',
+      message: 'Error al eliminar el usuario. Revisa los permisos o si hay registros asociados.',
       isError: true,
     })
     closeConfirmationModal()
@@ -315,6 +356,10 @@ const deleteUserConfirmed = async () => {
 
 // --- HANDLERS DE NOTIFICACIONES ---
 
+/**
+ * Muestra el modal de notificación con un mensaje dado.
+ * @param result Objeto con el mensaje y el estado de error.
+ */
 const showNotification = (result: { message: string; isError: boolean }) => {
   notification.value = {
     visible: true,
@@ -323,25 +368,29 @@ const showNotification = (result: { message: string; isError: boolean }) => {
   }
 }
 
+/**
+ * Cierra el modal de notificación.
+ */
 const closeNotification = () => {
   notification.value = { visible: false, message: '', isError: false }
 }
 
 // --- WATCHERS y CICLO DE VIDA ---
 
-// Observa cambios en la página actual o filtros para recargar la lista
+/**
+ * Observa cambios en la página actual o filtros (búsqueda/rol) para recargar la lista.
+ */
 watch(
   [currentPage, searchQuery, selectedRole],
   ([newPage, newSearch, newRole], [oldPage, oldSearch, oldRole]) => {
-    // Reiniciar la página a 1 si los filtros cambiaron.
+    // Si la búsqueda o el rol cambian, forzamos la página a 1 para empezar la búsqueda.
     if (newSearch !== oldSearch || newRole !== oldRole) {
       if (currentPage.value !== 1) {
         currentPage.value = 1
-        return // El cambio a 1 disparará el watcher de nuevo
+        return
       }
     }
-
-    // Si solo la página cambió, o si ya estamos en la página 1 con filtros nuevos, cargamos:
+    // Cargar usuarios si la página cambió o si los filtros cambiaron estando en la página 1.
     fetchUsers()
   },
 )
