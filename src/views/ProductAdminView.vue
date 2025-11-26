@@ -56,7 +56,7 @@ import { ref, onMounted } from 'vue'
 // Componentes
 import ProductFormModal from '@/components/products/ProductFormModal.vue'
 import ProductGrid from '@/components/products/ProductGrid.vue'
-import NotificationModal from '@/components/NotificationModal.vue'
+import NotificationModal from '@/components/utils/NotificationModal.vue'
 import CategoryManagerModal from '@/components/products/CategoryManagerModal.vue'
 
 // Servicios

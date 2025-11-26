@@ -10,11 +10,11 @@
             ><i class="bi bi-house me-2"></i><span>Inicio</span></a
           >
         </li>
-        <li class="nav-item">
+        <!--  <li class="nav-item">
           <router-link :to="{ name: 'VentaNueva' }" class="nav-link text-white"
             ><i class="bi bi-cart me-2"></i><span>Ventas</span></router-link
           >
-        </li>
+        </li> -->
         <li class="nav-item">
           <router-link :to="{ name: 'Productos' }" class="nav-link text-white"
             ><i class="bi bi-box me-2"></i><span>Productos</span></router-link
@@ -25,6 +25,11 @@
             <i class="bi bi-people me-2"></i><span>Usuarios</span>
           </router-link>
         </li>
+        <!--  <li class="nav-item">
+          <router-link :to="{ name: 'ventas' }" class="nav-link text-white">
+            <i class="bi bi-basket me-2"></i><span>Ventas</span>
+          </router-link>
+        </li> -->
       </ul>
     </nav>
   </aside>

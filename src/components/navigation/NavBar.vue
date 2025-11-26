@@ -60,7 +60,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { storeToRefs } from 'pinia'
-import UserProfileMenu from './UserProfileMenu.vue'
+import UserProfileMenu from '../users/UserProfileMenu.vue'
 import { useLayoutStore } from '@/store/layoutStore'
 
 const layoutStore = useLayoutStore()

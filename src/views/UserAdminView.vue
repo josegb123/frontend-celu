@@ -130,8 +130,8 @@ import UserService from '@/services/UserService'
 import type { IUser, IPaginatedUsers } from '@/interfaces/IUser'
 import UserList from '../components/users/UserList.vue'
 import UserForm from '@/components/users/UserForm.vue'
-import NotificationModal from '@/components/NotificationModal.vue'
-import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import NotificationModal from '@/components/utils/NotificationModal.vue'
+import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 import { isAxiosError } from 'axios'
 
 // --- ESTADO ---

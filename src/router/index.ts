@@ -38,7 +38,18 @@ const routes: Array<RouteRecordRaw> = [
       requireAuth: true,
     },
   },
+  /*
   {
+    path: '/ventas/',
+    name: 'ventas',
+    component: () => import('@/views/VentaAdminView.vue'),
+    meta: {
+      requireAuth: true,
+      title: 'Ventas',
+    },
+  },
+
+    {
     path: '/ventas/nueva',
     name: 'VentaNueva',
     component: () => import('@/views/VentaForm.vue'),
@@ -46,7 +57,7 @@ const routes: Array<RouteRecordRaw> = [
       requireAuth: true,
       title: 'Nueva Venta',
     },
-  },
+  }, */
   {
     path: '/productos',
     name: 'Productos',
