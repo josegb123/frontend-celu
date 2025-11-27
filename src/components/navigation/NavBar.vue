@@ -13,9 +13,9 @@
           </button>
         </div>
 
-        <router-link :to="{ name: 'home' }" class="navbar-brand p-0 fw-bold fs-6 text-uppercase"
-          >E-Store Admin</router-link
-        >
+        <router-link :to="{ name: 'home' }" class="navbar-brand p-0 fw-bold fs-6 text-uppercase">{{
+          nameBranding
+        }}</router-link>
 
         <span class="text-white-50 ms-3 d-none d-sm-inline fs-6" v-if="isAuthenticated">{{
           $route.meta.title || 'Panel Principal'
@@ -63,6 +63,7 @@ import { storeToRefs } from 'pinia'
 import UserProfileMenu from '../users/UserProfileMenu.vue'
 import { useLayoutStore } from '@/store/layoutStore'
 
+const nameBranding = import.meta.env.VITE_BRANDING_NAME
 const layoutStore = useLayoutStore()
 
 const authStore = useAuthStore()
