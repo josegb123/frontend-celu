@@ -182,7 +182,7 @@ const confirmDelete = async () => {
     // Esconder el modal independientemente del resultado
     hideConfirmationModal()
   }
-} // ⬅️ Falta cerrar la función aquí
+}
 
 // --- OBSERVADORES ---
 

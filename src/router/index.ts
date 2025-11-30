@@ -3,6 +3,7 @@ import AuthView from '@/views/AuthView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import HomeView from '@/views/HomeView.vue'
 import { useAuthStore } from '@/store/authStore'
+import VentaPOS from '@/views/VentaPOS.vue'
 
 // --- 1. DEFINICIÓN DE RUTAS ---
 const routes: Array<RouteRecordRaw> = [
@@ -49,15 +50,23 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
 
-    {
-    path: '/ventas/nueva',
-    name: 'VentaNueva',
-    component: () => import('@/views/VentaForm.vue'),
-    meta: {
-      requireAuth: true,
-      title: 'Nueva Venta',
-    },
   }, */
+  {
+    path: '/cuentas-por-cobrar',
+    name: 'cuentas',
+    component: () => import('@/views/CuentasPorCobrarView.vue'),
+    meta: {
+      title: 'Cuentas por cobrar',
+      requireAuth: true, // Asegurando que 'productos' requiere autenticación
+    },
+  },
+  {
+    // 🚨 La ruta para el punto de venta
+    path: '/pos',
+    name: 'pos',
+    component: VentaPOS,
+    meta: { requiresAuth: true, layout: 'LayoutPOS' }, // Opcional: para control de acceso y layout
+  },
   {
     path: '/productos',
     name: 'Productos',
@@ -68,10 +77,28 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: '/proveedores',
+    name: 'Proveedores',
+    component: () => import('@/views/ProveedoresView.vue'),
+    meta: {
+      title: 'Gestión de Proveedores',
+      requireAuth: true, // Asegurando que 'proveedores' requiere autenticación
+    },
+  },
+  {
     path: '/usuarios',
     name: 'Usuarios',
     component: () => import('@/views/UserAdminView.vue'),
     meta: { requireAuth: true, title: 'Gestión de Usuarios' },
+  },
+  {
+    path: '/movimientos',
+    name: 'movimientos',
+    component: () => import('@/views/MovimientosView.vue'),
+    meta: {
+      title: 'Movimientos Financieros',
+      requireAuth: true, // Asegurando que 'movimientos' requiere autenticación
+    },
   },
 ]
 // --- 2. CREACIÓN DEL ROUTER ---

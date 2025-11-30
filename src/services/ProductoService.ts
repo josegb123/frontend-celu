@@ -49,11 +49,33 @@ class ProductoService {
   public async searchProductos(query: string): Promise<Producto[]> {
     if (query.length < 3) return []
     try {
-      const response: AxiosResponse<PaginatedResponse<Producto>> = await laravelApi.get(
+      // ⬅️ SOLUCIÓN: Hacemos el llamado a la API
+      const response: AxiosResponse<Producto[] | { data: Producto[] }> = await laravelApi.get(
         `${this.endpoint}?search=${query}`,
       )
-      // Si la API usa Paginate::collection() o similar, los datos están en response.data.data
-      return response.data.data
+
+      // 1. Intentamos acceder a response.data.data (si usa paginación o el envoltorio 'data')
+      const paginatedResults = (response.data as { data: Producto[] })?.data
+
+      // 2. Si es un array directo (no paginado), response.data será el array.
+      const directResults = response.data
+
+      let results: Producto[] = []
+
+      if (Array.isArray(paginatedResults)) {
+        results = paginatedResults // Usamos el array paginado
+      } else if (Array.isArray(directResults)) {
+        results = directResults as Producto[] // Usamos el array directo
+      } else {
+        // Si la respuesta es 200 pero la estructura es desconocida
+        console.warn(
+          'Estructura de respuesta inesperada en searchProductos. No se encontró array de productos.',
+          response.data,
+        )
+        return []
+      }
+
+      return results
     } catch (error) {
       console.error('Error al buscar productos:', error)
       return []
