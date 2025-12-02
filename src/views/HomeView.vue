@@ -10,7 +10,6 @@ import {
   type TimeSeriesData,
 } from '@/services/estadisticasService'
 
-// Importar componentes hijos (los errores 7016 indican que TS no los encuentra; si esto persiste, verifica tu archivo 'shims-vue.d.ts' o 'tsconfig.app.json')
 import StatCard from '@/components/home/StatCard.vue'
 import TopRankingCard from '@/components/home/TopRankingCard.vue'
 import LastSalesTable from '@/components/home/LastSalesTable.vue'
@@ -18,9 +17,9 @@ import LastSalesTable from '@/components/home/LastSalesTable.vue'
 interface DashboardData {
   ticketPromedio: number
   margenBrutoMes: number
-  productosBajoStock: LowStockProduct[] // Tipado explícito
-  topClientes: TopMetric[] // Tipado explícito
-  ultimasVentas: VentaMinimal[] // Tipado explícito
+  productosBajoStock: LowStockProduct[]
+  topClientes: TopMetric[]
+  ultimasVentas: VentaMinimal[]
 }
 
 // 2. TIPAR EL REF dashboardData con la nueva interfaz
@@ -33,14 +32,12 @@ const dashboardData = ref<DashboardData>({
   ultimasVentas: [],
 })
 
-// Simulación de carga de datos
 const fetchDashboardData = async () => {
   loading.value = true
   try {
     // 1. Métricas clave
     const [ticket, margenResult] = await Promise.all([
       estadisticasService.getTicketPromedio(),
-      // 3. CORRECCIÓN: El método se llama getHistorialGanancias, no getMargenBruto (Error 2339)
       estadisticasService.getHistorialGanancias({ periodo: 'month' }),
     ])
 
@@ -49,7 +46,7 @@ const fetchDashboardData = async () => {
     // Obtener el beneficio de la primera entrada (asumiendo que es el mes actual)
     const margenData: TimeSeriesData[] = margenResult.data
     dashboardData.value.margenBrutoMes =
-      margenData.length > 0 ? (margenData[0].beneficio_bruto ?? 0) : 0
+      margenData.length > 0 && margenData[0] ? (margenData[0].beneficio_bruto ?? 0) : 0
 
     // 2. Tablas/Listados
     const [stock, clientes, ventas] = await Promise.all([
@@ -86,9 +83,8 @@ onMounted(fetchDashboardData)
       </div>
       <p class="mt-2 text-muted">Obteniendo datos frescos de la base de datos...</p>
     </div>
-
     <div v-else>
-      <div class="row g-4 mb-5">
+      <div class="row g-3 mb-4">
         <div class="col-lg-4 col-md-6 col-sm-12">
           <StatCard
             icon="bi-cash-coin"
@@ -97,6 +93,7 @@ onMounted(fetchDashboardData)
             format="currency"
             variant="primary"
             tooltip="Monto promedio de cada venta."
+            card-class="tailwind-style-card"
           />
         </div>
         <div class="col-lg-4 col-md-6 col-sm-12">
@@ -107,6 +104,7 @@ onMounted(fetchDashboardData)
             format="currency"
             variant="success"
             tooltip="Ganancia total antes de gastos operativos."
+            card-class="tailwind-style-card"
           />
         </div>
         <div class="col-lg-4 col-md-12 col-sm-12">
@@ -119,11 +117,12 @@ onMounted(fetchDashboardData)
             tooltip="Productos con stock bajo el umbral configurado."
             action-text="Ver inventario"
             action-link="/productos"
+            card-class="tailwind-style-card"
           />
         </div>
       </div>
 
-      <div class="row g-4">
+      <div class="row g-3">
         <div class="col-lg-6 col-md-12">
           <TopRankingCard
             title="🏆 Top 10 Clientes"
@@ -151,5 +150,44 @@ onMounted(fetchDashboardData)
 /* Estilos específicos si son necesarios */
 .container-fluid {
   max-width: 1400px;
+}
+
+/* Estilos de tarjeta compacta */
+.tailwind-style-card {
+  border-radius: 0.5rem; /* rounded-lg */
+
+  box-shadow: none !important;
+
+  /* Borde delgado y sutil (thin border) - OK, usa variable adaptable */
+  border: 1px solid var(--bs-border-color-translucent);
+
+  /* Reducir el padding interno (p-3 o p-4) */
+  padding: 0.75rem !important; /* Aproximadamente p-3 */
+}
+
+/* Ajustes internos para compactación */
+.tailwind-style-card .card-body {
+  padding: 0 !important;
+}
+
+/* Alineación y tamaño de texto */
+.tailwind-style-card .card-title {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem !important;
+}
+
+.tailwind-style-card .stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Ajuste del icono */
+.tailwind-style-card .stat-icon {
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+  line-height: 2rem;
+  border-radius: 50%;
+  margin-right: 0.75rem;
 }
 </style>

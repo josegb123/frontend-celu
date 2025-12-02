@@ -12,7 +12,7 @@ export interface LaravelPagination<T> {
   from: number
   last_page: number
   last_page_url: string
-  links: any[] // Se puede refinar si es necesario
+  links: { url: string | null; label: string; active: boolean }[]
   next_page_url: string | null
   path: string
   per_page: number
@@ -36,12 +36,14 @@ export interface TopMetric {
  * Métrica para Ventas por Período e Historial de Ganancias
  */
 export interface TimeSeriesData {
+  beneficio_bruto: number
+  beneficio: number
   periodo: string
   data: [
     {
       periodo_fecha: string // Ej: "2025-11"
       ventas_totales?: number
-      beneficio_bruto?: number // Para historial de ganancias (Margen Bruto)
+      beneficio?: number // Para historial de ganancias (Margen Bruto)
     },
   ]
 }

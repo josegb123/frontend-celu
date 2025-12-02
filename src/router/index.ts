@@ -45,15 +45,14 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/CuentasPorCobrarView.vue'),
     meta: {
       title: 'Cuentas por cobrar',
-      requireAuth: true, // Asegurando que 'productos' requiere autenticación
+      requireAuth: true,
     },
   },
   {
-    // 🚨 La ruta para el punto de venta
     path: '/pos',
     name: 'pos',
     component: VentaPOS,
-    meta: { requiresAuth: true, layout: 'LayoutPOS' }, // Opcional: para control de acceso y layout
+    meta: { requiresAuth: true, layout: 'LayoutPOS', title: 'Venta Nueva - POS' },
   },
   {
     path: '/productos',
@@ -61,7 +60,7 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/ProductAdminView.vue'),
     meta: {
       title: 'Gestión de Productos',
-      requireAuth: true, // Asegurando que 'productos' requiere autenticación
+      requireAuth: true,
     },
   },
   {
@@ -70,7 +69,7 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/ProveedoresView.vue'),
     meta: {
       title: 'Gestión de Proveedores',
-      requireAuth: true, // Asegurando que 'proveedores' requiere autenticación
+      requireAuth: true,
     },
   },
   {

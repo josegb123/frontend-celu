@@ -46,7 +46,7 @@
       </div>
     </div>
     <div class="card shadow">
-      <div class="card-header bg-light">
+      <div class="card-header">
         <h5 class="mb-0">Listado de Ventas Recientes</h5>
       </div>
       <div class="card-body p-0">
@@ -60,7 +60,7 @@
         </div>
 
         <table v-else class="table table-hover mb-0">
-          <thead class="table-light">
+          <thead>
             <tr>
               <th>ID</th>
               <th>Cliente</th>
@@ -163,7 +163,6 @@ import ventaService, {
 import VentaRow from '@/components/ventas/VentaRow.vue'
 import VentaDetailModal from '@/components/ventas/VentaDetailModal.vue'
 import VentaFormModal from '@/components/ventas/VentaFormModal.vue'
-// 🚨 Importar los nuevos componentes modales (Ajusta la ruta si es necesario)
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
 

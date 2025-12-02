@@ -26,7 +26,7 @@
           class="carrito-listado-items flex-grow-1 overflow-auto border rounded-3 bg-body-tertiary mb-3"
         >
           <table class="table table-sm mb-0 table-hover">
-            <thead class="sticky-top">
+            <thead>
               <tr>
                 <th></th>
                 <th class="fs-7">Producto</th>
