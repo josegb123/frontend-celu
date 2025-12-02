@@ -90,7 +90,7 @@ class ProveedorService {
 
       // Dependiendo de tu backend, podría ser response.data o response.data.data
       // Asumimos que para una búsqueda rápida, devuelve el array directo o 'data'
-      const results = (response.data as any)?.data || response.data
+      const results = (response.data as unknown as { data?: Proveedor[] }).data || response.data
 
       if (Array.isArray(results)) {
         return results as Proveedor[]

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 1. Definición de Props: Recibe el valor actual de la búsqueda (v-model)
-const props = defineProps<{
+defineProps<{
   searchValue: string
 }>()
 

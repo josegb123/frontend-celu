@@ -119,8 +119,8 @@ import MovimientoFinancieroService, {
   type StoreMovimientoPayload,
 } from '@/services/MovimientoFinancieroService'
 import type { MovimientoFinanciero, TipoMovimiento } from '@/interfaces/IMovimientoFinanciero'
-import axios, { type AxiosError } from 'axios'
-import { get } from 'lodash'
+import axios from 'axios'
+import get from 'lodash/get'
 import { tipoMovimientoService } from '@/services/TipoMovimientoService'
 
 // --- Interfaces Locales/Helpers ---
@@ -254,7 +254,7 @@ const submitMovimiento = async () => {
             const errorMsg = Array.isArray(errorData.errors[key])
               ? errorData.errors[key][0]
               : errorData.errors[key]
-            errors.value[key] = errorMsg
+            errors.value[key] = errorMsg ?? ''
           }
         }
         errorMessage.value =

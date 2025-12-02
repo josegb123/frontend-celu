@@ -50,19 +50,13 @@
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
 // --- PROPIEDADES ---
-const props = defineProps<{
+defineProps<{
   /** Controla la visibilidad del modal. */
   isVisible: boolean
   /** El mensaje que se muestra en el cuerpo del modal. */
   message: string
   /** Si es true, usa el color rojo (Error); si es false, usa el color verde (Éxito). */
   isError: boolean
-}>()
-
-// --- EMIT EVENTS ---
-const emit = defineEmits<{
-  /** Evento emitido al hacer clic en cerrar o aceptar. */
-  (e: 'close'): void
 }>()
 </script>
 

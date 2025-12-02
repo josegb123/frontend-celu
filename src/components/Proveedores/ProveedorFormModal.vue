@@ -74,7 +74,7 @@ async function saveProveedor() {
 
     // Notificar al padre que la operación fue exitosa
     emit('saved')
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error al guardar proveedor:', err)
     alert('Error al guardar el proveedor. Revisa la consola para más detalles.')
   } finally {

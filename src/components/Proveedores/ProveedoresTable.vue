@@ -14,7 +14,7 @@ interface Proveedor {
 }
 
 // 1. Definición de Props: Recibe la lista de proveedores
-const props = defineProps<{
+defineProps<{
   proveedores: Proveedor[]
 }>()
 

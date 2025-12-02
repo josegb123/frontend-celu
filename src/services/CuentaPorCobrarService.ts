@@ -23,10 +23,14 @@ export interface CuentasPorCobrarParams {
 
 // Interfaz extendida para la respuesta del método show()
 export interface CuentaPorCobrarDetalle extends CuentaPorCobrar {
-  cliente: { id: number; nombre: string; ruc_ci: string | null }
+  cliente: { id: string; nombre: string; apellidos: string }
   venta: {
     id: number
-    user: { id: number; nombre: string } // Vendedor
+    subtotal: string
+    total: string
+    estado: string
+    metodo_pago: string
+    user: { id: number; nombre: string; name: string } // Vendedor (nombre + name)
     detalles: ItemVenta[]
   }
   abonos: Abono[] // Historial de abonos

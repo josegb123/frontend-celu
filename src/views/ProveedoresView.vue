@@ -28,6 +28,12 @@ interface Proveedor {
   fechaRegistro: string
 }
 // ... [Otras interfaces DTO, PaginatedResponse, etc.] ...
+interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  last_page: number
+  current_page: number
+}
 
 // Estado Inicial para el Formulario (Se pasa al modal)
 const initialFormState = {
@@ -72,25 +78,29 @@ const formData = reactive({ ...initialFormState }) // Datos para edición/creaci
 /**
  * Carga la lista de proveedores (Función central de la API).
  */
-async function fetchProveedores(page: number = pagination.page) {
+async function fetchProveedores(_page: number = pagination.page) {
   loading.value = true
   error.value = null
 
   const params = {
-    page: page,
+    page: _page,
     per_page: pagination.per_page,
     search: pagination.search,
   }
 
   try {
-    const response: any = await proveedorService.getAll(params) // Asumiendo el tipo PaginatedResponse
+    const response: PaginatedResponse<Proveedor> = await proveedorService.getAll(params)
     proveedores.value = response.data
     pagination.total = response.total
     pagination.last_page = response.last_page
     pagination.current_page = response.current_page
     pagination.page = response.current_page
-  } catch (err: any) {
-    error.value = 'Error al cargar: ' + (err.message || 'Error desconocido.')
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = 'Error al cargar: ' + err.message
+    } else {
+      error.value = 'Error al cargar: Error desconocido.'
+    }
   } finally {
     loading.value = false
   }
@@ -142,7 +152,7 @@ async function handleDeleteProveedor(id: number) {
       loading.value = true
       await proveedorService.delete(id)
       await fetchProveedores() // Recarga la lista
-    } catch (err) {
+    } catch {
       alert('Error al eliminar.')
     } finally {
       loading.value = false

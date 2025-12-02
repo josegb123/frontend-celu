@@ -64,12 +64,13 @@ import { defineProps, defineEmits } from 'vue'
 
 // --- PROPIEDADES y EMITS ---
 
-const props = defineProps<{
+defineProps<{
   users: IUser[]
   loading: boolean
 }>()
 
-const emit = defineEmits<{
+// defineEmits is used for type inference, but the variable is not needed
+defineEmits<{
   (e: 'edit', user: IUser): void
   (e: 'delete', user: IUser): void
 }>()

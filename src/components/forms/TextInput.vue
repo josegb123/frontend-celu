@@ -5,7 +5,8 @@
       :type="type"
       :id="id"
       class="form-control"
-      v-model="modelValue"
+      :value="modelValue"
+      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       :required="required"
       :step="step"
     />

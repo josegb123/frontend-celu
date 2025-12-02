@@ -36,12 +36,6 @@ const props = defineProps<{
   venta: VentaIndexResponse
 }>()
 
-const emit = defineEmits<{
-  (e: 'ver-detalle', id: number): void
-  (e: 'editar', venta: VentaIndexResponse): void
-  (e: 'eliminar', id: number): void
-}>()
-
 const estadoColor = computed(() => {
   switch (props.venta.estado) {
     case 'finalizada':

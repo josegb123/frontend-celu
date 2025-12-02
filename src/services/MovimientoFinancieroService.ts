@@ -3,7 +3,6 @@ import type { AxiosResponse } from 'axios'
 import type {
   MovimientoFinanciero,
   MovimientoFinancieroParams,
-  TipoMovimiento,
 } from '@/interfaces/IMovimientoFinanciero'
 
 // ⚠️ Asumimos que tienes la interfaz de paginación definida globalmente o importada

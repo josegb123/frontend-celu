@@ -46,7 +46,7 @@
                     <i class="bi bi-trash-fill smaller-icon"></i>
                   </button>
                 </td>
-                <td class="align-middle fs-7">{{ item.nombre }}</td>
+                <td class="align-middle fs-7">{{ item.nombre }}</td>               
                 <td class="align-middle text-center">
                   <input
                     type="number"
@@ -92,11 +92,6 @@
               class="form-control form-control-xs text-end border-secondary"
               style="width: 80px; height: 25px"
             />
-          </div>
-
-          <div class="d-flex justify-content-between mb-3 pb-2 border-bottom small">
-            <span class="fw-medium">Impuesto ({{ IMPUESTO_RATE * 100 }}%):</span>
-            <span class="fw-medium">+${{ impuesto.toFixed(2) }}</span>
           </div>
 
           <div class="d-flex justify-content-between total-final">
@@ -145,7 +140,7 @@
             <PaymentForm
               :subtotal-bruto="subtotalGeneral"
               :descuento="descuento"
-              :impuesto="impuesto"
+              :impuesto="0"
               :total-pagar="totalVenta"
               :items="itemsVenta"
               :cliente="clienteSeleccionado"
@@ -176,7 +171,6 @@
 </template>
 
 <script setup lang="ts">
-// ... El script de lógica se mantiene igual ya que no contenía estilos
 import { computed, ref, watch, nextTick } from 'vue'
 
 // Componentes
@@ -209,7 +203,6 @@ const clienteSeleccionado = ref<Cliente>(clienteGenerico)
 const itemsVenta: Ref<ItemVenta[]> = ref([])
 const searchQueryGrid = ref('')
 const descuento = ref(0.0)
-const IMPUESTO_RATE = 0.1 // 10% IVA
 
 const gridRefreshKey = ref(0)
 
@@ -312,7 +305,9 @@ const addProductToCart = (producto: ProductoVentaBase) => {
     itemsVenta.value.push({
       id: producto.id,
       nombre: producto.nombre,
+      nombre_producto: producto.nombre, // o ajusta según corresponda
       precio_venta: precioNumerico,
+      precio_unitario: precioNumerico, // o ajusta según corresponda
       stock_actual: producto.stock_actual,
       cantidad: 1,
       subtotal: precioNumerico,
@@ -348,15 +343,9 @@ const subtotalGeneral = computed(() => {
   return itemsVenta.value.reduce((sum, item) => sum + item.subtotal, 0)
 })
 
-const impuesto = computed(() => {
-  const descuentoAplicable = Math.min(descuento.value, subtotalGeneral.value)
-  const baseImponible = subtotalGeneral.value - descuentoAplicable
-  return baseImponible > 0 ? baseImponible * IMPUESTO_RATE : 0
-})
-
 const totalVenta = computed(() => {
   const descuentoAplicable = Math.min(descuento.value, subtotalGeneral.value)
-  return subtotalGeneral.value - descuentoAplicable + impuesto.value
+  return subtotalGeneral.value - descuentoAplicable
 })
 
 // --- 5. Lógica de Interfaz y Handlers ---

@@ -11,8 +11,10 @@ export interface ProductoVentaBase {
 /** Interfaz para el ítem en el carrito de venta. (precio_venta debe ser number) */
 export interface ItemVenta {
   id: number
-  nombre: string
-  precio_venta: number // Debe ser number en el carrito
+  nombre_producto: string
+  nombre?: string
+  precio_venta: number
+  precio_unitario: number
   stock_actual: number
   cantidad: number
   subtotal: number

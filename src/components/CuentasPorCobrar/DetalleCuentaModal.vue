@@ -15,13 +15,9 @@
         <div v-else-if="detalleCuenta" class="modal-body">
           <div class="row mb-3 border-bottom pb-3">
             <div class="col-md-7">
-              <p class="mb-1">
-                <strong>Cliente:</strong> {{ detalleCuenta.cliente.nombre }} ({{
-                  detalleCuenta.cliente.ruc_ci || 'N/A'
-                }})
-              </p>
+              <p class="mb-1"><strong>Cliente:</strong> {{ detalleCuenta.cliente.nombre }}</p>
               <p class="mb-1"><strong>ID Venta:</strong> {{ detalleCuenta.venta_id }}</p>
-              <p class="mb-1"><strong>Vendedor:</strong> {{ detalleCuenta.venta.user.nombre }}</p>
+              <p class="mb-1"><strong>Vendedor:</strong> {{ detalleCuenta.venta.user.name }}</p>
               <p class="mb-1">
                 <strong>Vencimiento:</strong> {{ detalleCuenta.fecha_vencimiento }}
               </p>
@@ -70,7 +66,8 @@
                 class="list-group-item d-flex justify-content-between align-items-center small py-2 bg-light"
               >
                 <span>
-                  Abono #{{ abono.id }} registrado por **{{ abono.user?.nombre || 'N/A' }}**
+                  Abono #{{ abono.id }} registrado por
+                  <strong>{{ abono?.user.name || 'N/A' }}</strong>
                 </span>
                 <span class="fw-bold text-success">
                   + ${{ Number(abono.monto_abonado).toFixed(2) }} ({{ abono.metodo_pago }})

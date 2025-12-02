@@ -16,6 +16,17 @@ export interface CuentaPorCobrar {
   created_at: string
   updated_at: string
   deleted_at: string | null
+  venta: {
+    id: number
+    subtotal: string
+    total: string
+    estado: string
+    metodo_pago: string
+
+    user: {
+      name: string
+    }
+  }
 }
 
 /**
@@ -30,7 +41,7 @@ export interface Abono {
   referencia_pago: string
   created_at: string
   updated_at: string
-  // Relación:
+  user: { name: string }
   cuenta_por_cobrar?: CuentaPorCobrar // Se incluye en la respuesta del store
 }
 

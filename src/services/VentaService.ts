@@ -40,7 +40,8 @@ export interface VentaIndexResponse {
   id: number
   estado: string
   resumen_productos: string
-  total: number
+  brutotal: number
+  total: string | number
   metodo_pago: MetodoPagoRequest
   user: {
     name: string | null
@@ -54,16 +55,17 @@ export interface VentaIndexResponse {
 
 // Interfaz para el Detalle de Ítem dentro de VentaShowResource
 export interface DetalleVentaResponse {
-  detalle_id: number
+  id: number
+  producto_id: number
   cantidad: number
   precio_unitario: number
   subtotal: number
-  nombre_producto: string
-  cliente_nombre: string
+  nombre_producto_historico: string
 }
 
 // Interfaz para el Detalle Completo (VentaShowResource)
 export interface VentaShowResponse extends VentaIndexResponse {
+  venta_id: number
   totales_financieros: {
     subtotal: number
     iva_monto: number
@@ -71,6 +73,9 @@ export interface VentaShowResponse extends VentaIndexResponse {
     descuento_total: number
   }
   detalles_completos: DetalleVentaResponse[]
+  cliente_nombre: string | null
+  total_venta: number
+  usuario_vendedor: string
 }
 
 // Interfaz genérica para la respuesta de paginación de Laravel

@@ -5,7 +5,7 @@
       type="number"
       :id="id"
       class="form-control"
-      v-model.number="modelValue"
+      v-model.number="localValue"
       :required="required"
       :step="step"
     />
@@ -14,9 +14,9 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
+import { defineProps, defineEmits, computed } from 'vue'
 
-defineProps({
+const props = defineProps({
   id: { type: String, required: true },
   label: { type: String, required: true },
   modelValue: { type: Number, required: true },
@@ -25,7 +25,12 @@ defineProps({
   error: { type: String, default: null },
 })
 
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
+
+const localValue = computed({
+  get: () => props.modelValue,
+  set: (val: number) => emit('update:modelValue', val),
+})
 </script>
 
 <style scoped>

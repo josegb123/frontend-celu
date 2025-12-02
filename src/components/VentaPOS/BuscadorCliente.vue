@@ -102,7 +102,7 @@ const selectCliente = (cliente: Cliente) => {
       />
     </div>
 
-    <div class="search-results-area" style="min-height: 80px">
+    <div class="search-results-area">
       <div v-if="isLoading" class="alert alert-info py-2 text-center mb-0 small">
         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
         Buscando clientes...
