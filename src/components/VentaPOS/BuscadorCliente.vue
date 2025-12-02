@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { debounce } from 'lodash' // Se asume que lodash está instalado
-// Importamos las interfaces adaptadas del servicio
 import ClienteService, { type Cliente } from '@/services/ClienteService'
 
 // --- 1. Definiciones de Props y Emits ---
@@ -13,7 +12,6 @@ const props = defineProps<{
   currentCliente: Cliente
 }>()
 
-// Define los eventos que emitirá el componente
 const emit = defineEmits<{
   /**
    * Emite el objeto Cliente seleccionado al componente padre.
@@ -46,7 +44,6 @@ const performSearch = async (query: string) => {
 
   isLoading.value = true
   try {
-    // Usamos el servicio de clientes para la búsqueda
     const data = await ClienteService.searchClientes(query)
     searchResults.value = data
   } catch (error) {
@@ -73,75 +70,72 @@ const selectCliente = (cliente: Cliente) => {
   // 2. Limpiar el estado interno y cerrar el modal
   searchQuery.value = ''
   searchResults.value = []
-  emit('close')
+  // No emitimos 'close' aquí si el modal de pago lo maneja
+  // El padre (VentaPOS.vue) maneja el cierre del modal en el handler.
 }
 </script>
 
 <template>
   <div class="cliente-search-container">
-    <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4">
-      <p class="lead mb-0">
+    <div
+      class="alert alert-light border d-flex justify-content-between align-items-center mb-3 py-2"
+    >
+      <p class="mb-0 small">
         Cliente Actual: <span class="fw-bold text-primary">{{ props.currentCliente.nombre }}</span>
       </p>
-      <small class="text-muted">Cédula/RUC: {{ props.currentCliente.ruc_ci || 'N/A' }}</small>
+      <small class="text-muted small">Cédula/RUC: {{ props.currentCliente.ruc_ci || 'N/A' }}</small>
     </div>
 
-    <h6 class="mb-3">Buscar nuevo cliente:</h6>
+    <h6 class="mb-2 fs-6">Buscar nuevo cliente:</h6>
 
     <div class="input-group mb-3">
-      <span class="input-group-text pos-bg-accent text-light" id="search-cliente-icon">
+      <span class="input-group-text text-bg-primary" id="search-cliente-icon">
         <i class="bi bi-person-circle"></i>
       </span>
       <input
         type="text"
         v-model="searchQuery"
-        class="form-control form-control-lg shadow-none"
+        class="form-control form-control-sm shadow-none"
         placeholder="Buscar por nombre o Cédula/RUC (min. 3 caracteres)"
         aria-label="Buscar cliente"
         aria-describedby="search-cliente-icon"
       />
     </div>
 
-    <div class="search-results-area" style="min-height: 100px">
-      <div v-if="isLoading" class="alert alert-info py-2 text-center mb-0">
+    <div class="search-results-area" style="min-height: 80px">
+      <div v-if="isLoading" class="alert alert-info py-2 text-center mb-0 small">
         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
         Buscando clientes...
       </div>
-      <div v-else-if="errorMessage" class="alert alert-danger py-2 mb-0">
+      <div v-else-if="errorMessage" class="alert alert-danger py-2 mb-0 small">
         {{ errorMessage }}
       </div>
 
       <div
         v-else-if="searchQuery.length >= 3 && searchResults.length > 0"
-        class="list-group shadow-sm"
+        class="list-group list-group-flush shadow-sm"
       >
         <a
           v-for="cliente in searchResults"
           :key="cliente.id"
           href="#"
-          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          class="list-group-item list-group-item-action list-group-item-light d-flex justify-content-between align-items-center py-2"
           @click.prevent="selectCliente(cliente)"
         >
           <div>
-            <p class="mb-0 fw-bold text-dark">{{ cliente.nombre }}</p>
-            <small class="text-muted">Cédula/RUC: {{ cliente.ruc_ci || 'N/A' }}</small>
+            <p class="mb-0 fw-bold small">{{ cliente.nombre }}</p>
+            <small class="text-muted small">Cédula/RUC: {{ cliente.ruc_ci || 'N/A' }}</small>
           </div>
-          <span class="badge bg-primary rounded-pill">Seleccionar</span>
+          <span class="badge text-bg-primary rounded-pill small">Seleccionar</span>
         </a>
       </div>
 
       <div
         v-else-if="searchQuery.length >= 3 && !isLoading"
-        class="alert alert-warning py-2 text-center mb-0"
+        class="alert alert-warning py-2 text-center mb-0 small"
       >
         No se encontraron clientes con el término "{{ searchQuery }}".
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.pos-bg-accent {
-  background-color: #6a0dad !important; /* Púrpura oscuro */
-}
-</style>

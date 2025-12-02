@@ -6,13 +6,18 @@
     <nav class="p-2">
       <ul class="nav flex-column">
         <li class="nav-item">
-          <a class="nav-link text-white" href="#"
-            ><i class="bi bi-house me-2"></i><span>Inicio</span></a
+          <router-link :to="{ name: 'home' }" class="nav-link text-white"
+            ><i class="bi bi-house me-2"></i><span>Inicio</span></router-link
           >
         </li>
         <li class="nav-item">
           <router-link :to="{ name: 'pos' }" class="nav-link text-white"
             ><i class="bi bi-cart me-2"></i><span>Ventas</span></router-link
+          >
+        </li>
+        <li class="nav-item">
+          <router-link :to="{ name: 'ventas' }" class="nav-link text-white"
+            ><i class="bi bi-receipt me-2"></i><span>Ventas</span></router-link
           >
         </li>
         <li class="nav-item">

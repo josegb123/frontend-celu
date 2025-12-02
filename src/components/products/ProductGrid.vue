@@ -30,14 +30,38 @@
       </div>
     </div>
 
-    <div
-      v-if="!isLoading && products.length > 0 && totalPages > 1"
-      class="d-flex justify-content-center mt-4"
-    >
-      <p class="text-info small">
-        *La paginación está deshabilitada ya que la API no proporciona metadata de total/página
-        actual.
-      </p>
+    <div v-if="!isLoading && pagination.last_page > 1" class="d-flex justify-content-center mt-4">
+      <nav aria-label="Navegación de Productos">
+        <ul class="pagination">
+          <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+            <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)">
+              Anterior
+            </a>
+          </li>
+
+          <li
+            class="page-item"
+            :class="{ active: p === pagination.current_page }"
+            v-for="p in pageRange"
+            :key="p"
+          >
+            <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+          </li>
+
+          <li
+            class="page-item"
+            :class="{ disabled: pagination.current_page === pagination.last_page }"
+          >
+            <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)">
+              Siguiente
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <div v-if="!isLoading && products.length > 0" class="text-center mt-2 text-muted small">
+      Mostrando {{ pagination.data.length }} de {{ pagination.total }} productos.
     </div>
   </div>
 
@@ -53,24 +77,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, reactive, computed } from 'vue'
 import ProductCard from '@/components/products/ProductCard.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
-import ProductoService, { type Producto } from '@/services/ProductoService.js'
+import ProductoService, {
+  type Producto,
+  type PaginatedResponse,
+} from '@/services/ProductoService.js'
+
+// --- CONSTANTES ---
+const ITEMS_PER_PAGE = 20 // Más ítems por página para la vista de inventario
 
 // --- PROPS y EMITS ---
 const props = defineProps<{
-  // Propiedades para filtros, controladas por el componente padre
   searchQuery: string
   categoriaId: number | null
 }>()
 
 const emit = defineEmits<{
-  // Emitir el evento de edición al componente padre (HomeView)
   (e: 'editProduct', product: Producto): void
-  // Emitir el evento de recarga (para actualizar la lista después de crear/eliminar)
   (e: 'productsUpdated'): void
-  // ⬇️ 2. Nuevo Emit para notificar al padre (ProductAdminView) ⬇️
   (e: 'showNotification', result: { message: string; isError: boolean }): void
 }>()
 
@@ -82,47 +108,84 @@ const isConfirmModalVisible = ref(false)
 const productToDeleteId = ref<number | null>(null)
 const isDeleting = ref(false)
 
-// --- ESTADO SIMULADO DE PAGINACIÓN (Basado en la API no paginada) ---
 const currentPage = ref(1)
-const totalPages = ref(1)
+
+const pagination = reactive<PaginatedResponse<Producto>>({
+  current_page: 1,
+  data: [],
+  last_page: 1,
+  total: 0,
+  per_page: ITEMS_PER_PAGE,
+})
+
+// --- LÓGICA COMPUTADA ---
+
+/**
+ * Genera un rango inteligente de botones de página.
+ */
+const pageRange = computed(() => {
+  const pages: (number | string)[] = []
+  const lastPage = pagination.last_page
+  const current = pagination.current_page
+
+  // Lógica para mostrar solo algunas páginas (ej: 1, 2, ..., N)
+  if (lastPage <= 7) {
+    // Mostrar todas si son pocas
+    for (let i = 1; i <= lastPage; i++) {
+      pages.push(i)
+    }
+  } else {
+    pages.push(1)
+    if (current > 4) pages.push('...')
+
+    const start = Math.max(2, current - 1)
+    const end = Math.min(lastPage - 1, current + 1)
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
+    if (current < lastPage - 3) pages.push('...')
+    pages.push(lastPage)
+
+    // Filtrar duplicados de '...'
+    return pages.filter(
+      (value, index, self) =>
+        self.indexOf(value) === index && !(value === '...' && self[index - 1] === '...'),
+    )
+  }
+  return pages
+})
 
 // --- MÉTODOS ---
 
-/**
- * Función auxiliar para obtener el nombre del producto a eliminar para el modal.
- */
 const getProductToDeleteName = (): string => {
   const product = products.value.find((p) => p.id === productToDeleteId.value)
   return product ? product.nombre : 'Producto Desconocido'
 }
 
-/**
- * Muestra el modal de confirmación y guarda el ID del producto.
- */
 const showConfirmationModal = (productId: number) => {
   productToDeleteId.value = productId
   isConfirmModalVisible.value = true
 }
 
-/**
- * Cierra el modal y limpia el ID.
- */
 const hideConfirmationModal = () => {
   isConfirmModalVisible.value = false
   productToDeleteId.value = null
   isDeleting.value = false
 }
+
 /**
  * Carga la lista de productos con filtros y paginación.
  */
 const fetchProducts = async () => {
   isLoading.value = true
-  products.value = [] // Limpiar lista anterior
+  products.value = []
 
-  // Parámetros basados en las props
-  const params: { page: number; search: string; categoria_id?: number } = {
+  const params: { page: number; search: string; categoria_id?: number; per_page: number } = {
     page: currentPage.value,
     search: props.searchQuery,
+    per_page: ITEMS_PER_PAGE, // Usamos la constante
   }
 
   if (props.categoriaId !== null) {
@@ -130,26 +193,35 @@ const fetchProducts = async () => {
   }
 
   try {
-    const data = await ProductoService.getProductos(params)
-    products.value = data
+    const response: PaginatedResponse<Producto> = await ProductoService.getProductos(params)
+
+    products.value = response.data
+    Object.assign(pagination, response)
   } catch (error) {
     console.error('Error al cargar productos:', error)
-    // No emitimos notificación de error de carga aquí para evitar spam.
+    emit('showNotification', {
+      message: 'Fallo al cargar la lista de productos. Revise la consola.',
+      isError: true,
+    })
   } finally {
     isLoading.value = false
   }
 }
 
 /**
- * Maneja la eliminación de un producto (solo abre el modal).
+ * Cambia la página y recarga los productos.
  */
+const changePage = (page: number | string) => {
+  if (typeof page === 'number' && page >= 1 && page <= pagination.last_page) {
+    currentPage.value = page
+    fetchProducts()
+  }
+}
+
 const handleDeleteProduct = (productId: number) => {
   showConfirmationModal(productId)
 }
 
-/**
- * Maneja la eliminación real DESPUÉS de la confirmación del modal.
- */
 const confirmDelete = async () => {
   const productId = productToDeleteId.value
   if (!productId) {
@@ -157,36 +229,39 @@ const confirmDelete = async () => {
     return
   }
 
-  isDeleting.value = true // Habilita el spinner en el modal
+  isDeleting.value = true
 
   try {
     await ProductoService.deleteProducto(productId)
 
-    // Éxito: Emitir notificación
+    // Éxito: Emitir notificación al AdminView
     emit('showNotification', {
       message: `Producto "${getProductToDeleteName()}" eliminado con éxito.`,
       isError: false,
     })
 
     // Recargar la lista y notificar al padre
-    fetchProducts()
-    emit('productsUpdated')
+    // Si estamos en la última página y queda vacía, volvemos a la anterior
+    if (products.value.length === 1 && currentPage.value > 1) {
+      currentPage.value -= 1
+    }
+
+    await fetchProducts()
+    emit('productsUpdated') // Notifica que la lista ha cambiado
   } catch (error) {
     console.error(`Error al eliminar el producto ID ${productId}:`, error)
-    // Error: Emitir notificación
+    // Error: Emitir notificación al AdminView
     emit('showNotification', {
       message: 'Fallo al eliminar el producto. Revise la consola.',
       isError: true,
     })
   } finally {
-    // Esconder el modal independientemente del resultado
     hideConfirmationModal()
   }
 }
 
 // --- OBSERVADORES ---
 
-// Observa cambios en el filtro de búsqueda o categoría y recarga la lista
 watch([() => props.searchQuery, () => props.categoriaId], () => {
   currentPage.value = 1 // Reiniciar página al aplicar nuevo filtro
   fetchProducts()
@@ -211,6 +286,6 @@ onMounted(() => {
 
 <style scoped>
 .product-grid-container {
-  min-height: 400px; /* Evita que el layout salte al cargar */
+  min-height: 400px;
 }
 </style>

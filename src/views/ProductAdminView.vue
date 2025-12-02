@@ -2,21 +2,39 @@
   <div class="container-fluid py-4">
     <h1 class="mb-4">Gestión de Inventario 🛍️</h1>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <label for="search" class="form-label">Buscar por Nombre/Código</label>
-        <input
-          type="text"
-          id="search"
-          class="form-control"
-          placeholder="Ej. Teclado mecánico"
-          v-model="searchQuery"
-        />
+    <div class="row mb-4 align-items-end">
+      <div class="col-12 col-md-4 mb-3 mb-md-0">
+        <div>
+          <label for="search" class="form-label">Buscar por <strong>Nombre/Código</strong></label>
+          <input
+            type="text"
+            id="search"
+            class="form-control"
+            placeholder="Ej. Teclado mecánico"
+            v-model="searchQuery"
+          />
+        </div>
       </div>
 
-      <button class="btn btn-primary" @click="openProductFormModal">
-        <i class="bi bi-plus-circle me-2"></i> Crear Producto
-      </button>
+      <div class="col-12 col-md-4 mb-3 mb-md-0">
+        <div>
+          <label for="category-filter" class="form-label"
+            >Filtrar por <strong> Categoría</strong></label
+          >
+          <select id="category-filter" class="form-select" v-model="selectedCategoriaId">
+            <option :value="null">Todas las Categorías</option>
+            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+              {{ cat.nombre }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 d-grid">
+        <button class="btn btn-primary" @click="openProductFormModal">
+          <i class="bi bi-plus-circle me-2"></i> Crear Producto
+        </button>
+      </div>
     </div>
 
     <ProductGrid
@@ -24,6 +42,7 @@
       :categoria-id="selectedCategoriaId"
       @edit-product="startEditing"
       @products-updated="handleGridUpdate"
+      @show-notification="handleShowNotification"
     />
   </div>
 
@@ -69,7 +88,7 @@ import type { Ref } from 'vue'
 
 // Filtros
 const searchQuery = ref('')
-const selectedCategoriaId = ref<number | null>(null) // Corregido el nombre de la variable
+const selectedCategoriaId = ref<number | null>(null) // Mantenemos el nombre correcto
 
 // Datos y Edición
 const categories: Ref<ICategoria[]> = ref([])
@@ -81,14 +100,11 @@ const notification = ref({
   message: '',
   isError: false,
 })
-const categoryModalVisible = ref(false) // Nuevo estado para el modal de categorías
-const productFormModalVisible = ref(false) // Estado para el modal del formulario de productos
+const categoryModalVisible = ref(false)
+const productFormModalVisible = ref(false)
 
 // --- MÉTODOS DE MANEJO DE ESTADO ---
 
-/**
- * Carga la lista de categorías.
- */
 const loadCategories = async () => {
   try {
     categories.value = await CategoriaService.getCategorias()
@@ -98,46 +114,31 @@ const loadCategories = async () => {
   }
 }
 
-/**
- * Muestra el modal de notificación.
- */
 const showNotification = (message: string, isError = false) => {
   notification.value = { visible: true, message, isError }
 }
 
-/**
- * Cierra el modal de notificación.
- */
 const closeNotification = () => {
   notification.value = { visible: false, message: '', isError: false }
 }
 
-/**
- * Abre el modal de gestión de categorías.
- */
+const handleShowNotification = (result: { message: string; isError: boolean }) => {
+  showNotification(result.message, result.isError)
+}
+
 const openCategoryModal = () => {
   categoryModalVisible.value = true
 }
 
-/**
- * Cierra el modal de gestión de categorías y recarga la lista.
- */
 const closeCategoryModal = () => {
   categoryModalVisible.value = false
-  // Siempre recargar categorías después de cerrar por si hubo cambios
   loadCategories()
 }
 
-/**
- * Abre el modal del formulario de productos.
- */
 const openProductFormModal = () => {
   productFormModalVisible.value = true
 }
 
-/**
- * Cierra el modal del formulario de productos.
- */
 const closeProductFormModal = () => {
   productFormModalVisible.value = false
   productToEdit.value = null
@@ -150,16 +151,12 @@ onMounted(() => {
 
 // --- HANDLERS ---
 
-/**
- * Inicia el proceso de edición al recibir el producto de ProductCard.
- */
 const startEditing = (product: Producto) => {
   productToEdit.value = product
   openProductFormModal()
 }
 
 /**
- * ⬅️ CORRECCIÓN CLAVE 1: Recibe el resultado y muestra la notificación.
  * Se llama cuando un producto es creado o actualizado.
  */
 const handleProductSaved = (result: { success: boolean; message: string }) => {
@@ -170,11 +167,12 @@ const handleProductSaved = (result: { success: boolean; message: string }) => {
 }
 
 /**
- * Se llama cuando ProductGrid ha terminado su actualización.
- * Útil para manejar errores o mensajes post-recarga.
+ * Se llama cuando ProductGrid ha terminado su actualización (después de eliminar, por ejemplo).
+ * Forzamos la recarga del grid.
  */
 const handleGridUpdate = () => {
-  // Este método es un placeholder, lo mantenemos por si se necesita lógica post-grid.
+  // Simplemente cerramos el modal de formulario si está abierto
+  closeProductFormModal()
 }
 </script>
 

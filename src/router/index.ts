@@ -39,18 +39,6 @@ const routes: Array<RouteRecordRaw> = [
       requireAuth: true,
     },
   },
-  /*
-  {
-    path: '/ventas/',
-    name: 'ventas',
-    component: () => import('@/views/VentaAdminView.vue'),
-    meta: {
-      requireAuth: true,
-      title: 'Ventas',
-    },
-  },
-
-  }, */
   {
     path: '/cuentas-por-cobrar',
     name: 'cuentas',
@@ -83,6 +71,15 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: 'Gestión de Proveedores',
       requireAuth: true, // Asegurando que 'proveedores' requiere autenticación
+    },
+  },
+  {
+    path: '/ventas',
+    name: 'ventas',
+    component: () => import('@/views/VentaAdminView.vue'),
+    meta: {
+      title: 'Gestión de Ventas',
+      requireAuth: true, // Asegurando que 'ventas' requiere autenticación
     },
   },
   {

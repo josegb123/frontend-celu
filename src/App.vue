@@ -11,8 +11,32 @@
 </template>
 
 <script setup lang="ts">
+import { watch } from 'vue'
 import AsideMenu from './components/navigation/AsideMenu.vue'
 import NavBar from './components/navigation/NavBar.vue'
+import { useThemeStore } from './store/themeStore'
+
+const themeStore = useThemeStore()
+function applyThemeAttribute(isDark: boolean) {
+  const element = document.documentElement // Elemento HTML raíz
+
+  if (isDark) {
+    // Establecer el atributo oficial de Bootstrap
+    element.setAttribute('data-bs-theme', 'dark')
+  } else {
+    // Establecer el modo claro
+    element.setAttribute('data-bs-theme', 'light')
+    // Nota: Aunque puedes removerlo, es más seguro establecer 'light' explícitamente.
+  }
+}
+
+watch(
+  () => themeStore.isDarkMode,
+  (newVal) => {
+    applyThemeAttribute(newVal)
+  },
+  { immediate: true },
+)
 </script>
 
 <style>

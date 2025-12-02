@@ -1,43 +1,69 @@
 <template>
-  <div class="card product-card h-100 shadow-sm">
-    <img
-      :src="imageUrl"
-      class="card-img-top"
-      :alt="product.nombre"
-      loading="lazy"
-      @error="handleImageError"
-    />
+  <div class="card product-card h-100 shadow-lg border-0">
+    <div class="image-container">
+      <img
+        :src="imageUrl"
+        class="card-img-top"
+        :alt="product.nombre"
+        loading="lazy"
+        @error="handleImageError"
+      />
+      <span class="category-badge badge text-bg-dark">
+        {{ product.categoria?.nombre || 'Sin Categoría' }}
+      </span>
+    </div>
 
-    <div class="card-body d-flex flex-column">
-      <h5 class="card-title mb-1 text-truncate" :title="product.nombre">
+    <div class="card-body d-flex flex-column p-3">
+      <h5 class="card-title mb-0 text-truncate text-body" :title="product.nombre">
         {{ product.nombre }}
       </h5>
-      <p class="card-subtitle text-muted small mb-2">
-        {{ product.categoria?.nombre || 'Sin Categoría' }}
+      <p class="card-subtitle text-body-secondary small mb-3">
+        Código: {{ product.codigo_barra || 'N/A' }}
       </p>
 
-      <div class="prices mb-3">
-        <div class="mb-1">
-          <span class="price-tag bg-success text-white">Venta: ${{ product.precio_venta }}</span>
+      <div class="d-flex justify-content-start gap-3 mb-3">
+        <div class="price-box price-venta">
+          <div class="price-label">Venta</div>
+          <div class="price-value">
+            ${{ parseFloat(product.precio_venta.toString()).toFixed(2) }}
+          </div>
         </div>
-        <div>
-          <span class="price-tag bg-secondary text-white"
-            >Compra: ${{ product.precio_compra }}</span
-          >
+        <div class="price-box price-compra">
+          <div class="price-label">Compra</div>
+          <div class="price-value">
+            ${{ parseFloat(product.precio_compra.toString()).toFixed(2) }}
+          </div>
         </div>
       </div>
 
-      <div class="d-flex flex-row flex-lg-column gap-1 align-items-start">
-        <span :class="stockBadgeClass">Stock: {{ product.stock_actual }}</span>
-        <span class="price-tag text-bg-warning">Reservado: {{ product.stock_reservado }}</span>
-        <span class="price-tag text-bg-danger">Mínimo: {{ product.stock_minimo }}</span>
+      <div class="stock-info row g-1 text-center mt-auto mb-3">
+        <div class="col-4">
+          <div class="stock-item p-2 border" :class="stockBadgeClass">
+            <small class="text-body-secondary">Stock</small>
+            <div class="fw-bold">{{ product.stock_actual }}</div>
+          </div>
+        </div>
+
+        <div class="col-4">
+          <div class="stock-item p-2 bg-warning-subtle border border-warning">
+            <small class="text-body-secondary">Reservado</small>
+            <div class="fw-bold text-warning">{{ product.stock_reservado }}</div>
+          </div>
+        </div>
+
+        <div class="col-4">
+          <div class="stock-item p-2 bg-danger-subtle border border-danger">
+            <small class="text-body-secondary">Mínimo</small>
+            <div class="fw-bold text-danger">{{ product.stock_minimo }}</div>
+          </div>
+        </div>
       </div>
 
-      <div class="card-actions d-flex justify-content-between mt-2">
-        <button class="btn btn-sm btn-outline-primary" @click="$emit('edit', product)">
+      <div class="card-actions d-flex justify-content-between gap-2 mt-auto">
+        <button class="btn btn-sm btn-outline-primary w-50" @click="$emit('edit', product)">
           <i class="bi bi-pencil-square"></i> Editar
         </button>
-        <button class="btn btn-sm btn-outline-danger" @click="requestDelete">
+        <button class="btn btn-sm btn-outline-danger w-50" @click="requestDelete">
           <i class="bi bi-trash"></i> Eliminar
         </button>
       </div>
@@ -48,6 +74,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { type Producto } from '@/services/ProductoService.js'
+
+// --- SETUP REACTIVO ---
 const isImageError = ref(false)
 
 // --- PROPIEDADES Y EMITS ---
@@ -63,68 +91,118 @@ const emit = defineEmits<{
 // --- CÁLCULOS REACTIVOS ---
 
 /**
- * Determina la clase del badge de stock_actual basado en stock_minimo.
+ * Determina la clase del badge de stock_actual basado en stock_minimo (compatible con Dark Mode).
  */
 const stockBadgeClass = computed(() => {
+  // Usamos clases de Bootstrap para fondos sutiles y bordes que se invierten automáticamente en modo oscuro.
   return props.product.stock_actual <= props.product.stock_minimo
-    ? 'price-tag text-bg-danger '
-    : 'price-tag text-bg-info '
+    ? 'bg-danger-subtle border-danger text-danger'
+    : 'bg-info-subtle border-info text-info'
 })
 
 /**
  * Genera la URL de la imagen, usando un placeholder si hay error o no hay URL.
  */
 const imageUrl = computed(() => {
-  // Usar el placeholder si: 1) no hay URL, O 2) hubo error de carga (isImageError.value)
   if (!props.product.imagen_url || isImageError.value) {
-    return '/public/no_image.webp'
+    return '/no_image.webp'
   }
   return props.product.imagen_url
 })
 
 // --- MÉTODOS ---
 
-/**
- * 💥 CORRECCIÓN CLAVE: Elimina el confirm() y solo emite el ID.
- * Delega la confirmación modal al componente padre (ProductGrid).
- */
 const requestDelete = () => {
-  // Ya no necesitamos 'if (confirm(...))'
   emit('delete', props.product.id)
 }
 
-/**
- * Maneja el error de carga de la imagen (ej. 404) y la reemplaza con el placeholder.
- */
 const handleImageError = () => {
-  // Cambiamos el estado, lo que forzará a la computed property 'imageUrl' a reevaluarse.
   isImageError.value = true
 }
 </script>
 
 <style scoped>
+/* Contenedor Principal */
 .product-card {
-  transition: transform 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  /* Shadow adaptativo en Dark Mode */
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05) !important;
 }
+/* Estilo de hover para modo oscuro/claro */
 .product-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+  border-color: var(--bs-primary) !important;
+  /* Ajuste de color de fondo al hacer hover */
+  background-color: var(--bs-card-bg);
 }
 
+/* Imagen y Badge */
+.image-container {
+  position: relative;
+  overflow: hidden;
+  height: 200px;
+}
 .card-img-top {
-  height: 200px; /* Altura fija para la imagen */
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
-
-.price-tag {
-  padding: 0.2em 0.5em;
-  border-radius: 0.25rem;
-  font-weight: bold;
-  font-size: 0.85rem;
+.category-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 0.4em 0.7em;
+  font-size: 0.75rem;
+  z-index: 10;
+  opacity: 0.95;
 }
 
+/* Títulos y Subtítulos: Usamos text-body y text-body-secondary para que se ajusten */
 .card-title {
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* Precios */
+.price-box {
+  flex: 1;
+  padding: 0.5rem 0;
+  border-radius: 0.35rem;
+  text-align: center;
+  /* Usamos border-light para un borde sutil en modo claro, y el fondo se encarga del resto */
+  border: 1px solid var(--bs-border-color-translucent);
+}
+.price-venta {
+  background-color: var(--bs-success);
+  color: white;
+  border-color: var(--bs-success);
+}
+.price-compra {
+  background-color: var(--bs-secondary);
+  color: white;
+  border-color: var(--bs-secondary);
+}
+.price-label {
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+.price-value {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+/* Stock Info */
+.stock-info {
+  /* Separador que se adapta al modo oscuro */
+  border-top: 1px solid var(--bs-border-color-translucent);
+  padding-top: 0.5rem;
+}
+
+.stock-item {
+  border-radius: 0.25rem;
 }
 </style>

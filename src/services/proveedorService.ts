@@ -52,7 +52,7 @@ export interface ProveedorQueryParams {
  * Utiliza laravelApi (Axios) para la comunicación.
  */
 class ProveedorService {
-  private endpoint = '/proveedores' // El endpoint completo es /api/proveedores
+  private endpoint = '/proveedor' // El endpoint completo es /api/proveedores
 
   /**
    * Obtiene una lista paginada de proveedores.

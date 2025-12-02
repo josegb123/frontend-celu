@@ -48,7 +48,20 @@
               >Iniciar Sesión</router-link
             >
           </li>
-          <div class="d-flex align-items-center py-1">
+          <div class="d-flex align-items-center p-1 gap-2">
+            <button
+              @click="themeStore.toggleDarkMode"
+              class="btn btn-sm"
+              :class="themeStore.isDarkMode ? 'btn-light' : 'btn-dark'"
+              title="Cambiar Tema"
+            >
+              <i v-if="themeStore.isDarkMode" class="bi bi-sun-fill me-1"></i>
+              <i v-else class="bi bi-moon-fill me-1"></i>
+
+              <span class="d-none d-sm-inline">
+                {{ themeStore.isDarkMode ? 'Claro' : 'Oscuro' }}
+              </span>
+            </button>
             <UserProfileMenu v-if="isAuthenticated" />
           </div>
         </ul>
@@ -62,12 +75,14 @@ import { useAuthStore } from '@/store/authStore'
 import { storeToRefs } from 'pinia'
 import UserProfileMenu from '../users/UserProfileMenu.vue'
 import { useLayoutStore } from '@/store/layoutStore'
+import { useThemeStore } from '@/store/themeStore'
 
 const nameBranding = import.meta.env.VITE_BRANDING_NAME
 const layoutStore = useLayoutStore()
 
 const authStore = useAuthStore()
 const { isAuthenticated } = storeToRefs(authStore)
+const themeStore = useThemeStore()
 </script>
 
 <style scoped>

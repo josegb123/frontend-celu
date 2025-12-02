@@ -1,7 +1,7 @@
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
 
-// 1. Interfaz Extendida para Administración (Se mantiene igual)
+// 1. Interfaz Extendida para Administración
 export interface Producto {
   id: number
   categoria_id: number
@@ -10,8 +10,8 @@ export interface Producto {
   nombre: string
   descripcion: string | null
   imagen_url: string | null
-  precio_compra: number | string // Mantener flexibilidad si Laravel lo devuelve como string
-  precio_venta: number | string // Mantener flexibilidad si Laravel lo devuelve como string
+  precio_compra: number | string
+  precio_venta: number | string
   stock_actual: number
   stock_reservado: number
   stock_minimo: number
@@ -23,17 +23,18 @@ export interface Producto {
   } | null
   user: {
     id: number
-    nombre: string
+    name: string
   } | null
 }
 
-// Interfaz para la respuesta paginada de Laravel (Se mantiene para consistencia, aunque no se usa en getProductos)
+// 2. Interfaz para la respuesta paginada de Laravel (Crucial para el POS)
 export interface PaginatedResponse<T> {
   current_page: number
-  data: T[]
+  data: T[] // El array de productos
   last_page: number
   per_page: number
   total: number
+  // Se pueden añadir otras propiedades de Laravel si se usan (ej. from, to, first_page_url)
 }
 
 // Clase de servicio
@@ -44,30 +45,25 @@ class ProductoService {
 
   /**
    * Busca productos por un término para un componente de búsqueda rápida.
-   * ASUME: El endpoint devuelve una respuesta paginada donde el array de productos está en 'data.data'.
+   * ASUME: El endpoint devuelve una respuesta que contiene un array de productos.
    */
   public async searchProductos(query: string): Promise<Producto[]> {
     if (query.length < 3) return []
     try {
-      // ⬅️ SOLUCIÓN: Hacemos el llamado a la API
       const response: AxiosResponse<Producto[] | { data: Producto[] }> = await laravelApi.get(
         `${this.endpoint}?search=${query}`,
       )
 
-      // 1. Intentamos acceder a response.data.data (si usa paginación o el envoltorio 'data')
       const paginatedResults = (response.data as { data: Producto[] })?.data
-
-      // 2. Si es un array directo (no paginado), response.data será el array.
       const directResults = response.data
 
       let results: Producto[] = []
 
       if (Array.isArray(paginatedResults)) {
-        results = paginatedResults // Usamos el array paginado
+        results = paginatedResults
       } else if (Array.isArray(directResults)) {
-        results = directResults as Producto[] // Usamos el array directo
+        results = directResults as Producto[]
       } else {
-        // Si la respuesta es 200 pero la estructura es desconocida
         console.warn(
           'Estructura de respuesta inesperada en searchProductos. No se encontró array de productos.',
           response.data,
@@ -84,28 +80,33 @@ class ProductoService {
 
   /**
    * Obtiene la lista de productos con soporte para paginación y filtros.
-   * ASUME: El endpoint devuelve directamente el array de productos [{}, {}, ...] SIN paginación.
-   * @param params Objeto de parámetros de consulta (page, search, categoria_id).
+   * 🚨 CORRECCIÓN CLAVE: La firma asume que el backend devolverá la PaginatedResponse.
+   * @param params Objeto de parámetros de consulta (page, search, categoria_id, per_page).
+   * @returns Una promesa que resuelve con la respuesta paginada (PaginatedResponse<Producto>).
    */
   public async getProductos(params: {
     page?: number
     search?: string
     categoria_id?: number
-  }): Promise<Producto[]> {
+    per_page?: number
+  }): Promise<PaginatedResponse<Producto>> {
     try {
-      // El backend devuelve directamente el array (ejemplo de la respuesta que mostraste).
-      const response: AxiosResponse<Producto[]> = await laravelApi.get(this.endpoint, { params })
+      // Usamos el tipo PaginatedResponse<Producto> para asegurar la estructura de la respuesta
+      const response: AxiosResponse<PaginatedResponse<Producto>> = await laravelApi.get(
+        this.endpoint,
+        { params },
+      )
+
+      // Devolvemos la respuesta completa de paginación para que el POS pueda usar 'current_page', 'last_page', etc.
       return response.data
     } catch (error) {
-      console.error('Error al obtener la lista de productos.', error)
+      console.error('Error al obtener la lista de productos paginada.', error)
       throw error
     }
   }
 
   /**
    * Obtiene un producto por su ID.
-   * @param id ID del producto a buscar.
-   * @returns Una promesa que resuelve con el producto encontrado.
    */
   public async getProductoById(id: number): Promise<Producto | null> {
     try {
@@ -113,7 +114,7 @@ class ProductoService {
       return response.data
     } catch (error) {
       console.error(`Error al obtener el producto con ID ${id}:`, error)
-      return null // Retornar null si no se encuentra el producto o hay un error
+      return null
     }
   }
 
@@ -121,35 +122,26 @@ class ProductoService {
 
   /**
    * Maneja la creación o actualización de un producto, incluyendo la imagen.
-   * ASUME: El backend devuelve el objeto Producto directamente, NO envuelto en un { data: ... }.
-   * @param data Objeto FormData que contiene todos los campos, incluido el archivo 'imagen'.
-   * @param id ID del producto a actualizar (null si es nuevo).
    */
   public async saveProducto(data: FormData, id: number | null): Promise<Producto> {
     try {
       let response: AxiosResponse<Producto>
 
       if (id) {
-        // Actualización: PUT
-        //data.append('_method', 'PUT')
         response = await laravelApi.post(`${this.endpoint}/${id}`, data)
       } else {
-        // Creación: POST
         response = await laravelApi.post(this.endpoint, data)
       }
 
-      // ⬅️ CORRECCIÓN CRÍTICA: Se asume que el backend devuelve el objeto Producto directamente
-      // No necesitamos response.data.data porque el backend no lo envuelve.
       return response.data
     } catch (error) {
       console.error(`Error al guardar producto (ID: ${id})`, error)
-      throw error // Permitir que el formulario maneje los errores de validación
+      throw error
     }
   }
 
   /**
    * Elimina un producto por su ID.
-   * @param id ID del producto a eliminar.
    */
   public async deleteProducto(id: number): Promise<void> {
     try {
