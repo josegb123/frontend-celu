@@ -107,13 +107,50 @@ La aplicación utiliza `Vue Router` para gestionar la navegación.
 
 ---
 
-## 5. Tareas por Hacer
+## 5. Tareas por Hacer (para un Frontend Sólido)
 
-*   [ ] Implementar pruebas unitarias y de integración para componentes y servicios clave.
-*   [ ] Mejorar la gestión de errores y la retroalimentación al usuario.
-*   [ ] Optimizar la carga de datos y el rendimiento general de la aplicación.
-*   [ ] Revisar y mejorar la accesibilidad (a11y) de la interfaz de usuario.
+Para asegurar un frontend robusto, seguro y mantenible, se recomienda abordar las siguientes tareas:
+
+### Seguridad
+
+*   [ ] Implementar y reforzar las medidas de seguridad del lado del cliente (ej., sanitización de entradas, protección contra XSS/CSRF si aplica en el frontend).
+*   [ ] Asegurar el almacenamiento seguro de tokens de autenticación (ej., HttpOnly cookies o almacenamiento local cifrado si es necesario y se justifica).
+*   [ ] Revisar las dependencias de terceros para detectar vulnerabilidades conocidas.
+
+### Manejo de Excepciones y Errores
+
+*   [ ] Establecer una estrategia global y consistente para el manejo de errores en la aplicación (ej., interceptores HTTP, límites de error en componentes Vue).
+*   [ ] Implementar mensajes de error claros y amigables para el usuario, evitando mostrar detalles técnicos sensibles.
+*   [ ] Registrar errores de forma centralizada (ej., con una herramienta de monitoreo de errores como Sentry o similar).
+
+### Normalización y Coherencia de Datos
+
+*   [ ] Evaluar la necesidad de normalizar datos recibidos del backend, especialmente en el store (Pinia), para evitar duplicidades y facilitar actualizaciones.
+*   [ ] Definir y aplicar un esquema de validación de datos estricto para las entradas del usuario y los datos de la API.
+
+### Pruebas
+
+*   [ ] Ampliar la cobertura de pruebas unitarias para componentes críticos (ej., formularios, componentes complejos).
+*   [ ] Implementar pruebas de integración para flujos de usuario clave (ej., inicio de sesión, creación de productos, realización de ventas).
+*   [ ] Considerar pruebas E2E (End-to-End) para validar la funcionalidad completa de la aplicación desde la perspectiva del usuario.
+
+### Rendimiento y Optimización
+
+*   [ ] Optimizar la carga de datos y el rendimiento general de la aplicación (ej., lazy loading de componentes y rutas, virtualización de listas grandes).
+*   [ ] Analizar y reducir el tamaño del bundle de la aplicación.
+*   [ ] Implementar estrategias de caching (caché de red, caché de datos) para mejorar la experiencia del usuario.
+
+### Mantenibilidad y Calidad del Código
+
+*   [ ] Mantener el código limpio, bien estructurado y documentado, siguiendo las guías de estilo del proyecto (ej., ESLint, Prettier).
+*   [ ] Realizar revisiones de código periódicas.
+*   [ ] Asegurar la compatibilidad con diferentes navegadores y dispositivos (responsive design).
+*   [ ] Mejorar la accesibilidad (a11y) de la interfaz de usuario.
+
+### Documentación Adicional
+
 *   [ ] Actualizar la documentación con detalles específicos de la API y modelos de datos.
+*   [ ] Crear documentación sobre las decisiones de diseño y arquitectura.
 
 ---
 
