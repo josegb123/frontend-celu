@@ -38,7 +38,7 @@ class TipoMovimientoService {
       // La respuesta de Axios contendrá la estructura TipoMovimientoApiResponse
       const response: AxiosResponse<TipoMovimientoApiResponse> = await laravelApi.get(this.apiUrl)
 
-      // 🚨 CORRECCIÓN: Devolvemos el array que está dentro de la clave 'data'
+      // Devolvemos el array que está dentro de la clave 'data'
       return response.data.data
     } catch (error) {
       console.error('Error al obtener tipos de movimiento:', error)

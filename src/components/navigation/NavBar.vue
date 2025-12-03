@@ -36,18 +36,6 @@
 
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav align-items-center">
-          <li class="nav-item me-2" v-if="!isAuthenticated">
-            <router-link
-              :to="{ name: 'register' }"
-              class="btn btn-sm btn-outline-light nav-link py-1"
-              >Registrarse</router-link
-            >
-          </li>
-          <li class="nav-item me-3" v-if="!isAuthenticated">
-            <router-link :to="{ name: 'auth' }" class="btn btn-sm btn-light nav-link py-1 fw-bold"
-              >Iniciar Sesión</router-link
-            >
-          </li>
           <div class="d-flex align-items-center p-1 gap-2">
             <button
               @click="themeStore.toggleDarkMode"
@@ -62,7 +50,7 @@
                 {{ themeStore.isDarkMode ? 'Claro' : 'Oscuro' }}
               </span>
             </button>
-            <UserProfileMenu v-if="isAuthenticated" />
+            <UserProfileMenu v-if="isAuthenticated" @show-cierre-modal="handleShowCierreModal" />
           </div>
         </ul>
       </div>
@@ -77,12 +65,23 @@ import UserProfileMenu from '../users/UserProfileMenu.vue'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useThemeStore } from '@/store/themeStore'
 
+// 1. Definir los eventos que este componente puede emitir
+const emit = defineEmits(['showCierreModal'])
+
 const nameBranding = import.meta.env.VITE_BRANDING_NAME
 const layoutStore = useLayoutStore()
 
 const authStore = useAuthStore()
 const { isAuthenticated } = storeToRefs(authStore)
 const themeStore = useThemeStore()
+
+/**
+ * 2. Función para reemitir el evento del componente hijo (UserProfileMenu)
+ * hacia el componente padre (App.vue).
+ */
+function handleShowCierreModal() {
+  emit('showCierreModal')
+}
 </script>
 
 <style scoped>

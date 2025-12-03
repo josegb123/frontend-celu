@@ -45,7 +45,7 @@ class ProductoService {
 
   /**
    * Busca productos por un término para un componente de búsqueda rápida.
-   * ASUME: El endpoint devuelve una respuesta que contiene un array de productos.
+   * El endpoint devuelve una respuesta que contiene un array de productos.
    */
   public async searchProductos(query: string): Promise<Producto[]> {
     if (query.length < 3) return []
@@ -80,7 +80,6 @@ class ProductoService {
 
   /**
    * Obtiene la lista de productos con soporte para paginación y filtros.
-   * 🚨 CORRECCIÓN CLAVE: La firma asume que el backend devolverá la PaginatedResponse.
    * @param params Objeto de parámetros de consulta (page, search, categoria_id, per_page).
    * @returns Una promesa que resuelve con la respuesta paginada (PaginatedResponse<Producto>).
    */

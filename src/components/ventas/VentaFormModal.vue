@@ -541,7 +541,7 @@ watch(
 </script>
 
 <style scoped>
-/* 🚨 ESTILOS PARA COMPACTAR EL FORMULARIO */
+/* ESTILOS PARA COMPACTAR EL FORMULARIO */
 
 /* Reducir el padding de los elementos del formulario */
 .form-control-md,

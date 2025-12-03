@@ -240,7 +240,6 @@ interface ProductFormData {
   imagen_input_url: string | null
 }
 
-// ⬅️ Se mantiene para controlar el modal de categoría en el componente padre
 const showCategoryModal = ref(false)
 
 const initialFormState: ProductFormData = {
@@ -288,7 +287,7 @@ const clearCurrentImage = () => {
   // 1. Marcar para eliminación (alerta al usuario)
   imageURLisBeingCleared.value = true
 
-  // 2. 💥 CORRECCIÓN CRÍTICA: Limpiar el campo de entrada de URL en el formulario.
+  // 2. Anular la URL en el formulario
   form.value.imagen_input_url = null
 
   // 3. Anular la subida de cualquier archivo nuevo
@@ -366,7 +365,7 @@ const submitForm = async () => {
   if (currentUserId.value !== null) {
     formData.append('user_id', String(currentUserId.value))
   } else {
-    // ⬅️ CAMBIO: Emitir error en lugar de llamar a showNotification/alert
+    // Emitir error en lugar de llamar a showNotification/alert
     emit('productSaved', { success: false, message: 'Error: Usuario no autenticado.' })
     isSubmitting.value = false
     return
@@ -380,7 +379,7 @@ const submitForm = async () => {
   try {
     await ProductoService.saveProducto(formData, productId)
 
-    // ⬅️ CAMBIO: Emitir éxito
+    // Emitir éxito
     emit('productSaved', { success: true, message: 'Producto guardado con éxito!' })
     resetForm()
   } catch (err: unknown) {
@@ -400,7 +399,7 @@ const submitForm = async () => {
       console.error('Error al guardar:', err)
     }
 
-    // ⬅️ CAMBIO: Emitir error
+    // Emitir error
     emit('productSaved', { success: false, message: errorMessage })
   } finally {
     isSubmitting.value = false

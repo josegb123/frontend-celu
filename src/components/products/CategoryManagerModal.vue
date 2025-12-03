@@ -178,7 +178,6 @@ const fetchCategories = async () => {
   try {
     categories.value = await CategoriaService.getCategorias()
   } catch (err: unknown) {
-    // ⬅️ Corregido: 'err' es ahora de tipo 'unknown'
     console.error('Error al obtener categorías:', err)
     emit('showNotification', {
       message: 'Error al cargar las categorías. Revise la conexión.',
@@ -291,7 +290,6 @@ const handleApiError = (err: unknown) => {
   let errorMessage = 'Hubo un error en la operación de categoría.'
 
   if (isAxiosError<ApiErrorResponseData>(err)) {
-    // ⬅️ CORRECCIÓN CLAVE 2: Tipificación de la respuesta de error
     const axiosErr = err as AxiosError<ApiErrorResponseData>
     if (axiosErr.response?.status === 422) {
       const errors = axiosErr.response.data?.errors || {}
@@ -299,7 +297,6 @@ const handleApiError = (err: unknown) => {
       errorMessage = 'Falló la validación: Revise el nombre.'
       console.error('Errores de validación:', formErrors.value)
     } else {
-      // ⬅️ Corrección: Usamos la propiedad 'message' de la respuesta si existe.
       errorMessage = axiosErr.response?.data?.message || 'Error de conexión con la API.'
       console.error('Error de API:', axiosErr)
     }

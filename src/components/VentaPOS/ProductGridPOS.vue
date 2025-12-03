@@ -26,9 +26,9 @@
             class="card product-card-pos shadow-sm text-center border square-aspect-ratio"
             @click="emit('product-selected', product)"
             :class="{
-              // 🚨 Alerta de stock bajo (1 a 4 unidades)
+              // Alerta de stock bajo (1 a 4 unidades)
               'low-stock-alert': product.stock_actual > 0 && product.stock_actual < 5,
-              // 🚨 Alerta de stock agotado (0 unidades)
+              // Alerta de stock agotado (0 unidades)
               'out-of-stock': product.stock_actual === 0,
             }"
           >

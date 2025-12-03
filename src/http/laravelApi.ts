@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useAuthStore } from '@/store/authStore' // ⬅️ Importar Pinia
+import { useAuthStore } from '@/store/authStore'
 
 const laravelApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL, // Asegúrate de que esta URL sea correcta
@@ -10,7 +10,7 @@ const laravelApi = axios.create({
   // YA NO NECESITAS: withCredentials: true
 })
 
-// ⬅️ INTERCEPTOR CLAVE para adjuntar el Bearer Token
+// INTERCEPTOR CLAVE para adjuntar el Bearer Token
 laravelApi.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore() // Obtener el store dentro del interceptor

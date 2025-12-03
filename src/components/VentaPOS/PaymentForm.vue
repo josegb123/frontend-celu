@@ -136,6 +136,7 @@ import VentaService, {
 
 import { type ItemVenta } from '@/interfaces/IPostInterfaces'
 import { type Cliente } from '@/interfaces/IPostInterfaces'
+import { useCajaStore } from '@/store/useCajaStore'
 
 // --- 1. Definiciones de Props y Emits ---
 const props = defineProps<{
@@ -173,6 +174,9 @@ const errorVenta = ref<string | null>(null)
 // ESTADOS PARA EL IVA
 const aplicaIva = ref(false) // Por defecto: Desmarcado
 const ivaPorcentajeManual = ref(0) // Por defecto: 0%
+
+// Acceso al store de caja si es necesario
+const cajaStore = useCajaStore()
 
 // Watch para sincronizar el monto recibido con el total a pagar
 watch(
@@ -235,8 +239,15 @@ const registrarVenta = async () => {
     errorVenta.value = 'No se puede registrar una venta sin productos.'
     return
   }
-  // No necesitamos validar isTotalCubierto aquí si el botón ya lo deshabilita.
 
+  const cajaDiariaId = cajaStore.cajaDiariaId
+
+  if (cajaDiariaId === null) {
+    // Esto solo debería ocurrir si el CajaBloqueador falla o se omite.
+    errorVenta.value = 'Error: No se encontró un ID de caja activa para registrar la venta.'
+    console.error('Fallo de negocio: No hay caja activa.')
+    return
+  }
   isProcessing.value = true
   errorVenta.value = null
 
@@ -257,6 +268,7 @@ const registrarVenta = async () => {
 
   const ventaData: VentaDTO = {
     cliente_id: clienteIdFinal,
+    caja_diaria_id: cajaDiariaId,
     tipo_venta_id: tipoVentaSeleccionado.value,
     descuento_total: props.descuento > 0 ? props.descuento : null,
     metodo_pago: metodoPagoFinal,

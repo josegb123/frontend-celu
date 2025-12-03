@@ -239,7 +239,7 @@ async function cargarVentas() {
     Object.assign(pagination, response)
   } catch (error) {
     console.error('Fallo al cargar ventas:', error)
-    // 🚨 Usamos el modal de notificación en lugar de alert()
+    // Usamos el modal de notificación en lugar de alert()
     notificationMessage.value = 'Error al cargar las ventas. Revisa la consola.'
     notificationIsError.value = true
     mostrarModalNotificacion.value = true

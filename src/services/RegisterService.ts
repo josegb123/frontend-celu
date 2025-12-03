@@ -31,7 +31,6 @@ class RegisterService {
           name: name,
           email: email,
           password: password,
-          // CORRECCIÓN CLAVE: El campo esperado por Laravel es password_confirmation
           password_confirmation: password,
           role: role,
         }),

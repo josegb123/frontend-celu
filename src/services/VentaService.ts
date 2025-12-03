@@ -1,9 +1,5 @@
-// /services/VentaService.js (CÓDIGO COMPLETO Y CORREGIDO)
-
 import laravelApi from '@/http/laravelApi'
 import type { AxiosResponse } from 'axios'
-
-// --- DTOs (Data Transfer Objects) ALINEADOS CON StoreVentaRequest ---
 
 // DTO para el detalle del ítem
 export interface VentaItemDTO {
@@ -26,7 +22,7 @@ export interface VentaDTO {
   metodo_pago: MetodoPagoRequest | null
   estado: EstadoVentaRequest | null
   iva_porcentaje: number | null
-
+  caja_diaria_id: number | null
   // --- Ítems ---
   items: VentaItemDTO[]
 }

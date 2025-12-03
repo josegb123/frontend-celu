@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import laravelApi from '@/http/laravelApi'
 import AuthService from '@/services/AuthService'
+import { useCajaStore } from './useCajaStore'
 
 interface User {
   id: number | null
@@ -36,14 +37,39 @@ export const useAuthStore = defineStore('auth', {
       return response
     },
 
-    async logout() {
-      const authService = new AuthService()
-      await authService.logout()
+    /**
+     * @description Intenta cerrar sesión. Si hay una caja abierta, aborta y retorna false.
+     * @returns {Promise<boolean>} Retorna true si el cierre de sesión fue exitoso, false si fue bloqueado.
+     */
+    async logout(): Promise<boolean> {
+      // CAMBIO DE RETORNO a Promise<boolean>
 
-      this.accessToken = null
-      localStorage.removeItem('access_token')
-      this.isAuthenticated = false
-      this.user = { id: null, name: null, email: null }
+      // 1. Verificar el estado de la caja
+      const cajaStore = useCajaStore()
+
+      if (cajaStore.isCajaAbierta) {
+        console.warn('AuthStore: Cierre de sesión bloqueado. Hay una caja diaria activa.')
+        // Debugging: Retornar falso para que el componente sepa que el logout falló.
+        return false
+      }
+
+      // 2. Ejecutar el cierre de sesión si no hay caja abierta
+      try {
+        const authService = new AuthService()
+        await authService.logout()
+      } catch (e) {
+        // Un error en el logout del backend no debe impedir el borrado local
+        console.error('Error al notificar el cierre de sesión al backend:', e)
+      } finally {
+        // 3. Limpieza de estado local y almacenamiento
+        this.accessToken = null
+        localStorage.removeItem('access_token')
+        this.isAuthenticated = false
+        this.user = { id: null, name: null, email: null }
+
+        // Debugging: Señalización de éxito
+      }
+      return true
     },
 
     async checkSession() {

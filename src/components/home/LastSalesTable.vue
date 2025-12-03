@@ -69,7 +69,7 @@ const formatDate = (dateString: string): string => {
 
     <!-- Contenido de la tabla con scroll y padding 0 -->
     <div class="card-body p-0 table-responsive">
-      <!-- 🚨 AJUSTE 3: Tabla compacta, sin margen inferior y con texto más pequeño -->
+      <!-- AJUSTE 3: Tabla compacta, sin margen inferior y con texto más pequeño -->
       <table class="table table-striped table-hover mb-0 fs-6">
         <thead>
           <tr>

@@ -2,7 +2,7 @@
 
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
-import type { Abono, StoreAbonoPayload, StoreAbonoResponse } from '@/interfaces/IAbono' // Asume que guardaste las interfaces ahí
+import type { Abono, StoreAbonoPayload, StoreAbonoResponse } from '@/interfaces/IAbono'
 
 /**
  * Servicio para interactuar con el endpoint de Abonos.

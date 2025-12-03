@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 
-// Importar los nuevos componentes atomizados
 import ProveedorFormModal from '@/components/Proveedores/ProveedorFormModal.vue'
 import ProveedorToolbar from '@/components/Proveedores/ProveedorToolbar.vue'
 import ProveedoresTable from '@/components/Proveedores/ProveedoresTable.vue'
-// Asegúrate de que proveedorService sigue siendo accesible
 import { proveedorService } from '@/services/proveedorService'
 
 // ===============================================
@@ -27,7 +25,7 @@ interface Proveedor {
   activo: boolean
   fechaRegistro: string
 }
-// ... [Otras interfaces DTO, PaginatedResponse, etc.] ...
+
 interface PaginatedResponse<T> {
   data: T[]
   total: number

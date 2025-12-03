@@ -99,7 +99,6 @@ const performSearch = async () => {
     return
   }
 
-  // ⬅️ CORRECCIÓN: Usar try...catch en el componente para asegurar el array vacío.
   try {
     const results = await ProductoService.searchProductos(searchQuery.value)
     searchResults.value = results // Asignar el array de resultados
