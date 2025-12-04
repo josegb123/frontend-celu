@@ -15,6 +15,7 @@ export interface Producto {
   stock_actual: number
   stock_reservado: number
   stock_minimo: number
+  is_bajo_stock: boolean
 
   // Relaciones (lite)
   categoria: {

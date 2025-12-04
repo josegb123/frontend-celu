@@ -57,13 +57,13 @@
           <h6 class="mb-3 text-primary">Historial de Abonos ({{ detalleCuenta.abonos.length }})</h6>
           <div
             v-if="detalleCuenta.abonos.length > 0"
-            class="abonos-list-wrapper card card-body bg-light mb-4"
+            class="abonos-list-wrapper card card-body mb-4"
           >
             <ul class="list-group list-group-flush">
               <li
                 v-for="abono in detalleCuenta.abonos"
                 :key="abono.id"
-                class="list-group-item d-flex justify-content-between align-items-center small py-2 bg-light"
+                class="list-group-item d-flex justify-content-between align-items-center small py-2"
               >
                 <span>
                   Abono #{{ abono.id }} registrado por
@@ -119,22 +119,21 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import CuentaPorCobrarService, {
-  type CuentaPorCobrarDetalle,
-} from '@/services/CuentaPorCobrarService'
-import type { CuentaPorCobrar } from '@/interfaces/IAbono'
+import CuentaPorCobrarService from '@/services/CuentaPorCobrarService'
+import type { dataCuentaPorCobrar } from '@/interfaces/ICuentaPorCobrar'
+import type { ICuentaPorCobrarShow } from '@/interfaces/ICuentaPorCobrarShow'
 
 const props = defineProps<{
-  cuenta: CuentaPorCobrar | null
+  cuenta: dataCuentaPorCobrar | null
   show: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'register-abono', cuenta: CuentaPorCobrar): void
+  (e: 'register-abono', cuenta: dataCuentaPorCobrar): void
 }>()
 
-const detalleCuenta = ref<CuentaPorCobrarDetalle | null>(null)
+const detalleCuenta = ref<ICuentaPorCobrarShow | null>(null)
 const isLoading = ref(false)
 
 /**

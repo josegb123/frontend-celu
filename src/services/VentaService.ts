@@ -64,6 +64,7 @@ export interface DetalleVentaResponse {
 // Interfaz para el Detalle Completo (VentaShowResource)
 export interface VentaShowResponse extends VentaIndexResponse {
   venta_id: number
+  caja_diaria_id: number | null
   totales_financieros: {
     subtotal: number
     iva_monto: number

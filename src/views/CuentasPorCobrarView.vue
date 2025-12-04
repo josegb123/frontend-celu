@@ -2,7 +2,7 @@
   <div class="cuentas-por-cobrar-view p-4">
     <h1 class="h3 mb-4 text-primary fw-bold">Gestión de Cuentas por Cobrar 💰</h1>
 
-    <div class="card shadow-sm mb-4 p-3 bg-light">
+    <div class="card shadow-sm mb-4 p-3 border">
       <div class="d-flex flex-wrap gap-3 align-items-end">
         <div class="flex-shrink-0">
           <button class="btn btn-success btn-sm shadow-sm" @click="openAbonoModal(null)">
@@ -99,10 +99,11 @@ import AbonoModal from '@/components/CuentasPorCobrar/AbonoModal.vue'
 import CuentaPorCobrarService, {
   type CuentasPorCobrarParams,
 } from '@/services/CuentaPorCobrarService'
-import type { CuentaPorCobrar, Abono } from '@/interfaces/IAbono'
+import type { IAbono } from '@/interfaces/IAbono'
+import type { dataCuentaPorCobrar } from '@/interfaces/ICuentaPorCobrar'
 
 // --- ESTADO LOCAL ---
-const cuentas = ref<CuentaPorCobrar[]>([])
+const cuentas = ref<dataCuentaPorCobrar[]>([])
 const isLoading = ref(false)
 
 // --- ESTADO DE PAGINACIÓN ---
@@ -117,10 +118,10 @@ const filtroEstado = ref('')
 
 // --- ESTADO DE MODALES ---
 const showDetailsModal = ref(false)
-const selectedCuenta = ref<CuentaPorCobrar | null>(null)
+const selectedCuenta = ref<dataCuentaPorCobrar | null>(null)
 
 const showAbonoModal = ref(false)
-const abonoTargetCuenta = ref<CuentaPorCobrar | null>(null)
+const abonoTargetCuenta = ref<dataCuentaPorCobrar | null>(null)
 
 // --- LÓGICA DE DATOS Y FILTROS ---
 
@@ -186,12 +187,12 @@ const clearFilters = () => {
 
 // --- HANDLERS DE MODALES ---
 
-const openDetailsModal = (cuenta: CuentaPorCobrar) => {
+const openDetailsModal = (cuenta: dataCuentaPorCobrar) => {
   selectedCuenta.value = cuenta
   showDetailsModal.value = true
 }
 
-const openAbonoModal = (cuenta: CuentaPorCobrar | null) => {
+const openAbonoModal = (cuenta: dataCuentaPorCobrar | null) => {
   // Si se viene del botón global, la cuenta es null. Si se viene de la tabla, es la cuenta seleccionada.
   abonoTargetCuenta.value = cuenta
 
@@ -211,7 +212,7 @@ const openAbonoModal = (cuenta: CuentaPorCobrar | null) => {
 /**
  * Se ejecuta al recibir el evento de éxito del AbonoModal.
  */
-const handleAbonoSuccess = (abono: Abono) => {
+const handleAbonoSuccess = (abono: IAbono) => {
   // Recargar la lista de cuentas para ver el saldo actualizado y el estado (Saldada).
   fetchCuentas()
 
@@ -220,7 +221,7 @@ const handleAbonoSuccess = (abono: Abono) => {
     // Asignamos la cuenta actualizada para que el modal de detalle la recargue
     selectedCuenta.value = {
       ...selectedCuenta.value,
-      monto_pendiente: abono.cuenta_por_cobrar?.monto_pendiente || '0.00',
+      monto_pendiente: selectedCuenta.value?.monto_pendiente || '0.00',
     }
     showDetailsModal.value = true
   }

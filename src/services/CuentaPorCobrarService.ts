@@ -1,16 +1,7 @@
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
-import type { CuentaPorCobrar, Abono } from '@/interfaces/IAbono'
-import type { PaginationMeta } from '@/interfaces/PaginatedMeta'
-import type { ItemVenta } from '@/interfaces/IPostInterfaces'
-// Interfaz para la respuesta paginada de la tabla
-export interface PaginatedCuentasResponse {
-  current_page: number
-  last_page: number
-  data: CuentaPorCobrar[]
-  meta: PaginationMeta
-  links: { url: string | null; label: string; active: boolean }[]
-}
+import type { PaginatedCuentasPorCobrar } from '@/interfaces/ICuentaPorCobrar'
+import type { ICuentaPorCobrarShow } from '@/interfaces/ICuentaPorCobrarShow'
 
 // Interfaz para los parámetros de búsqueda/filtro
 export interface CuentasPorCobrarParams {
@@ -21,31 +12,16 @@ export interface CuentasPorCobrarParams {
   per_page?: number
 }
 
-// Interfaz extendida para la respuesta del método show()
-export interface CuentaPorCobrarDetalle extends CuentaPorCobrar {
-  cliente: { id: string; nombre: string; apellidos: string }
-  venta: {
-    id: number
-    subtotal: string
-    total: string
-    estado: string
-    metodo_pago: string
-    user: { id: number; nombre: string; name: string } // Vendedor (nombre + name)
-    detalles: ItemVenta[]
-  }
-  abonos: Abono[] // Historial de abonos
-}
-
 class CuentaPorCobrarService {
   private endpoint = '/cuentas-por-cobrar'
 
   /**
    * Obtiene la lista PAGINADA de cuentas por cobrar con filtros (Resumen para la tabla).
    */
-  public async getCuentas(params: CuentasPorCobrarParams = {}): Promise<PaginatedCuentasResponse> {
+  public async getCuentas(params: CuentasPorCobrarParams = {}): Promise<PaginatedCuentasPorCobrar> {
     try {
       // Esperamos una respuesta con { data: [...], meta: {...} }
-      const response: AxiosResponse<PaginatedCuentasResponse> = await laravelApi.get(
+      const response: AxiosResponse<PaginatedCuentasPorCobrar> = await laravelApi.get(
         this.endpoint,
         { params },
       )
@@ -60,9 +36,9 @@ class CuentaPorCobrarService {
   /**
    * Obtiene el detalle completo de una cuenta por cobrar (Método SHOW).
    */
-  public async getCuentaDetalle(id: number): Promise<CuentaPorCobrarDetalle | null> {
+  public async getCuentaDetalle(id: number): Promise<ICuentaPorCobrarShow | null> {
     try {
-      const response: AxiosResponse<CuentaPorCobrarDetalle> = await laravelApi.get(
+      const response: AxiosResponse<ICuentaPorCobrarShow> = await laravelApi.get(
         `${this.endpoint}/${id}`,
       )
       return response.data

@@ -2,7 +2,7 @@
 
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
-import type { Abono, StoreAbonoPayload, StoreAbonoResponse } from '@/interfaces/IAbono'
+import type { IAbono, StoreAbonoPayload, StoreAbonoResponse } from '@/interfaces/IAbono'
 
 /**
  * Servicio para interactuar con el endpoint de Abonos.
@@ -34,9 +34,9 @@ class AbonoService {
   }
 
   // Si necesitas obtener todos los abonos de una cuenta:
-  public async getAbonosByCuentaId(cuentaId: number): Promise<Abono[]> {
+  public async getAbonosByCuentaId(cuentaId: number): Promise<IAbono[]> {
     try {
-      const response: AxiosResponse<Abono[]> = await laravelApi.get(
+      const response: AxiosResponse<IAbono[]> = await laravelApi.get(
         `${this.endpoint}?cuenta_id=${cuentaId}`,
       )
       return response.data

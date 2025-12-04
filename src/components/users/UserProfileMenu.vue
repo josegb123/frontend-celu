@@ -100,7 +100,7 @@ const user = computed(() => authStore.user)
 /** Cálculo del total de notificaciones */
 const totalNotificaciones = computed(() => {
   // Aquí puedes sumar otras fuentes de notificaciones (ej: morosos)
-  return stockStore.totalAlertas
+  return stockStore.totalNotificaciones
 })
 
 /**

@@ -76,19 +76,19 @@
 </template>
 
 <script setup lang="ts">
-import type { CuentaPorCobrar } from '@/interfaces/IAbono'
+import type { dataCuentaPorCobrar } from '@/interfaces/ICuentaPorCobrar'
 
 // --- PROPS ---
 defineProps<{
   // La lista de cuentas que viene de la vista principal (ya filtrada y paginada)
-  cuentas: CuentaPorCobrar[]
+  cuentas: dataCuentaPorCobrar[]
   loading: boolean
 }>()
 
 // --- EMITS ---
 const emit = defineEmits<{
-  (e: 'show-details', cuenta: CuentaPorCobrar): void
-  (e: 'register-abono', cuenta: CuentaPorCobrar): void
+  (e: 'show-details', cuenta: dataCuentaPorCobrar): void
+  (e: 'register-abono', cuenta: dataCuentaPorCobrar): void
 }>()
 
 // --- UTILIDADES ---

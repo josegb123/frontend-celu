@@ -3,8 +3,8 @@
 
 // Definición de la interfaz para una venta mínima (asumida por el componente)
 interface VentaMinimal {
-  id: number | string
-  total: number
+  venta_id: number | string
+  total_venta: number
   created_at: string
   cliente_nombre: string | null
 }
@@ -80,10 +80,12 @@ const formatDate = (dateString: string): string => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="sale in sales" :key="sale.id" class="align-middle">
-            <td class="small text-muted">#{{ sale.id }}</td>
-            <td class="small">{{ sale.cliente_nombre || 'Anónimo' }}</td>
-            <td class="text-end fw-bold text-primary small">{{ formatCurrency(sale.total) }}</td>
+          <tr v-for="sale in sales" :key="sale.venta_id" class="align-middle">
+            <td class="small text-muted">#{{ sale.venta_id }}</td>
+            <td class="small">{{ sale.cliente_nombre || 'Cliente Anónimo' }}</td>
+            <td class="text-end fw-bold text-primary small">
+              {{ formatCurrency(sale.total_venta) }}
+            </td>
             <td class="small">{{ formatDate(sale.created_at) }}</td>
           </tr>
           <tr v-if="sales.length === 0">

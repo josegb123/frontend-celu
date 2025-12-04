@@ -2,7 +2,7 @@
   <div class="movimientos-view p-4">
     <h1 class="h3 mb-4 text-primary fw-bold">Gestión de Movimientos Financieros 💵</h1>
 
-    <div class="card shadow-sm mb-4 p-3 bg-light">
+    <div class="card shadow-sm mb-4 p-3 border">
       <div class="d-flex flex-wrap align-items-center justify-content-between">
         <div class="d-flex gap-4">
           <p class="mb-0 small">
@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <div class="card shadow-sm mb-4 p-3">
+    <div class="card shadow-sm mb-4 p-3 border">
       <div class="d-flex flex-wrap gap-3 align-items-end">
         <div class="flex-shrink-0">
           <label for="selectTipo" class="form-label small mb-1">Tipo</label>

@@ -59,11 +59,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Proveedor } from '@/interfaces/ProveedorInterfaces' // Asegúrate de tener esta interfaz
+import type { Proveedor } from '@/interfaces/IProveedores'
 import { defineProps, defineEmits } from 'vue'
 
 // --- PROPS ---
-const props = defineProps<{
+defineProps<{
   isVisible: boolean
   productoNombre: string
   proveedores: Proveedor[]

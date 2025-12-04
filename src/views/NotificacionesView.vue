@@ -6,9 +6,9 @@
       <div
         class="card-header bg-warning text-dark d-flex justify-content-between align-items-center"
       >
-        <h3 class="mb-0 text-bg-warning">
+        <h3 class="mb-0 text-white">
           <i class="bi bi-box-seam me-2"></i> Alertas de Bajo Stock
-          <span class="badge rounded-pill bg-danger ms-2">{{ stockStore.totalAlertas }}</span>
+          <span class="badge rounded-pill bg-danger ms-2">{{ stockStore.totalStockAlertas }}</span>
         </h3>
         <button
           class="btn btn-sm btn-outline-dark"
@@ -22,11 +22,11 @@
       <div class="card-body">
         <div v-if="stockStore.isLoading" class="text-center p-4">
           <div class="spinner-border text-warning" role="status">
-            <span class="visually-hidden">Cargando alertas...</span>
+            <span class="visually-hidden">Cargando alertas de stock...</span>
           </div>
         </div>
         <div
-          v-else-if="stockStore.totalAlertas === 0"
+          v-else-if="stockStore.totalStockAlertas === 0"
           class="alert alert-success text-center"
           role="alert"
         >
@@ -72,30 +72,38 @@
           <div class="d-flex justify-content-center mt-3">
             <nav>
               <ul class="pagination pagination-sm mb-0">
-                <li class="page-item" :class="{ disabled: stockStore.alertData.currentPage === 1 }">
+                <li
+                  class="page-item"
+                  :class="{ disabled: stockStore.stockAlertData.currentPage === 1 }"
+                >
                   <a
                     class="page-link"
                     href="#"
-                    @click.prevent="stockStore.fetchBajoStock(stockStore.alertData.currentPage - 1)"
+                    @click.prevent="
+                      stockStore.fetchBajoStock(stockStore.stockAlertData.currentPage - 1)
+                    "
                     >Anterior</a
                   >
                 </li>
                 <li class="page-item disabled">
                   <span class="page-link"
-                    >{{ stockStore.alertData.currentPage }} /
-                    {{ stockStore.alertData.lastPage }}</span
+                    >{{ stockStore.stockAlertData.currentPage }} /
+                    {{ stockStore.stockAlertData.lastPage }}</span
                   >
                 </li>
                 <li
                   class="page-item"
                   :class="{
-                    disabled: stockStore.alertData.currentPage === stockStore.alertData.lastPage,
+                    disabled:
+                      stockStore.stockAlertData.currentPage === stockStore.stockAlertData.lastPage,
                   }"
                 >
                   <a
                     class="page-link"
                     href="#"
-                    @click.prevent="stockStore.fetchBajoStock(stockStore.alertData.currentPage + 1)"
+                    @click.prevent="
+                      stockStore.fetchBajoStock(stockStore.stockAlertData.currentPage + 1)
+                    "
                     >Siguiente</a
                   >
                 </li>
@@ -107,18 +115,30 @@
     </div>
 
     <div class="card shadow">
-      <div class="card-header bg-info text-dark">
-        <h3 class="mb-0 text-bg-info">
+      <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
+        <h3 class="mb-0 text-white">
           <i class="bi bi-credit-card me-2"></i> Cuentas de Cobro por Vencer
           <span class="badge rounded-pill bg-danger ms-2">{{
-            clientesMorososSimulados.length
+            stockStore.totalCuentasMorosas
           }}</span>
         </h3>
+        <button
+          class="btn btn-sm btn-outline-dark"
+          @click="stockStore.fetchCuentasMorosas(1)"
+          :disabled="stockStore.isLoadingCuentas"
+        >
+          <i class="bi bi-arrow-clockwise me-1"></i> Recargar
+        </button>
       </div>
 
       <div class="card-body">
+        <div v-if="stockStore.isLoadingCuentas" class="text-center p-4">
+          <div class="spinner-border text-info" role="status">
+            <span class="visually-hidden">Cargando cuentas morosas...</span>
+          </div>
+        </div>
         <div
-          v-if="clientesMorososSimulados.length === 0"
+          v-else-if="stockStore.totalCuentasMorosas === 0"
           class="alert alert-success text-center"
           role="alert"
         >
@@ -130,20 +150,38 @@
               <tr>
                 <th>Cliente</th>
                 <th>Monto Pendiente</th>
-                <th>Fecha Límite</th>
+                <th>Fecha Vencimiento</th>
+                <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="cliente in clientesMorososSimulados" :key="cliente.id">
-                <td>{{ cliente.nombre }}</td>
-                <td>{{ formatCurrency(cliente.monto) }}</td>
-                <td>{{ formatDate(cliente.fechaLimite) }}</td>
+              <tr v-for="cuenta in stockStore.cuentasMorosas" :key="cuenta.id">
+                <td>{{ cuenta.cliente.nombre }} {{ cuenta.cliente.apellidos }}</td>
+                <td>
+                  <span class="badge bg-warning text-dark">{{
+                    formatCurrency(parseFloat(cuenta.monto_pendiente))
+                  }}</span>
+                </td>
+                <td>{{ formatDate(cuenta.fecha_vencimiento) }}</td>
+                <td class="text-center">
+                  <span
+                    :class="['badge', cuenta.estado === 'Pendiente' ? 'bg-danger' : 'bg-secondary']"
+                    >{{ cuenta.estado }}</span
+                  >
+                </td>
                 <td class="text-center">
                   <button
                     class="btn btn-sm btn-success"
-                    @click="enviarWhatsappCobro(cliente.telefono, cliente.nombre, cliente.monto)"
+                    @click="
+                      enviarWhatsappCobro(
+                        cuenta.cliente.telefono,
+                        cuenta.cliente.nombre,
+                        parseFloat(cuenta.monto_pendiente),
+                      )
+                    "
                     title="Notificar Pago"
+                    :disabled="!cuenta.cliente.telefono"
                   >
                     <i class="bi bi-whatsapp"></i> Notificar
                   </button>
@@ -151,6 +189,48 @@
               </tr>
             </tbody>
           </table>
+          <div class="d-flex justify-content-center mt-3">
+            <nav>
+              <ul class="pagination pagination-sm mb-0">
+                <li
+                  class="page-item"
+                  :class="{ disabled: stockStore.cuentasAlertData.currentPage === 1 }"
+                >
+                  <a
+                    class="page-link"
+                    href="#"
+                    @click.prevent="
+                      stockStore.fetchCuentasMorosas(stockStore.cuentasAlertData.currentPage - 1)
+                    "
+                    >Anterior</a
+                  >
+                </li>
+                <li class="page-item disabled">
+                  <span class="page-link"
+                    >{{ stockStore.cuentasAlertData.currentPage }} /
+                    {{ stockStore.cuentasAlertData.lastPage }}</span
+                  >
+                </li>
+                <li
+                  class="page-item"
+                  :class="{
+                    disabled:
+                      stockStore.cuentasAlertData.currentPage ===
+                      stockStore.cuentasAlertData.lastPage,
+                  }"
+                >
+                  <a
+                    class="page-link"
+                    href="#"
+                    @click.prevent="
+                      stockStore.fetchCuentasMorosas(stockStore.cuentasAlertData.currentPage + 1)
+                    "
+                    >Siguiente</a
+                  >
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
       </div>
     </div>
@@ -178,25 +258,9 @@ const stockStore = useStockAlertStore()
 // --- CONFIGURACIÓN DE BRANDING ---
 const enterpriseName = import.meta.env.VITE_BRANDING_NAME || 'Tu Empresa'
 
-// --- ESTADO SIMULADO PARA CLIENTES MOROSOS ---
-const clientesMorososSimulados = reactive([
-  {
-    id: 1,
-    nombre: 'Juan Pérez',
-    monto: 150.5,
-    fechaLimite: '2025-12-07',
-    telefono: '573009876543',
-  },
-  {
-    id: 2,
-    nombre: 'María López',
-    monto: 320.0,
-    fechaLimite: '2025-12-10',
-    telefono: '573001122334',
-  },
-])
+// NOTA: Se eliminó clientesMorososSimulados ya que ahora usamos el store.
 
-// --- ESTADO DEL MODAL ---
+// --- ESTADO DEL MODAL (Stock) ---
 const mostrarModalContacto = ref(false)
 const selectedProducto = reactive<{
   nombre: string
@@ -208,17 +272,19 @@ const selectedProducto = reactive<{
 
 // --- FORMATO DE UTILIDAD ---
 const formatCurrency = (value: number) => {
-  return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })
+  // Aseguramos la conversión a número antes de formatear
+  const numValue = typeof value === 'string' ? parseFloat(value) : value
+  return numValue.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })
 }
 
 const formatDate = (dateString: string) => {
+  if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleDateString('es-CO')
 }
 
-// --- GESTIÓN DEL MODAL ---
+// --- GESTIÓN DEL MODAL (Stock) ---
 function abrirModalContacto(producto: ProductoBajoStock) {
   selectedProducto.nombre = producto.nombre
-  // Asignamos los proveedores, asegurando que sea un array
   selectedProducto.proveedores = producto.proveedores || []
   mostrarModalContacto.value = true
 }
@@ -232,7 +298,6 @@ function cerrarModalContacto() {
 // --- LÓGICA DE WHATSAPP ---
 
 function enviarWhatsappStock(telefono: string, productoNombre: string) {
-  // La validación de null/empty ya se hizo en el modal, aquí solo ejecutamos la acción.
   const mensaje = encodeURIComponent(
     `Hola, somos ${enterpriseName}. Requerimos realizar un pedido urgente de reabastecimiento para el producto: *${productoNombre}* que se encuentra en bajo stock. Por favor, confírmanos disponibilidad y tiempo de entrega.`,
   )
@@ -242,7 +307,11 @@ function enviarWhatsappStock(telefono: string, productoNombre: string) {
   cerrarModalContacto()
 }
 
-function enviarWhatsappCobro(telefono: string, clienteNombre: string, monto: number) {
+function enviarWhatsappCobro(telefono: string | null, clienteNombre: string, monto: number) {
+  if (!telefono) {
+    alert(`El cliente ${clienteNombre} no tiene un número de teléfono registrado.`)
+    return
+  }
   const montoFormateado = formatCurrency(monto)
 
   const mensaje = encodeURIComponent(
@@ -254,13 +323,21 @@ function enviarWhatsappCobro(telefono: string, clienteNombre: string, monto: num
 
 // --- HOOKS ---
 onMounted(() => {
-  if (stockStore.totalAlertas === 0) {
-    stockStore.fetchBajoStock(1)
-  }
+  stockStore.fetchBajoStock(1)
+  stockStore.fetchCuentasMorosas(1)
 })
 </script>
 
 <style scoped>
+/* Ajustes de estilos para que el header se vea bien con el texto blanco */
+.card-header.bg-warning,
+.card-header.bg-info {
+  color: #fff !important;
+}
+.card-header .text-white {
+  color: #fff !important;
+}
+
 .badge.bg-danger {
   font-size: 0.8em;
 }

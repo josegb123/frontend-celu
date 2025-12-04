@@ -13,6 +13,10 @@ import {
 import StatCard from '@/components/home/StatCard.vue'
 import TopRankingCard from '@/components/home/TopRankingCard.vue'
 import LastSalesTable from '@/components/home/LastSalesTable.vue'
+import { useStockAlertStore } from '@/store/useStockAlertStore'
+
+const storeAlert = useStockAlertStore()
+const bajoStock = storeAlert.totalStockAlertas
 
 interface DashboardData {
   ticketPromedio: number
@@ -111,7 +115,7 @@ onMounted(fetchDashboardData)
           <StatCard
             icon="bi-exclamation-triangle-fill"
             title="Alerta de Inventario"
-            :value="dashboardData.productosBajoStock.length"
+            :value="bajoStock"
             format="integer"
             variant="danger"
             tooltip="Productos con stock bajo el umbral configurado."

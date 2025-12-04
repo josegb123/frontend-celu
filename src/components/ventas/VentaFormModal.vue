@@ -278,6 +278,7 @@ const ventaIdToEdit = ref<number | null>(null)
 
 // Datos Iniciales por defecto
 const initialFormData: VentaFormDTO = {
+  caja_diaria_id: null,
   cliente_id: null,
   tipo_venta_id: 1,
   descuento_total: 0,
@@ -354,6 +355,7 @@ const mapShowResponseToDTO = (data: VentaShowResponse): VentaFormDTO => {
     cliente_id: data.cliente?.id || null,
     tipo_venta_id: 1,
     descuento_total: data.totales_financieros.descuento_total,
+    caja_diaria_id: data.caja_diaria_id || null,
     metodo_pago: data.metodo_pago,
     estado: (data.estado as VentaEstado) || null,
     iva_porcentaje: data.totales_financieros.iva_porcentaje,
@@ -524,8 +526,8 @@ watch(
     // La visibilidad se maneja con clases CSS directamente
     if (newVal) {
       if (props.mode === 'edit' && props.ventaToEdit) {
-        ventaIdToEdit.value = props.ventaToEdit.id
-        await loadVentaForEdit(props.ventaToEdit.id)
+        ventaIdToEdit.value = props.ventaToEdit.venta_id
+        await loadVentaForEdit(props.ventaToEdit.venta_id)
       } else {
         resetForm()
       }

@@ -1,6 +1,6 @@
 <template>
-  <div class="table-responsive">
-    <table class="table table-striped table-hover table-sm">
+  <div class="table-responsive rounded border py-2 px-3">
+    <table class="table table-borderless table-hover table-sm text-center">
       <thead class="sticky-top bg-light shadow-sm">
         <tr>
           <th>ID</th>

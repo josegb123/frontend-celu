@@ -78,8 +78,8 @@ export interface StockParams {
  * Interfaz Mínima para una Venta (Usado en getUltimasVentas)
  */
 export interface VentaMinimal {
-  id: number
-  total: number
+  venta_id: number
+  total_venta: number
   created_at: string
   cliente_nombre: string | null
   // Añade aquí más campos que necesites de la venta (ej: estado, metodo_pago)

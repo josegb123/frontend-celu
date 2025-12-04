@@ -100,8 +100,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import AbonoService from '@/services/AbonoService'
-import type { CuentaPorCobrar, StoreAbonoPayload, Abono } from '@/interfaces/IAbono'
+import type { IAbono, StoreAbonoPayload } from '@/interfaces/IAbono'
 import axios from 'axios'
+import type { dataCuentaPorCobrar } from '@/interfaces/ICuentaPorCobrar'
 
 // Interfaces Locales
 type PagoMetodo = 'efectivo' | 'tarjeta' | 'transferencia' | 'cheque' | 'otro'
@@ -112,13 +113,13 @@ interface FormErrors {
 // --- PROPS y EMITS ---
 const props = defineProps<{
   // La cuenta a la que se aplica el abono. Debe incluir el monto_pendiente.
-  cuenta: CuentaPorCobrar | null
+  cuenta: dataCuentaPorCobrar | null
   show: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'abono-success', abono: Abono): void // Evento para que la vista principal recargue o actualice la cuenta
+  (e: 'abono-success', abono: IAbono): void // Evento para que la vista principal recargue o actualice la cuenta
 }>()
 
 // --- ESTADO LOCAL ---
