@@ -23,9 +23,9 @@ const emit = defineEmits(['edit', 'delete'])
 </script>
 
 <template>
-  <div class="table-responsive card shadow-lg">
+  <div class="table-responsive border rounded shadow-lg">
     <table class="table table-hover mb-0">
-      <thead class="table-light">
+      <thead>
         <tr>
           <th scope="col">Compañía</th>
           <th scope="col" class="d-none d-sm-table-cell">Contacto</th>

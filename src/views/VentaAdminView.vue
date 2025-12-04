@@ -12,11 +12,11 @@
         <div class="row g-3">
           <div class="col-md-4">
             <label for="search" class="form-label">Buscar Cliente/Vendedor</label>
-            <input
-              type="text"
-              class="form-control"
+            <InputDebounced
               v-model="filtroBusqueda.search"
               placeholder="Escribe para buscar..."
+              :delay="500"
+              @search="aplicarFiltros"
               @change="aplicarFiltros"
             />
           </div>
@@ -171,6 +171,7 @@ import VentaFormModal from '@/components/ventas/VentaFormModal.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
 import { useCajaStore } from '@/store/useCajaStore'
+import InputDebounced from '@/components/ventas/InputDebounced.vue'
 
 // ----------------------------------------------------
 // ESTADO DE LA VISTA
