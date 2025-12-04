@@ -2,7 +2,7 @@
   <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="mb-0">📊 Administración de Ventas</h2>
-      <button class="btn btn-primary" @click="abrirModalCrearVenta">
+      <button class="btn btn-primary" @click="handleCrearVentaClick">
         <i class="bi bi-plus-lg me-2"></i>Nueva Venta
       </button>
     </div>
@@ -17,11 +17,12 @@
               class="form-control"
               v-model="filtroBusqueda.search"
               placeholder="Escribe para buscar..."
+              @change="aplicarFiltros"
             />
           </div>
           <div class="col-md-3">
             <label for="estado" class="form-label">Estado</label>
-            <select class="form-select" v-model="filtroBusqueda.estado">
+            <select class="form-select" v-model="filtroBusqueda.estado" @change="aplicarFiltros">
               <option value="">Todos los Estados</option>
               <option value="finalizada">Finalizada</option>
               <option value="pendiente_pago">Pendiente de Pago</option>
@@ -30,7 +31,11 @@
           </div>
           <div class="col-md-3">
             <label for="metodoPago" class="form-label">Método de Pago</label>
-            <select class="form-select" v-model="filtroBusqueda.metodo_pago">
+            <select
+              class="form-select"
+              v-model="filtroBusqueda.metodo_pago"
+              @change="aplicarFiltros"
+            >
               <option value="">Todos</option>
               <option value="efectivo">Efectivo</option>
               <option value="tarjeta">Tarjeta</option>
@@ -38,8 +43,8 @@
             </select>
           </div>
           <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-outline-secondary w-100" @click="aplicarFiltros">
-              <i class="bi bi-funnel"></i> Filtrar
+            <button class="btn btn-secondary w-100" @click="aplicarFiltros">
+              <i class="bi bi-funnel-fill me-2"></i>Aplicar Filtros
             </button>
           </div>
         </div>
@@ -74,7 +79,7 @@
           <tbody>
             <VentaRow
               v-for="venta in ventas"
-              :key="venta.id"
+              :key="venta.venta_id"
               :venta="venta"
               @ver-detalle="verDetalleVenta"
               @editar="editarVenta"
@@ -165,6 +170,7 @@ import VentaDetailModal from '@/components/ventas/VentaDetailModal.vue'
 import VentaFormModal from '@/components/ventas/VentaFormModal.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
+import { useCajaStore } from '@/store/useCajaStore'
 
 // ----------------------------------------------------
 // ESTADO DE LA VISTA
@@ -206,8 +212,11 @@ const mostrarModalNotificacion = ref(false)
 const notificationMessage = ref('')
 const notificationIsError = ref(false)
 
+// STORES
+const cajaStore = useCajaStore()
+
 // ----------------------------------------------------
-// LÓGICA COMPUTADA (Sin cambios)
+// LÓGICA COMPUTADA
 // ----------------------------------------------------
 const totalPaginas = computed(() => {
   const start = Math.max(1, pagination.current_page - 2)
@@ -239,7 +248,6 @@ async function cargarVentas() {
     Object.assign(pagination, response)
   } catch (error) {
     console.error('Fallo al cargar ventas:', error)
-    // Usamos el modal de notificación en lugar de alert()
     notificationMessage.value = 'Error al cargar las ventas. Revisa la consola.'
     notificationIsError.value = true
     mostrarModalNotificacion.value = true
@@ -261,31 +269,70 @@ function cambiarPagina(page: number) {
   cargarVentas()
 }
 
-/**
- * Maneja el evento de una venta creada o editada con éxito.
- * La notificación de éxito viene del VentaFormModal, aquí solo recargamos la lista.
- */
 function handleVentaGuardada() {
   mostrarModalForm.value = false
   cargarVentas()
 }
 
 // ----------------------------------------------------
-// GESTIÓN DE MODALES
+// GESTIÓN DE MODALES Y RESTRICCIÓN DE CAJA 🚨
 // ----------------------------------------------------
+
+/**
+ * Función de restricción: Verifica si se permite crear/editar.
+ * Solo se permite si la caja está abierta O si el usuario es administrador.
+ */
+function checkCajaRestriction(action: 'crear' | 'editar'): boolean {
+  // Si la caja está abierta, permitimos la acción (para vendedores).
+  if (cajaStore.isCajaAbierta) {
+    return true
+  }
+
+  // Si no tiene caja abierta y no es admin, notificar y bloquear.
+  notificationMessage.value =
+    action === 'crear'
+      ? 'No se puede crear una nueva venta. La caja diaria no está abierta.'
+      : 'No se puede editar la venta. La caja diaria debe estar abierta.'
+  notificationIsError.value = true
+  mostrarModalNotificacion.value = true
+
+  return false
+}
 
 function verDetalleVenta(ventaId: number) {
   selectedVentaId.value = ventaId
   mostrarModalDetalle.value = true
 }
 
+/**
+ * Función que maneja el click del botón "Nueva Venta"
+ */
+function handleCrearVentaClick() {
+  // Verificar restricción antes de abrir el modal
+  if (!checkCajaRestriction('crear')) {
+    return
+  }
+  abrirModalCrearVenta()
+}
+
+/**
+ * Abre el modal de creación (solo si `handleCrearVentaClick` lo permite).
+ */
 function abrirModalCrearVenta() {
   formModalMode.value = 'create'
   ventaToEdit.value = null
   mostrarModalForm.value = true
 }
 
+/**
+ * Función que maneja el click del botón "Editar Venta"
+ */
 function editarVenta(venta: VentaIndexResponse) {
+  // Verificar restricción antes de abrir el modal
+  if (!checkCajaRestriction('editar')) {
+    return
+  }
+
   formModalMode.value = 'edit'
   ventaToEdit.value = venta
   mostrarModalForm.value = true
@@ -297,6 +344,9 @@ function editarVenta(venta: VentaIndexResponse) {
  * Muestra el modal de confirmación para anular una venta.
  */
 function confirmarEliminarVenta(ventaId: number) {
+  // Opcional: Podrías aplicar la restricción aquí también si anular es considerado una edición crítica
+  // if (!checkCajaRestriction('editar')) { return }
+
   ventaIdToDelete.value = ventaId
   mostrarModalConfirmacion.value = true
 }
@@ -308,14 +358,14 @@ async function ejecutarEliminarVenta() {
   if (ventaIdToDelete.value === null) return
 
   isDeleting.value = true
-  mostrarModalConfirmacion.value = false // Cerrar inmediatamente el modal de confirmación
+  mostrarModalConfirmacion.value = false
 
   try {
     await ventaService.deleteVenta(ventaIdToDelete.value)
 
     notificationMessage.value = `Venta #${ventaIdToDelete.value} anulada con éxito.`
     notificationIsError.value = false
-    cargarVentas() // Recargar lista
+    cargarVentas()
   } catch (error) {
     console.error('Error al anular venta:', error)
 
@@ -323,7 +373,7 @@ async function ejecutarEliminarVenta() {
     notificationIsError.value = true
   } finally {
     isDeleting.value = false
-    mostrarModalNotificacion.value = true // Abrir notificación de resultado
+    mostrarModalNotificacion.value = true
     ventaIdToDelete.value = null
   }
 }
@@ -340,6 +390,10 @@ function handleNotificationFromForm(data: { message: string; isError: boolean })
 // ----------------------------------------------------
 onMounted(() => {
   cargarVentas()
+  // Verificar estado de caja al montar la vista
+  if (!cajaStore.isCajaAbierta && !cajaStore.isLoading) {
+    cajaStore.fetchCajaActiva()
+  }
 })
 </script>
 

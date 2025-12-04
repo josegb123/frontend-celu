@@ -1,16 +1,16 @@
 <template>
   <tr>
-    <td class="fw-bold">#{{ venta.id }}</td>
-    <td>{{ venta.cliente?.nombre || 'Cliente Genérico' }}</td>
-    <td>{{ venta.user?.name || 'N/A' }}</td>
+    <td class="fw-bold">#{{ venta.venta_id }}</td>
+    <td>{{ venta.cliente_nombre || 'Cliente Genérico' }}</td>
+    <td>{{ venta.usuario_vendedor || 'N/A' }}</td>
     <td>
       <span :class="`badge bg-${estadoColor}`">{{ estadoTexto }}</span>
     </td>
-    <td class="fw-bold">${{ venta?.total }}</td>
+    <td class="fw-bold">${{ venta?.total_venta }}</td>
     <td>{{ formattedDate }}</td>
     <td class="text-center">
       <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-info" @click="$emit('ver-detalle', venta.id)">
+        <button class="btn btn-outline-info" @click="$emit('ver-detalle', venta.venta_id)">
           <i class="bi bi-eye"></i>
         </button>
         <button class="btn btn-outline-secondary" @click="$emit('editar', venta)">
@@ -18,7 +18,7 @@
         </button>
         <button
           class="btn btn-outline-danger"
-          @click="$emit('eliminar', venta.id)"
+          @click="$emit('eliminar', venta.venta_id)"
           :disabled="venta.estado === 'cancelada'"
         >
           <i class="bi bi-trash"></i>

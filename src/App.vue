@@ -1,6 +1,6 @@
 <template>
   <div id="app" class="app-layout">
-    <CajaBloqueador v-if="authStore.isAuthenticated">
+    <template v-if="authStore.isAuthenticated">
       <NavBar @show-cierre-modal="showCerrarCajaModal = true" />
       <div class="main-container">
         <AsideMenu />
@@ -8,7 +8,7 @@
           <RouterView />
         </main>
       </div>
-    </CajaBloqueador>
+    </template>
 
     <template v-else>
       <main class="app-content-full">
@@ -28,7 +28,6 @@
 import { watch, onMounted, ref } from 'vue'
 import AsideMenu from './components/navigation/AsideMenu.vue'
 import NavBar from './components/navigation/NavBar.vue'
-import CajaBloqueador from './components/shared/CajaBloqueador.vue'
 import { useThemeStore } from './store/themeStore'
 import { useAuthStore } from './store/authStore'
 import router from './router'
@@ -38,7 +37,6 @@ import CerrarCajaModal from './components/shared/CerrarCajaModal.vue'
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 
-/** Maneja el evento cuando la caja se ha cerrado exitosamente */
 const showCerrarCajaModal = ref(false)
 
 function applyThemeAttribute(isDark: boolean) {
@@ -47,14 +45,12 @@ function applyThemeAttribute(isDark: boolean) {
   if (isDark) {
     element.setAttribute('data-bs-theme', 'dark')
   } else {
-    element.setAttribute('data-bs-theme', 'light')
+    element.removeAttribute('data-bs-theme')
   }
 }
 
 // Lógica de chequeo de sesión al inicio
 onMounted(() => {
-  // Es vital verificar la sesión al inicio para que isAuthenticated refleje el estado real
-
   authStore.checkSession()
 })
 
@@ -70,18 +66,14 @@ watch(
  * Debe forzar el cierre de sesión si el proceso de cierre fue iniciado por un intento de logout.
  */
 async function handleCajaClosed() {
-  // Cerramos el modal
   showCerrarCajaModal.value = false
 
   // Una vez que la caja está cerrada, intentamos el logout de nuevo.
-  // Ahora debería tener éxito y redirigir al usuario al login.
   const loggedOut = await authStore.logout()
 
-  // Si fue exitoso (loggedOut === true), el router lo llevará a 'auth'
   if (loggedOut) {
     router.push({ name: 'auth' })
   } else {
-    // En un escenario normal, esto no debería ocurrir si la caja se cerró.
     console.error('App.vue: Fallo inesperado después del cierre de caja al intentar hacer logout.')
   }
 }

@@ -33,11 +33,13 @@ export interface VentaDTO {
 
 // Interfaz para el listado (VentaIndexResource)
 export interface VentaIndexResponse {
-  id: number
+  venta_id: number
   estado: string
   resumen_productos: string
+  cliente_nombre: string | null
+  usuario_vendedor: string | null
   brutotal: number
-  total: string | number
+  total_venta: string | number
   metodo_pago: MetodoPagoRequest
   user: {
     name: string | null

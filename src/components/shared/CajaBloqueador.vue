@@ -6,7 +6,7 @@
   >
     <div class="modal-dialog modal-sm text-bg-dark" style="max-width: 450px; border-radius: 12px">
       <div class="modal-content shadow-lg">
-        <div class="modal-header text-bg-warning rounded-top py-2">
+        <div class="modal-header text-bg-warning rounded-top py-3">
           <h5 class="modal-title w-100 text-center">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> Apertura de Caja Requerida
           </h5>
