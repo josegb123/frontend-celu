@@ -115,6 +115,9 @@ const pagination = reactive<PaginatedResponse<Producto>>({
   data: [],
   last_page: 1,
   total: 0,
+  meta: {
+    total: 0,
+  },
   per_page: ITEMS_PER_PAGE,
 })
 

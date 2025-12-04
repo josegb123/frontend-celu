@@ -4,6 +4,14 @@
     class="bloqueo d-flex justify-content-center align-items-center"
     style="z-index: 1050; position: fixed"
   >
+    <button
+      class="btn btn-md btn-light btn-back-pos rounded-pill py-4 px-5 shadow-sm"
+      @click="goToHome"
+      aria-label="Volver a la página de inicio"
+      title="Volver al Inicio"
+    >
+      <i class="bi bi-house-door-fill"></i>
+    </button>
     <div class="modal-dialog modal-sm text-bg-dark" style="max-width: 450px; border-radius: 12px">
       <div class="modal-content shadow-lg">
         <div class="modal-header text-bg-warning rounded-top py-3">
@@ -83,7 +91,12 @@
 // correctamente si se envuelve con este componente.
 import { ref, onMounted, computed, watch } from 'vue'
 import { useCajaStore } from '@/store/useCajaStore' // Ajusta la ruta
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
+function goToHome() {
+  router.push({ name: 'home' }) // Asume que la ruta principal se llama 'home'
+}
 const cajaStore = useCajaStore()
 
 const fondoInicial = ref<number | null>(null)

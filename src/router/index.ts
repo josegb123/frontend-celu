@@ -96,6 +96,15 @@ const routes: Array<RouteRecordRaw> = [
       requireAuth: true, // Asegurando que 'movimientos' requiere autenticación
     },
   },
+  {
+    path: '/notificaciones',
+    name: 'notificaciones',
+    component: () => import('@/views/NotificacionesView.vue'),
+    meta: {
+      title: 'Notificaciones',
+      requireAuth: true,
+    },
+  },
 ]
 // --- 2. CREACIÓN DEL ROUTER ---
 const router = createRouter({

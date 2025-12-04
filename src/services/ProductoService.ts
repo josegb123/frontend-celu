@@ -34,6 +34,7 @@ export interface PaginatedResponse<T> {
   last_page: number
   per_page: number
   total: number
+  meta: { total: number }
   // Se pueden añadir otras propiedades de Laravel si se usan (ej. from, to, first_page_url)
 }
 

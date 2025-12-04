@@ -35,6 +35,11 @@
             <i class="bi bi-people me-2"></i><span>Usuarios</span>
           </router-link>
         </li>
+        <li>
+          <router-link :to="{ name: 'notificaciones' }" class="nav-link text-white"
+            ><i class="bi bi-bell me-2"></i><span>Notificaciones</span></router-link
+          >
+        </li>
         <li class="nav-item">
           <router-link :to="{ name: 'cuentas' }" class="nav-link text-white"
             ><i class="bi bi-wallet2 me-2"></i><span>Cuentas por Cobrar</span></router-link

@@ -20,6 +20,51 @@ defineProps<{
 
 // 2. Definición de Emits: Eventos que envían el proveedor/id para la acción
 const emit = defineEmits(['edit', 'delete'])
+
+// Nombre de la marca para los mensajes (puede venir de una configuración global o .env)
+const branding_name = import.meta.env.VITE_BRANDING_NAME || 'Tu Empresa'
+
+/**
+ * @param telefono Número de teléfono del proveedor (incluye código de país).
+ * @param nombre Nombre comercial del proveedor.
+ */
+function contactarProveedor(telefono: string | null, nombre: string) {
+  if (!telefono) {
+    alert(`El proveedor ${nombre} no tiene un número de teléfono registrado.`)
+    return
+  }
+
+  // Mensaje preescrito. Puedes ajustarlo a tus necesidades.
+  const mensaje = encodeURIComponent(
+    `Hola ${nombre}, te escribo desde ${branding_name} para coordinar un nuevo pedido. ¿Estás disponible para conversar?`,
+  )
+
+  // Abre la URL de WhatsApp. Se recomienda incluir el código de país (ej: 57)
+  window.open(`https://api.whatsapp.com/send?phone=${telefono}&text=${mensaje}`, '_blank')
+}
+
+/**
+ * @param email Dirección de correo electrónico del proveedor.
+ * @param nombre Nombre comercial del proveedor.
+ */
+function enviarCorreoProveedor(email: string | null, nombre: string) {
+  if (!email) {
+    alert(`El proveedor ${nombre} no tiene una dirección de correo electrónico registrada.`)
+    return
+  }
+
+  // 1. Definir asunto y cuerpo del mensaje
+  const asunto = encodeURIComponent(`Consulta de Pedido - [Tu Empresa]`)
+  const cuerpo = encodeURIComponent(
+    `Estimado(a) ${nombre},\n\nLe escribimos para solicitar información sobre disponibilidad y cotización para un nuevo pedido.\n\nEsperamos su pronta respuesta.\n\nAtentamente,\n${branding_name}`,
+  )
+
+  // 2. Construir el enlace mailto:
+  // El navegador abrirá el cliente predeterminado (que puede ser Gmail si está configurado)
+  const mailtoLink = `mailto:${email}?subject=${asunto}&body=${cuerpo}`
+
+  window.location.href = mailtoLink
+}
 </script>
 
 <template>
@@ -54,6 +99,24 @@ const emit = defineEmits(['edit', 'delete'])
             </span>
           </td>
           <td class="text-end text-nowrap">
+            <button
+              @click="enviarCorreoProveedor(proveedor.email, proveedor.nombreComercial)"
+              class="btn btn-sm btn-secondary me-2"
+              title="Enviar Correo"
+              :disabled="!proveedor.email"
+            >
+              <i class="bi bi-envelope"></i>
+            </button>
+
+            <button
+              @click="contactarProveedor(proveedor.telefono, proveedor.nombreComercial)"
+              class="btn btn-sm btn-success me-2"
+              title="Enviar WhatsApp"
+              :disabled="!proveedor.telefono"
+            >
+              <i class="bi bi-whatsapp"></i>
+            </button>
+
             <button
               @click="emit('edit', proveedor)"
               class="btn btn-sm btn-info text-white me-2"

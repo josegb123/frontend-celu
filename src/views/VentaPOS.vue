@@ -1,15 +1,7 @@
 <template>
   <CajaBloqueador>
-    <button
-      class="btn btn-md btn-light btn-back-pos rounded-pill py-4 px-5 shadow-sm"
-      @click="goToHome"
-      aria-label="Volver a la página de inicio"
-      title="Volver al Inicio"
-    >
-      <i class="bi bi-house-door-fill"></i>
-    </button>
     <div class="pos-view d-flex flex-column h-100 p-3 bg-body">
-      <div class="pos-content d-flex flex-grow-1 gap-3">
+      <div class="pos-content d-flex flex-column flex-md-row flex-grow-1 gap-3">
         <section class="seccion-productos card shadow-sm p-3 w-60 d-flex flex-column border">
           <h2 class="h6 card-title mb-3 pb-1">Búsqueda Rápida de Productos</h2>
 
@@ -194,7 +186,6 @@ import NotificationModal from '@/components/utils/NotificationModal.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 import CajaBloqueador from '@/components/shared/CajaBloqueador.vue'
 import { useCajaStore } from '@/store/useCajaStore'
-import { useRouter } from 'vue-router'
 
 // Interfaces
 import type { Cliente, ItemVenta, ProductoVentaBase } from '@/interfaces/IPostInterfaces'
@@ -202,11 +193,7 @@ import type { Ref } from 'vue'
 
 // --- Inicialización de Stores ---
 const cajaStore = useCajaStore() // Inicializamos el store de la caja
-const router = useRouter()
 
-function goToHome() {
-  router.push({ name: 'home' }) // Asume que la ruta principal se llama 'home'
-}
 // --- 1. Estado de Cliente ---
 interface NotificationState {
   isVisible: boolean
