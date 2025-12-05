@@ -1,7 +1,15 @@
 <template>
   <div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">{{ isEditing ? 'Editar Producto' : 'Crear Nuevo Producto' }}</h5>
+    <div
+      class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+    >
+      <h5 class="mb-0">{{ isEditing ? 'Editar Producto' : 'Crear Producto' }}</h5>
+      <button
+        type="button"
+        class="btn-close btn-close-white"
+        aria-label="Cerrar"
+        @click="resetAndClose"
+      ></button>
     </div>
     <div class="card-body">
       <form @submit.prevent="submitForm" method="POST">
@@ -110,6 +118,19 @@
             </div>
           </div>
         </div>
+
+        <div class="row mb-3 mt-3">
+          <div class="col-md-12">
+            <label class="form-label fw-bold">Proveedores asociados</label>
+            <SupplierSelector
+              :initial-supplier-ids="form.proveedores"
+              @update:supplier-ids="(ids) => (form.proveedores = ids)"
+            />
+            <div v-if="errors.proveedores" class="text-danger small">
+              {{ errors.proveedores[0] }}
+            </div>
+          </div>
+        </div>
         <div class="mb-3">
           <label for="descripcion" class="form-label">Descripción</label>
           <textarea
@@ -200,6 +221,8 @@ import ProductoService, { type Producto } from '@/services/ProductoService'
 import { AxiosError, isAxiosError } from 'axios'
 import type { ICategoria } from '@/interfaces/ICategoria'
 import { useAuthStore } from '@/store/authStore'
+// 🚨 Importar el nuevo componente
+import SupplierSelector from '@/components/products/SupplierSelector.vue'
 
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.user.id)
@@ -222,6 +245,8 @@ const emit = defineEmits<{
   (e: 'productSaved', result: { success: boolean; message: string }): void
   /** Evento emitido para abrir el modal de gestión de categorías. */
   (e: 'openCategoryModal'): void
+  /** 🚨 NUEVO EVENTO: Evento emitido para que el padre cierre el modal. */
+  (e: 'close'): void
 }>()
 
 // --- ESTADO INICIAL ---
@@ -238,6 +263,8 @@ interface ProductFormData {
   categoria_id: number | null
   descripcion: string | null
   imagen_input_url: string | null
+  // 🚨 Campo para los IDs de proveedores
+  proveedores: number[]
 }
 
 const showCategoryModal = ref(false)
@@ -254,6 +281,8 @@ const initialFormState: ProductFormData = {
   categoria_id: null,
   descripcion: null,
   imagen_input_url: null,
+  // 🚨 Inicializar el array de proveedores
+  proveedores: [],
 }
 
 const form = ref<ProductFormData>({ ...initialFormState })
@@ -270,30 +299,12 @@ const isEditing = computed(() => !!form.value.id)
 // --- MÉTODOS ---
 
 /**
- * Abre el modal de gestión de categorías (emite el evento al padre).
- */
-watch(showCategoryModal, (newValue) => {
-  if (newValue) {
-    emit('openCategoryModal')
-    // Opcional: reiniciar aquí showCategoryModal a false si el padre se encarga de todo.
-    // Por simplicidad, el padre debe escuchar y encargarse de cerrar/abrir su propio modal.
-  }
-})
-
-/**
  * Establece el estado para que la imagen actual sea eliminada al enviar el formulario.
  */
 const clearCurrentImage = () => {
-  // 1. Marcar para eliminación (alerta al usuario)
   imageURLisBeingCleared.value = true
-
-  // 2. Anular la URL en el formulario
   form.value.imagen_input_url = null
-
-  // 3. Anular la subida de cualquier archivo nuevo
   imageFile.value = null
-
-  // 4. Ocultar la miniatura (ya que se va a eliminar)
   currentImageURL.value = null
 }
 
@@ -304,7 +315,6 @@ const handleImageChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
-  // Si se selecciona un nuevo archivo, anular cualquier solicitud de eliminación previa.
   if (file) {
     imageURLisBeingCleared.value = false
   }
@@ -314,38 +324,35 @@ const handleImageChange = (event: Event) => {
 
 /**
  * Convierte los datos del formulario a FormData para el envío.
- * Incluye el manejo del archivo y el método HTTP.
  */
 const createFormData = (): FormData => {
   const formData = new FormData()
+  const { proveedores, imagen_input_url, ...restOfForm } = form.value
 
-  for (const key in form.value) {
-    const value = form.value[key as keyof ProductFormData]
+  // 1. Manejar el array de proveedores para el formato de Laravel
+  if (proveedores && Array.isArray(proveedores)) {
+    proveedores.forEach((id) => {
+      formData.append('proveedores[]', String(id))
+    })
+  }
 
-    // Excluir ID
-    if (key === 'id') continue
-
+  // 2. Procesar el resto de los campos
+  for (const key in restOfForm) {
+    const value = restOfForm[key as keyof typeof restOfForm]
     if (value !== null && value !== undefined) {
       formData.append(key, String(value))
     }
   }
 
+  // 3. Lógica de imagen:
   if (imageFile.value) {
-    // Opción 1: Se sube un nuevo archivo. (Máxima prioridad)
     formData.append('imagen', imageFile.value)
-    formData.append('imagen_url', 'null') // Asegurar que Laravel no use la URL existente
-  } else if (imageURLisBeingCleared.value) {
-    // Opción 2: Se pide eliminar la imagen. (La URL que enviamos es 'null' para el backend)
-    // El backend debe interpretar 'null' como solicitud de borrado.
     formData.append('imagen_url', 'null')
-  } else if (form.value.imagen_input_url) {
-    // Opción 3: Se ingresó o se mantuvo una URL (ya sea la existente o una nueva pegada).
-    formData.append('imagen_url', form.value.imagen_input_url)
-    // No anexamos 'imagen'
+  } else if (imageURLisBeingCleared.value) {
+    formData.append('imagen_url', 'null')
+  } else if (imagen_input_url) {
+    formData.append('imagen_url', imagen_input_url)
   } else if (currentImageURL.value) {
-    // Opción 4: Reutilizar la URL de cache (Si es edición y no se tocó nada, y no es un borrado).
-    // Esto es técnicamente innecesario si la URL ya está en form.value.imagen_input_url
-    // Pero lo mantendremos como respaldo.
     formData.append('imagen_url', currentImageURL.value)
   }
 
@@ -365,13 +372,11 @@ const submitForm = async () => {
   if (currentUserId.value !== null) {
     formData.append('user_id', String(currentUserId.value))
   } else {
-    // Emitir error en lugar de llamar a showNotification/alert
     emit('productSaved', { success: false, message: 'Error: Usuario no autenticado.' })
     isSubmitting.value = false
     return
   }
 
-  // LÓGICA DE MÉTODO HTTP: Forzar PUT/PATCH para la edición
   if (isEditing.value) {
     formData.append('_method', 'PUT')
   }
@@ -379,9 +384,8 @@ const submitForm = async () => {
   try {
     await ProductoService.saveProducto(formData, productId)
 
-    // Emitir éxito
     emit('productSaved', { success: true, message: 'Producto guardado con éxito!' })
-    resetForm()
+    resetAndClose() // 🚨 Cerrar después de guardar exitosamente
   } catch (err: unknown) {
     let errorMessage = 'Hubo un error desconocido al guardar el producto.'
 
@@ -399,7 +403,6 @@ const submitForm = async () => {
       console.error('Error al guardar:', err)
     }
 
-    // Emitir error
     emit('productSaved', { success: false, message: errorMessage })
   } finally {
     isSubmitting.value = false
@@ -407,14 +410,22 @@ const submitForm = async () => {
 }
 
 /**
- * Restablece el formulario a su estado inicial.
+ * Restablece el formulario A SU ESTADO INICIAL (vacío).
  */
 const resetForm = () => {
   form.value = { ...initialFormState }
   imageFile.value = null
   errors.value = {}
-  currentImageURL.value = null // Resetear el cache de imagen
+  currentImageURL.value = null
   imageURLisBeingCleared.value = false
+}
+
+/**
+ * 🚨 NUEVO: Restablece el formulario y emite el evento para que el padre cierre el modal.
+ */
+const resetAndClose = () => {
+  resetForm()
+  emit('close') // Emitir evento para que el componente padre oculte el modal
 }
 
 // --- WATCHER: Cargar datos para edición ---
@@ -422,23 +433,24 @@ watch(
   () => props.productToEdit,
   (newProduct) => {
     if (newProduct) {
-      // Llenar la forma con datos del producto
-      form.value = {
-        id: newProduct.id,
-        nombre: newProduct.nombre,
-        codigo_barra: newProduct.codigo_barra,
-        precio_compra: parseFloat(String(newProduct.precio_compra)),
-        precio_venta: parseFloat(String(newProduct.precio_venta)),
-        stock_actual: newProduct.stock_actual,
-        stock_reservado: newProduct.stock_reservado,
-        stock_minimo: newProduct.stock_minimo,
-        categoria_id: newProduct.categoria_id,
-        descripcion: newProduct.descripcion,
-        imagen_input_url: newProduct.imagen_url,
-      }
+      form.value.id = newProduct.id
+      form.value.nombre = newProduct.nombre
+      form.value.codigo_barra = newProduct.codigo_barra
+      form.value.precio_compra = parseFloat(String(newProduct.precio_compra))
+      form.value.precio_venta = parseFloat(String(newProduct.precio_venta))
+      form.value.stock_actual = newProduct.stock_actual
+      form.value.stock_reservado = newProduct.stock_reservado
+      form.value.stock_minimo = newProduct.stock_minimo
+      form.value.categoria_id = newProduct.categoria_id
+      form.value.descripcion = newProduct.descripcion
       form.value.imagen_input_url = newProduct.imagen_url
+      form.value.proveedores = (newProduct as any).proveedores
+        ? (newProduct as any).proveedores.map((p: { id: number }) => p.id)
+        : []
+
       imageFile.value = null
       currentImageURL.value = newProduct.imagen_url
+      errors.value = {} // Limpiar errores al cargar un nuevo producto
     } else {
       resetForm()
     }
@@ -446,24 +458,14 @@ watch(
   },
   { immediate: true },
 )
-
-/* * -------------------------------------------------------------------
- * LISTA DE TAREAS PENDIENTES (TODO)
- * -------------------------------------------------------------------
- */
-// TODO: Refactorización y Mejoras Post-Desarrollo
-// 1. Atomización:
-//    - Separar los inputs de stock/precios en componentes atómicos para mejorar la legibilidad y validación.
-//    - Crear un componente ImageUploader.vue para encapsular toda la lógica de miniatura, borrado, cache y selección de archivo.
-// 2. Usabilidad (UX):
-//    - Añadir una vista previa de la imagen seleccionada (`imageFile`) usando URL.createObjectURL() antes de la subida.
-//    - Bloquear la interfaz del formulario mientras `isSubmitting` es true.
-// 3. Lógica de Negocio:
-//    - Evaluar la necesidad futura de `stock_reservado` y `stock_actual` como campos editables, o si deben ser derivados/calculados por el backend.
 </script>
 
 <style scoped>
 .card-header {
   font-size: 1.1rem;
+}
+/* Estilo opcional para simular mejor el modal (bordes redondeados, etc.) */
+.btn-close-white {
+  filter: invert(1); /* Hace que la X sea blanca */
 }
 </style>

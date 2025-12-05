@@ -163,6 +163,36 @@ class ProveedorService {
       throw error
     }
   }
+
+  /**
+   * Obtiene la lista completa de proveedores activos (sin paginación).
+   * @returns Una promesa que resuelve a un array de Proveedores.
+   */
+  public async getAllProveedoresNoPaginado(): Promise<Proveedor[]> {
+    try {
+      // Usamos un query param para indicar al backend que devuelva todos los datos,
+      // asumiendo que tu endpoint de Laravel acepta algo como `?all=true`.
+      // Si tu backend tiene un endpoint dedicado, úsalo en su lugar.
+      const response: AxiosResponse<Proveedor[] | { data: Proveedor[] }> = await laravelApi.get(
+        `${this.endpoint}?all=true`,
+      )
+
+      // Manejamos el caso en que Laravel envuelva la lista en 'data'
+      const results =
+        (response.data as { data: Proveedor[] }).data || (response.data as Proveedor[])
+
+      if (Array.isArray(results)) {
+        return results
+      }
+
+      console.warn('Estructura de respuesta inesperada en getAllProveedoresNoPaginado.')
+      return []
+    } catch (error) {
+      console.error('Error al obtener la lista completa de proveedores:', error)
+      // Lanzar el error para que el componente pueda manejarlo
+      throw error
+    }
+  }
 }
 
 // Exportar una instancia para usarla en toda la aplicación (Singleton)
