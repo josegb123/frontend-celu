@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 // 1. IMPORTAR INTERFACES DEL SERVICIO para tipar 'dashboardData'
 import {
@@ -15,9 +15,13 @@ import TopRankingCard from '@/components/home/TopRankingCard.vue'
 import LastSalesTable from '@/components/home/LastSalesTable.vue'
 import { useStockAlertStore } from '@/store/useStockAlertStore'
 
+// 2. USAR EL STORE DE ALERTAS DE STOCK
 const storeAlert = useStockAlertStore()
-const bajoStock = storeAlert.totalStockAlertas
+const bajoStock = computed(() => {
+  return storeAlert.totalStockAlertas
+})
 
+// 3. DEFINIR LA INTERFAZ PARA LOS DATOS DEL DASHBOARD
 interface DashboardData {
   ticketPromedio: number
   margenBrutoMes: number

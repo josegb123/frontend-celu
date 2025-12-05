@@ -1,9 +1,8 @@
 <template>
   <div>
     <div class="alert text-bg-warning text-center fs-6 mb-3 py-2">
-      Total a Pagar: <strong class="ms-2">${{ props.totalPagar.toFixed(2) }}</strong>
+      Total a Pagar: <strong class="ms-2">${{ props.totalPagar }}</strong>
     </div>
-    <!-- Controles de IVA -->
     <div class="row border-top border-secondary-subtle pt-3 mt-3">
       <div class="col-12">
         <div class="form-check form-switch mb-2">
@@ -16,7 +15,7 @@
           <label class="form-check-label fw-bold small" for="aplicaIvaSwitch">
             Aplicar IVA
             <span v-if="aplicaIva" class="text-success ms-2">
-              (Tasa: {{ ivaPorcentajeManual.toFixed(2) }}%)
+              (Tasa: {{ ivaPorcentajeManual }}%)
             </span>
           </label>
         </div>
@@ -40,9 +39,20 @@
           </select>
         </div>
 
-        <div v-else class="col-md-6 mb-3 d-flex align-items-end">
-          <div class="alert bg-info-subtle text-info border-info py-2 text-center w-100 mb-0 small">
-            <i class="bi bi-info-circle me-1"></i> Modalidad: **CRÉDITO** (Pago Pendiente)
+        <div
+          v-else-if="tipoVentaSeleccionado === 2 || tipoVentaSeleccionado === 3"
+          class="col-md-6 mb-3 d-flex align-items-end"
+        >
+          <div
+            :class="[
+              'alert py-2 text-center w-100 mb-0 small',
+              tipoVentaSeleccionado === 2
+                ? 'text-bg-info border-info'
+                : 'text-bg-secondary border-secondary',
+            ]"
+          >
+            <i class="bi bi-info-circle me-1"></i> Modalidad:
+            <strong>{{ tipoVentaSeleccionado === 2 ? 'CRÉDITO' : 'PLAN SEPARE' }}</strong>
           </div>
         </div>
       </div>
@@ -60,8 +70,25 @@
         />
       </div>
     </div>
-    <!-- Fin Controles de IVA -->
-
+    <div
+      class="row border-top border-success-subtle pt-2 mt-2"
+      v-if="tipoVentaSeleccionado === 2 || tipoVentaSeleccionado === 3"
+    >
+      <div class="col-md-6 mb-3">
+        <label for="abonoInicialInput" class="form-label fw-bold small">
+          Abono Inicial
+          <span v-if="tipoVentaSeleccionado === 3" class="text-danger ms-1"> (Mín: $50,000) </span>
+        </label>
+        <input
+          id="abonoInicialInput"
+          type="number"
+          v-model.number="abonoInicial"
+          class="form-control form-control-sm"
+          min="0"
+          :max="props.totalPagar"
+        />
+      </div>
+    </div>
     <template v-if="tipoVentaSeleccionado === 1">
       <div class="row border-top border-primary-subtle pt-2 mt-2">
         <div class="col-md-6 mb-3">
@@ -92,15 +119,21 @@
 
     <div class="mt-2 pt-2 border-top border-primary-subtle">
       <div v-if="cambio > 0" class="alert bg-success-subtle text-success fs-6 py-2">
-        <i class="bi bi-wallet2 me-2"></i> Cambio: <strong>${{ cambio.toFixed(2) }}</strong>
+        <i class="bi bi-wallet2 me-2"></i> Cambio: <strong>${{ cambio }}</strong>
       </div>
 
       <div
-        v-if="montoPendiente > 0 && tipoVentaSeleccionado === 1"
-        class="alert bg-danger-subtle text-danger fs-6 py-2"
+        v-if="montoPendiente > 0"
+        :class="[
+          'alert fs-6 py-2',
+          tipoVentaSeleccionado === 1
+            ? 'bg-danger-subtle text-danger'
+            : 'bg-warning-subtle text-dark',
+        ]"
       >
-        <i class="bi bi-exclamation-triangle me-2"></i> Pendiente (Contado):
-        <strong>${{ montoPendiente.toFixed(2) }}</strong>
+        <i class="bi bi-exclamation-triangle me-2"></i> Pendiente
+        <span v-if="tipoVentaSeleccionado === 1">(Contado)</span>:
+        <strong>${{ montoPendiente }}</strong>
       </div>
 
       <div v-if="errorVenta" class="alert alert-danger py-2 small">
@@ -112,7 +145,7 @@
       <button
         class="btn btn-primary btn-md shadow-sm"
         @click="registrarVenta"
-        :disabled="isProcessing || (tipoVentaSeleccionado === 1 && !isTotalCubierto)"
+        :disabled="isProcessing || !isVentaValida"
       >
         <span
           v-if="isProcessing"
@@ -159,7 +192,10 @@ const emit = defineEmits<{
 const TIPO_VENTAS = [
   { id: 1, nombre: 'Contado' },
   { id: 2, nombre: 'Crédito' },
+  { id: 3, nombre: 'Plan separe' }, // ID 3
 ]
+
+const MIN_ABONO_PLAN_SEPARE = 50000
 
 const METODOS_PAGO_CONTADO = ['efectivo', 'tarjeta', 'transferencia'] as const
 type MetodoPagoContado = (typeof METODOS_PAGO_CONTADO)[number]
@@ -170,29 +206,51 @@ const montoRecibido = ref(props.totalPagar)
 const referenciaPago = ref<string | null>(null)
 const isProcessing = ref(false)
 const errorVenta = ref<string | null>(null)
+const abonoInicial = ref(0)
 
 // ESTADOS PARA EL IVA
-const aplicaIva = ref(false) // Por defecto: Desmarcado
-const ivaPorcentajeManual = ref(0) // Por defecto: 0%
+const aplicaIva = ref(false)
+const ivaPorcentajeManual = ref(0)
 
-// Acceso al store de caja si es necesario
 const cajaStore = useCajaStore()
 
 // Watch para sincronizar el monto recibido con el total a pagar
 watch(
   () => props.totalPagar,
   (newTotal) => {
-    montoRecibido.value = newTotal
+    if (tipoVentaSeleccionado.value === 1) {
+      montoRecibido.value = newTotal
+    }
   },
   { immediate: true },
+)
+
+// Watch para resetear estados al cambiar el tipo de venta
+watch(tipoVentaSeleccionado, (newTipo) => {
+  if (newTipo === 1) {
+    abonoInicial.value = 0
+    montoRecibido.value = props.totalPagar
+  } else {
+    montoRecibido.value = 0
+  }
+  abonoInicial.value = Math.max(0, abonoInicial.value)
+})
+
+// Watch para resetear el abono si supera el total
+watch(
+  () => props.totalPagar,
+  (newTotal) => {
+    if (abonoInicial.value > newTotal) {
+      abonoInicial.value = newTotal
+    }
+  },
 )
 
 // Si aplicaIva se marca, establecer el porcentaje a 19
 watch(aplicaIva, (newValue) => {
   if (newValue) {
-    ivaPorcentajeManual.value = 19 // Establecer 19% si se marca
+    ivaPorcentajeManual.value = 19
   } else {
-    // ponerlo a 0 al desmarcar para resetear el input
     ivaPorcentajeManual.value = 0
   }
 })
@@ -207,49 +265,116 @@ const cambio = computed(() => {
 })
 
 const montoPendiente = computed(() => {
-  if (tipoVentaSeleccionado.value === 2) {
-    // Si es crédito, el monto pendiente es el total
-    return props.totalPagar
+  const isCreditoOrSepare = tipoVentaSeleccionado.value === 2 || tipoVentaSeleccionado.value === 3
+
+  if (isCreditoOrSepare) {
+    const pendiente = props.totalPagar - abonoInicial.value
+    return Math.max(0, pendiente)
+  } else if (tipoVentaSeleccionado.value === 1) {
+    const pendiente = props.totalPagar - montoRecibido.value
+    return Math.max(0, pendiente)
   }
-  // Si es contado y el monto recibido es menor al total
-  return props.totalPagar - montoRecibido.value > 0 ? props.totalPagar - montoRecibido.value : 0
+  return 0
 })
 
-const isTotalCubierto = computed(() => {
-  if (tipoVentaSeleccionado.value === 2) {
-    return true // Crédito siempre se considera cubierto para el botón
+// Validación del abono inicial para Plan Separe
+const isAbonoMinimoValido = computed(() => {
+  if (tipoVentaSeleccionado.value === 3) {
+    // Si es Plan Separe
+    // Si el total es 0, no hay abono, es válido (aunque esto debe ser raro)
+    if (props.totalPagar === 0) return true
+
+    // Si el abono es 0, debe ser menor al total (para permitir abonos parciales)
+    if (abonoInicial.value === 0 && props.totalPagar > 0) {
+      // Un abono de 0 no cumple el mínimo, a menos que el total sea 0
+      return false
+    }
+
+    // Si el abono es mayor a 0, debe cumplir el mínimo o ser igual al total.
+    return abonoInicial.value >= MIN_ABONO_PLAN_SEPARE || abonoInicial.value === props.totalPagar
   }
-  return montoRecibido.value >= props.totalPagar
+  return true // Es válido para Contado o Crédito
+})
+
+// Validación general antes de enviar
+const isVentaValida = computed(() => {
+  // 1. Validación de Contado: Debe estar cubierto
+  if (tipoVentaSeleccionado.value === 1) {
+    return montoRecibido.value >= props.totalPagar
+  }
+
+  // 2. Validación de Crédito / Plan Separe
+  const isPendiente = tipoVentaSeleccionado.value === 2 || tipoVentaSeleccionado.value === 3
+
+  if (isPendiente) {
+    // Validación de abono mínimo para Plan Separe
+    if (tipoVentaSeleccionado.value === 3 && !isAbonoMinimoValido.value) {
+      return false
+    }
+
+    // El abono inicial no puede ser mayor al total a pagar
+    if (abonoInicial.value > props.totalPagar) {
+      return false
+    }
+
+    // Si el total a pagar es mayor a cero, se necesita un abono si es separe,
+    // si es crédito, puede ser 0
+    if (tipoVentaSeleccionado.value === 3 && abonoInicial.value <= 0 && props.totalPagar > 0) {
+      return false
+    }
+  }
+
+  return true
 })
 
 // CÁLCULO DEL IVA A ENVIAR AL BACKEND
 const ivaPorcentajeParaDTO = computed(() => {
   if (aplicaIva.value) {
-    // Si está marcado, enviamos el porcentaje manual (asegurando que sea al menos 0)
     return Math.max(0, ivaPorcentajeManual.value)
   }
-  // Si no está marcado, enviamos 0 para que el servicio omita el cálculo.
   return 0
 })
 
 // --- 4. Lógica de Finalización ---
 
 const registrarVenta = async () => {
+  // Resetear errorVenta para iniciar
+  errorVenta.value = null
+
   if (props.items.length === 0) {
     errorVenta.value = 'No se puede registrar una venta sin productos.'
+    return
+  }
+
+  const isPendiente = tipoVentaSeleccionado.value === 2 || tipoVentaSeleccionado.value === 3
+
+  if (isPendiente && props.cliente.id === props.clienteGenerico.id) {
+    errorVenta.value =
+      'Las ventas a Crédito o Plan Separe deben tener un cliente seleccionado (no puede ser cliente genérico).'
+    return
+  }
+
+  // Validación de abono mínimo
+  if (tipoVentaSeleccionado.value === 3 && !isAbonoMinimoValido.value) {
+    errorVenta.value = `El abono inicial para Plan Separe debe ser mínimo $${MIN_ABONO_PLAN_SEPARE.toLocaleString('es-CO')} o igual al total.`
     return
   }
 
   const cajaDiariaId = cajaStore.cajaDiariaId
 
   if (cajaDiariaId === null) {
-    // Esto solo debería ocurrir si el CajaBloqueador falla o se omite.
     errorVenta.value = 'Error: No se encontró un ID de caja activa para registrar la venta.'
     console.error('Fallo de negocio: No hay caja activa.')
     return
   }
+
+  if (!isVentaValida.value) {
+    // Esto debería ser capturado por las validaciones previas, pero como respaldo:
+    errorVenta.value = 'El monto de pago/abono no cubre el mínimo requerido o el total de la venta.'
+    return
+  }
+
   isProcessing.value = true
-  errorVenta.value = null
 
   // Mapeo tipificado
   const itemsDTO: VentaItemDTO[] = props.items.map((item: ItemVenta) => ({
@@ -260,11 +385,25 @@ const registrarVenta = async () => {
   }))
 
   const isCredito = tipoVentaSeleccionado.value === 2
+  const isPlanSepare = tipoVentaSeleccionado.value === 3
 
-  const metodoPagoFinal: MetodoPagoRequest | null = isCredito ? 'credito' : metodoSeleccionado.value
-  const estadoFinal: EstadoVentaRequest = isCredito ? 'pendiente_pago' : 'finalizada'
+  let metodoPagoFinal: MetodoPagoRequest | null = null
+  let estadoFinal: EstadoVentaRequest
+
+  if (isPendiente) {
+    metodoPagoFinal = isCredito ? 'credito' : 'plan_separe'
+    estadoFinal = 'pendiente_pago'
+  } else {
+    // Contado (tipoVentaSeleccionado.value === 1)
+    metodoPagoFinal = metodoSeleccionado.value
+    estadoFinal = 'finalizada'
+  }
+
   const clienteIdFinal: number | null =
     props.cliente.id === props.clienteGenerico.id ? null : props.cliente.id
+
+  // Abono inicial solo si el monto es mayor a 0 y es crédito/separe
+  const abonoInicialFinal = isPendiente && abonoInicial.value > 0 ? abonoInicial.value : null
 
   const ventaData: VentaDTO = {
     cliente_id: clienteIdFinal,
@@ -275,12 +414,21 @@ const registrarVenta = async () => {
     estado: estadoFinal,
     iva_porcentaje: ivaPorcentajeParaDTO.value,
     items: itemsDTO,
+    abono_inicial: abonoInicialFinal,
   }
 
   try {
     await VentaService.registrarVenta(ventaData)
 
-    const mensaje = `Venta ${isCredito ? 'a Crédito' : 'Contado'} registrada. Cambio: $${cambio.value.toFixed(2)}`
+    let mensaje = `Venta registrada. `
+    if (isCredito) {
+      mensaje = `Venta a Crédito registrada. Pendiente: $${montoPendiente.value}`
+    } else if (isPlanSepare) {
+      mensaje = `Venta Plan Separe registrada. Pendiente: $${montoPendiente.value}`
+    } else {
+      mensaje = `Venta Contado finalizada. Cambio: $${cambio.value}`
+    }
+
     emit('venta-registrada', mensaje)
   } catch (error) {
     errorVenta.value = 'Fallo al registrar la venta. Verifique el servidor.'

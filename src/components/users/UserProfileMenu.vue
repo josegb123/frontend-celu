@@ -31,7 +31,7 @@
         <hr class="dropdown-divider" />
       </li>
 
-      <li :class="{ 'bg-light': totalNotificaciones > 0 }">
+      <li>
         <a class="dropdown-item" href="#" @click.prevent="goToRoute('notificaciones')">
           <i class="bi bi-bell-fill me-2 text-warning"></i>Notificaciones
           <span v-if="totalNotificaciones > 0" class="badge rounded-pill bg-danger">

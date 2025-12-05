@@ -25,6 +25,7 @@ export interface VentaDTO {
   caja_diaria_id: number | null
   // --- Ítems ---
   items: VentaItemDTO[]
+  abono_inicial: number | null
 }
 
 // ----------------------------------------------------
