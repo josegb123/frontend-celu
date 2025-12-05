@@ -221,7 +221,6 @@ import ProductoService, { type Producto } from '@/services/ProductoService'
 import { AxiosError, isAxiosError } from 'axios'
 import type { ICategoria } from '@/interfaces/ICategoria'
 import { useAuthStore } from '@/store/authStore'
-// 🚨 Importar el nuevo componente
 import SupplierSelector from '@/components/products/SupplierSelector.vue'
 
 const authStore = useAuthStore()
@@ -245,7 +244,7 @@ const emit = defineEmits<{
   (e: 'productSaved', result: { success: boolean; message: string }): void
   /** Evento emitido para abrir el modal de gestión de categorías. */
   (e: 'openCategoryModal'): void
-  /** 🚨 NUEVO EVENTO: Evento emitido para que el padre cierre el modal. */
+  /** Evento emitido para que el padre cierre el modal. */
   (e: 'close'): void
 }>()
 
@@ -263,7 +262,6 @@ interface ProductFormData {
   categoria_id: number | null
   descripcion: string | null
   imagen_input_url: string | null
-  // 🚨 Campo para los IDs de proveedores
   proveedores: number[]
 }
 
@@ -281,7 +279,6 @@ const initialFormState: ProductFormData = {
   categoria_id: null,
   descripcion: null,
   imagen_input_url: null,
-  // 🚨 Inicializar el array de proveedores
   proveedores: [],
 }
 
@@ -421,7 +418,7 @@ const resetForm = () => {
 }
 
 /**
- * 🚨 NUEVO: Restablece el formulario y emite el evento para que el padre cierre el modal.
+ * Restablece el formulario y emite el evento para que el padre cierre el modal.
  */
 const resetAndClose = () => {
   resetForm()

@@ -42,6 +42,13 @@
         </div>
       </div>
 
+      <button
+        class="btn btn-sm btn-info text-white mb-3"
+        @click="$emit('showSuppliers', product.proveedores, product.nombre)"
+        :disabled="product.proveedores?.length === 0"
+      >
+        <i class="bi bi-truck-flatbed"></i> {{ product.proveedores?.length || 0 }} Proveedor(es)
+      </button>
       <div class="stock-info row g-1 text-center mt-auto mb-3">
         <div class="col-4">
           <div class="stock-item p-2 border" :class="stockBadgeClass">
@@ -80,23 +87,35 @@
 import { computed, ref } from 'vue'
 import { type Producto } from '@/services/ProductoService.js'
 
+// --- INTERFAZ LOCAL PARA PROVEEDOR ---
+// Definimos la estructura básica del proveedor tal como viene en el producto
+interface Proveedor {
+  id: number
+  nombreComercial: string
+  telefono: string | null
+  email: string | null
+}
+
+interface ProductosWithProvider extends Producto {
+  proveedores: Proveedor[]
+}
+
 // --- SETUP REACTIVO ---
 const isImageError = ref(false)
 
 // --- PROPIEDADES Y EMITS ---
 const props = defineProps<{
-  product: Producto
+  product: ProductosWithProvider
   stockStatus: 'agotado' | 'bajo' | 'normal'
 }>()
 
 const emit = defineEmits<{
   (e: 'edit', product: Producto): void
   (e: 'delete', productId: number): void
+  (e: 'showSuppliers', proveedores: Proveedor[], productName: string): void
 }>()
 
 // --- CÁLCULOS REACTIVOS ---
-
-// Lógica computada para la visualización del texto
 const isLowOrOut = computed(() => props.stockStatus !== 'normal')
 const indicatorText = computed(() => {
   if (props.stockStatus === 'agotado') return 'AGOTADO'
@@ -108,20 +127,11 @@ const indicatorClass = computed(() => {
   if (props.stockStatus === 'bajo') return 'stock-bajo'
   return ''
 })
-
-/**
- * Determina la clase del badge de stock_actual basado en stock_minimo (compatible con Dark Mode).
- */
 const stockBadgeClass = computed(() => {
-  // Usamos clases de Bootstrap para fondos sutiles y bordes que se invierten automáticamente en modo oscuro.
   return props.product.stock_actual <= props.product.stock_minimo
     ? 'bg-danger-subtle border-danger text-danger'
     : 'bg-info-subtle border-info text-info'
 })
-
-/**
- * Genera la URL de la imagen, usando un placeholder si hay error o no hay URL.
- */
 const imageUrl = computed(() => {
   if (!props.product.imagen_url || isImageError.value) {
     return '/no_image.webp'
@@ -141,24 +151,18 @@ const handleImageError = () => {
 </script>
 
 <style scoped>
-/* Contenedor Principal */
 .product-card {
   transition:
     transform 0.2s,
     box-shadow 0.2s;
-  /* Shadow adaptativo en Dark Mode */
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05) !important;
 }
-/* Estilo de hover para modo oscuro/claro */
 .product-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15) !important;
   border-color: var(--bs-primary) !important;
-  /* Ajuste de color de fondo al hacer hover */
   background-color: var(--bs-card-bg);
 }
-
-/* Imagen y Badge */
 .image-container {
   position: relative;
   overflow: hidden;
@@ -178,21 +182,16 @@ const handleImageError = () => {
   z-index: 10;
   opacity: 0.95;
 }
-
-/* Títulos y Subtítulos: Usamos text-body y text-body-secondary para que se ajusten */
 .card-title {
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1.4;
 }
-
-/* Precios */
 .price-box {
   flex: 1;
   padding: 0.5rem 0;
   border-radius: 0.35rem;
   text-align: center;
-  /* Usamos border-light para un borde sutil en modo claro, y el fondo se encarga del resto */
   border: 1px solid var(--bs-border-color-translucent);
 }
 .price-venta {
@@ -213,35 +212,27 @@ const handleImageError = () => {
   font-size: 1rem;
   font-weight: bold;
 }
-
-/* Stock Info */
 .stock-info {
-  /* Separador que se adapta al modo oscuro */
   border-top: 1px solid var(--bs-border-color-translucent);
   padding-top: 0.5rem;
 }
-
 .stock-item {
   border-radius: 0.25rem;
 }
-
 .image-container {
-  /* Es crucial que sea relativo para posicionar el badge */
   position: relative;
   overflow: hidden;
 }
-
 .image-low-stock {
   opacity: 0.3;
   transition: opacity 0.3s ease-in-out;
 }
-
 .stock-indicator {
   position: absolute;
   top: 0;
   right: 100;
   z-index: 10;
-  padding: 15px 10px; /* Un poco más grande para visibilidad */
+  padding: 15px 10px;
   font-weight: bold;
   font-size: 0.8rem;
   line-height: 1;
@@ -250,16 +241,12 @@ const handleImageError = () => {
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
-
-/* Estilo para AGOTADO (Rojo Fuerte) */
 .stock-agotado {
-  background-color: #c90a1a; /* Rojo oscuro */
+  background-color: #c90a1a;
   color: white;
 }
-
-/* Estilo para BAJO STOCK (Amarillo/Naranja de Advertencia) */
 .stock-bajo {
-  background-color: #ffc107; /* Amarillo */
-  color: #212529; /* Texto oscuro */
+  background-color: #ffc107;
+  color: #212529;
 }
 </style>

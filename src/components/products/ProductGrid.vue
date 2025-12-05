@@ -27,6 +27,7 @@
           :stockStatus="getStockStatus(product)"
           @edit="$emit('editProduct', $event)"
           @delete="handleDeleteProduct"
+          @showSuppliers="handleShowSuppliers"
         />
       </div>
     </div>
@@ -75,6 +76,13 @@
     @confirm="confirmDelete"
     @cancel="hideConfirmationModal"
   />
+
+  <SupplierModal
+    :show="isSupplierModalVisible"
+    :suppliers="supplierModalData.suppliers"
+    :product-name="supplierModalData.productName"
+    @close="isSupplierModalVisible = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -85,9 +93,18 @@ import ProductoService, {
   type Producto,
   type PaginatedResponse,
 } from '@/services/ProductoService.js'
+import SupplierModal from './SupplierModal.vue'
 
 // --- CONSTANTES ---
-const ITEMS_PER_PAGE = 20 // Más ítems por página para la vista de inventario
+const ITEMS_PER_PAGE = 20
+
+// --- TIPOS LOCALES ---
+interface Proveedor {
+  id: number
+  nombreComercial: string
+  telefono: string | null
+  email: string | null
+}
 
 // --- PROPS y EMITS ---
 const props = defineProps<{
@@ -121,6 +138,14 @@ const pagination = reactive<PaginatedResponse<Producto>>({
   },
   per_page: ITEMS_PER_PAGE,
 })
+
+//  ESTADO PARA EL MODAL DE PROVEEDORES
+const isSupplierModalVisible = ref(false)
+const supplierModalData = reactive<{ suppliers: Proveedor[]; productName: string }>({
+  suppliers: [],
+  productName: '',
+})
+// ---------------------------------------------
 
 // --- LÓGICA COMPUTADA ---
 
@@ -162,17 +187,13 @@ const pageRange = computed(() => {
 })
 
 /**
- * Ordena los productos para mostrar los de BAJO STOCK (actual < minimo) primero y con opacidad.
- * @returns Producto[]
+ * Ordena los productos para mostrar los de BAJO STOCK (actual < minimo) primero.
  */
 const sortedProducts = computed(() => {
-  // 1. Clonar la lista para no mutar el estado original
   const list = [...products.value]
 
-  // 2. Aplicar el orden:
-  // - La condición de BAJO STOCK es: stock_actual < stock_minimo
+  // Aplicar el orden: Los productos con stock actual < stock mínimo van primero.
   list.sort((a, b) => {
-    // 🚨 Nueva condición de bajo stock
     const isALow = a.stock_actual < a.stock_minimo
     const isBLow = b.stock_actual < b.stock_minimo
 
@@ -182,7 +203,6 @@ const sortedProducts = computed(() => {
     if (!isALow && isBLow) {
       return 1 // B va antes (bajo stock)
     }
-    // Si ambos tienen el mismo estado de stock, mantienen el orden
     return 0
   })
 
@@ -190,6 +210,16 @@ const sortedProducts = computed(() => {
 })
 
 // --- MÉTODOS ---
+
+/**
+ * Maneja el evento 'showSuppliers' del ProductCard.
+ */
+const handleShowSuppliers = (suppliers: Proveedor[], productName: string) => {
+  supplierModalData.suppliers = suppliers
+  supplierModalData.productName = productName
+  isSupplierModalVisible.value = true
+}
+// ----------------------------------------------
 
 const getStockStatus = (product: Producto): 'agotado' | 'bajo' | 'normal' => {
   if (product.stock_actual <= 0) {
@@ -227,7 +257,7 @@ const fetchProducts = async () => {
   const params: { page: number; search: string; categoria_id?: number; per_page: number } = {
     page: currentPage.value,
     search: props.searchQuery,
-    per_page: ITEMS_PER_PAGE, // Usamos la constante
+    per_page: ITEMS_PER_PAGE,
   }
 
   if (props.categoriaId !== null) {
@@ -283,13 +313,12 @@ const confirmDelete = async () => {
     })
 
     // Recargar la lista y notificar al padre
-    // Si estamos en la última página y queda vacía, volvemos a la anterior
     if (products.value.length === 1 && currentPage.value > 1) {
       currentPage.value -= 1
     }
 
     await fetchProducts()
-    emit('productsUpdated') // Notifica que la lista ha cambiado
+    emit('productsUpdated')
   } catch (error) {
     console.error(`Error al eliminar el producto ID ${productId}:`, error)
     // Error: Emitir notificación al AdminView
@@ -305,7 +334,7 @@ const confirmDelete = async () => {
 // --- OBSERVADORES ---
 
 watch([() => props.searchQuery, () => props.categoriaId], () => {
-  currentPage.value = 1 // Reiniciar página al aplicar nuevo filtro
+  currentPage.value = 1
   fetchProducts()
 })
 
