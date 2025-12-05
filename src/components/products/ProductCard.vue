@@ -1,13 +1,19 @@
 <template>
   <div class="card product-card h-100 shadow-lg border-0">
-    <div class="image-container">
+    <div class="image-container position-relative">
+      <div v-if="isLowOrOut" :class="['stock-indicator', indicatorClass]">
+        {{ indicatorText }}
+      </div>
+
       <img
         :src="imageUrl"
         class="card-img-top"
         :alt="product.nombre"
         loading="lazy"
         @error="handleImageError"
+        :class="{ 'image-low-stock': props.stockStatus === 'bajo' }"
       />
+
       <span class="category-badge badge text-bg-dark">
         {{ product.categoria?.nombre || 'Sin Categoría' }}
       </span>
@@ -25,13 +31,13 @@
         <div class="price-box price-venta">
           <div class="price-label">Venta</div>
           <div class="price-value">
-            ${{ parseFloat(product.precio_venta.toString()).toFixed(2) }}
+            ${{ parseFloat(product.precio_venta.toString()).toFixed(0) }}
           </div>
         </div>
         <div class="price-box price-compra">
           <div class="price-label">Compra</div>
           <div class="price-value">
-            ${{ parseFloat(product.precio_compra.toString()).toFixed(2) }}
+            ${{ parseFloat(product.precio_compra.toString()).toFixed(0) }}
           </div>
         </div>
       </div>
@@ -70,7 +76,6 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { type Producto } from '@/services/ProductoService.js'
@@ -81,6 +86,7 @@ const isImageError = ref(false)
 // --- PROPIEDADES Y EMITS ---
 const props = defineProps<{
   product: Producto
+  stockStatus: 'agotado' | 'bajo' | 'normal'
 }>()
 
 const emit = defineEmits<{
@@ -89,6 +95,19 @@ const emit = defineEmits<{
 }>()
 
 // --- CÁLCULOS REACTIVOS ---
+
+// Lógica computada para la visualización del texto
+const isLowOrOut = computed(() => props.stockStatus !== 'normal')
+const indicatorText = computed(() => {
+  if (props.stockStatus === 'agotado') return 'AGOTADO'
+  if (props.stockStatus === 'bajo') return `BAJO STOCK (${props.product.stock_actual})`
+  return ''
+})
+const indicatorClass = computed(() => {
+  if (props.stockStatus === 'agotado') return 'stock-agotado'
+  if (props.stockStatus === 'bajo') return 'stock-bajo'
+  return ''
+})
 
 /**
  * Determina la clase del badge de stock_actual basado en stock_minimo (compatible con Dark Mode).
@@ -204,5 +223,43 @@ const handleImageError = () => {
 
 .stock-item {
   border-radius: 0.25rem;
+}
+
+.image-container {
+  /* Es crucial que sea relativo para posicionar el badge */
+  position: relative;
+  overflow: hidden;
+}
+
+.image-low-stock {
+  opacity: 0.3;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.stock-indicator {
+  position: absolute;
+  top: 0;
+  right: 100;
+  z-index: 10;
+  padding: 15px 10px; /* Un poco más grande para visibilidad */
+  font-weight: bold;
+  font-size: 0.8rem;
+  line-height: 1;
+  border-radius: 0 0 8px 0;
+  pointer-events: none;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilo para AGOTADO (Rojo Fuerte) */
+.stock-agotado {
+  background-color: #c90a1a; /* Rojo oscuro */
+  color: white;
+}
+
+/* Estilo para BAJO STOCK (Amarillo/Naranja de Advertencia) */
+.stock-bajo {
+  background-color: #ffc107; /* Amarillo */
+  color: #212529; /* Texto oscuro */
 }
 </style>

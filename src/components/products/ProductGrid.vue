@@ -21,48 +21,49 @@
         </div>
       </div>
 
-      <div v-else v-for="product in products" :key="product.id" class="col">
+      <div v-else v-for="product in sortedProducts" :key="product.id" class="col">
         <ProductCard
           :product="product"
+          :stockStatus="getStockStatus(product)"
           @edit="$emit('editProduct', $event)"
           @delete="handleDeleteProduct"
         />
       </div>
     </div>
+  </div>
 
-    <div v-if="!isLoading && pagination.last_page > 1" class="d-flex justify-content-center mt-4">
-      <nav aria-label="Navegación de Productos">
-        <ul class="pagination">
-          <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-            <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)">
-              Anterior
-            </a>
-          </li>
+  <div v-if="!isLoading && pagination.last_page > 1" class="d-flex justify-content-center mt-4">
+    <nav aria-label="Navegación de Productos">
+      <ul class="pagination">
+        <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)">
+            Anterior
+          </a>
+        </li>
 
-          <li
-            class="page-item"
-            :class="{ active: p === pagination.current_page }"
-            v-for="p in pageRange"
-            :key="p"
-          >
-            <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
-          </li>
+        <li
+          class="page-item"
+          :class="{ active: p === pagination.current_page }"
+          v-for="p in pageRange"
+          :key="p"
+        >
+          <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+        </li>
 
-          <li
-            class="page-item"
-            :class="{ disabled: pagination.current_page === pagination.last_page }"
-          >
-            <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)">
-              Siguiente
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
+        <li
+          class="page-item"
+          :class="{ disabled: pagination.current_page === pagination.last_page }"
+        >
+          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)">
+            Siguiente
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
 
-    <div v-if="!isLoading && products.length > 0" class="text-center mt-2 text-muted small">
-      Mostrando {{ pagination.data.length }} de {{ pagination.total }} productos.
-    </div>
+  <div v-if="!isLoading && products.length > 0" class="text-center mt-2 text-muted small">
+    Mostrando {{ pagination.data.length }} de {{ pagination.total }} productos.
   </div>
 
   <ConfirmationModal
@@ -160,7 +161,45 @@ const pageRange = computed(() => {
   return pages
 })
 
+/**
+ * Ordena los productos para mostrar los de BAJO STOCK (actual < minimo) primero y con opacidad.
+ * @returns Producto[]
+ */
+const sortedProducts = computed(() => {
+  // 1. Clonar la lista para no mutar el estado original
+  const list = [...products.value]
+
+  // 2. Aplicar el orden:
+  // - La condición de BAJO STOCK es: stock_actual < stock_minimo
+  list.sort((a, b) => {
+    // 🚨 Nueva condición de bajo stock
+    const isALow = a.stock_actual < a.stock_minimo
+    const isBLow = b.stock_actual < b.stock_minimo
+
+    if (isALow && !isBLow) {
+      return -1 // A va antes (bajo stock)
+    }
+    if (!isALow && isBLow) {
+      return 1 // B va antes (bajo stock)
+    }
+    // Si ambos tienen el mismo estado de stock, mantienen el orden
+    return 0
+  })
+
+  return list
+})
+
 // --- MÉTODOS ---
+
+const getStockStatus = (product: Producto): 'agotado' | 'bajo' | 'normal' => {
+  if (product.stock_actual <= 0) {
+    return 'agotado'
+  }
+  if (product.stock_actual < product.stock_minimo) {
+    return 'bajo'
+  }
+  return 'normal'
+}
 
 const getProductToDeleteName = (): string => {
   const product = products.value.find((p) => p.id === productToDeleteId.value)
