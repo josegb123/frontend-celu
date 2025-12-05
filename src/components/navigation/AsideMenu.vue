@@ -31,6 +31,11 @@
           >
         </li>
         <li class="nav-item">
+          <router-link :to="{ name: 'RecibirPedidos' }" class="nav-link text-white"
+            ><i class="bi bi-truck-flatbed me-2"></i><span>Recibir Pedidos</span></router-link
+          >
+        </li>
+        <li class="nav-item">
           <router-link :to="{ name: 'Usuarios' }" class="nav-link text-white">
             <i class="bi bi-people me-2"></i><span>Usuarios</span>
           </router-link>

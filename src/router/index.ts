@@ -82,6 +82,15 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: '/recibir-pedidos',
+    name: 'RecibirPedidos',
+    component: () => import('@/views/RecibirPedidosView.vue'),
+    meta: {
+      title: 'Recibir Pedidos de Proveedor',
+      requireAuth: true,
+    },
+  },
+  {
     path: '/usuarios',
     name: 'Usuarios',
     component: () => import('@/views/UserAdminView.vue'),
