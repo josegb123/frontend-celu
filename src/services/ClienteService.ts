@@ -74,7 +74,7 @@ class ClienteService {
    * Busca clientes por un término (nombre, cédula).
    * @returns Promise<Cliente[]> El array de clientes adaptados, o un array vacío.
    */
-  public async searchClientes(query: string): Promise<Cliente[]> {
+  public async search(query: string): Promise<Cliente[]> {
     if (query.length < 3) return []
     try {
       // Usamos el query parameter 'search' para filtrar, asumiendo que el backend lo soporta

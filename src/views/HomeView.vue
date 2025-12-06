@@ -14,12 +14,16 @@ import StatCard from '@/components/home/StatCard.vue'
 import TopRankingCard from '@/components/home/TopRankingCard.vue'
 import LastSalesTable from '@/components/home/LastSalesTable.vue'
 import { useStockAlertStore } from '@/store/useStockAlertStore'
+import { useAuthStore } from '@/store/authStore'
 
 // 2. USAR EL STORE DE ALERTAS DE STOCK
 const storeAlert = useStockAlertStore()
 const bajoStock = computed(() => {
   return storeAlert.totalStockAlertas
 })
+
+const userStore = useAuthStore()
+const user = computed(() => userStore.user)
 
 // 3. DEFINIR LA INTERFAZ PARA LOS DATOS DEL DASHBOARD
 interface DashboardData {
@@ -81,7 +85,7 @@ onMounted(fetchDashboardData)
 <template>
   <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>👋 Dashboard Principal</h2>
+      <h2>👋 Bienvenido {{ user.name }}</h2>
       <p class="text-muted mb-0">Vista rápida y métricas clave del negocio.</p>
     </div>
 

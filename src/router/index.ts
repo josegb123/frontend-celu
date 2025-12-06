@@ -4,6 +4,8 @@ import RegisterView from '@/views/RegisterView.vue'
 import HomeView from '@/views/HomeView.vue'
 import { useAuthStore } from '@/store/authStore'
 import VentaPOS from '@/views/VentaPOS.vue'
+import DevolucionFormView from '@/views/devoluciones/DevolucionFormView.vue' // Import
+import DevolucionGestionView from '@/views/devoluciones/DevolucionGestionView.vue' // Import
 
 // --- 1. DEFINICIÓN DE RUTAS ---
 const routes: Array<RouteRecordRaw> = [
@@ -111,6 +113,24 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/NotificacionesView.vue'),
     meta: {
       title: 'Notificaciones',
+      requireAuth: true,
+    },
+  },
+  {
+    path: '/devoluciones/registrar',
+    name: 'DevolucionForm',
+    component: DevolucionFormView,
+    meta: {
+      title: 'Registrar Devolución',
+      requireAuth: true,
+    },
+  },
+  {
+    path: '/devoluciones/gestion',
+    name: 'DevolucionGestion',
+    component: DevolucionGestionView,
+    meta: {
+      title: 'Gestión de Devoluciones',
       requireAuth: true,
     },
   },

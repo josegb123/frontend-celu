@@ -40,7 +40,7 @@ export interface VentaIndexResponse {
   cliente_nombre: string | null
   usuario_vendedor: string | null
   brutotal: number
-  total_venta: string | number
+  total_venta: number
   metodo_pago: MetodoPagoRequest
   user: {
     name: string | null

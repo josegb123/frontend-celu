@@ -17,7 +17,7 @@
       />
 
       <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-        {{ totalNotificaciones > 99 ? '99+' : totalNotificaciones }}
+        {{ totalNotificaciones > 99 ? '99+' : totalNotificaciones || '' }}
       </span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="userDropdown">
