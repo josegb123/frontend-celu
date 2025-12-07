@@ -33,7 +33,7 @@ export interface Devolucion {
   updated_at: string
   // Relationships (simplified for now)
   producto?: { id: number; nombre: string }
-  cliente?: { id: number; nombre: string; ruc_ci: string | null }
+  cliente?: { id: number; nombre: string; cedula: string | null }
   venta?: { id: number; total: number }
 }
 

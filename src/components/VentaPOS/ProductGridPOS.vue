@@ -1,95 +1,98 @@
 <template>
-  <div class="product-grid-pos-container">
-    <div class="product-grid-scroll-area">
-      <div
-        class="row g-3"
-        :class="{
-          'row-cols-2': windowWidth < 800,
-          'row-cols-3': windowWidth >= 800,
-        }"
-      >
-        <div v-if="isLoading" class="col-12 text-center my-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando productos...</span>
-          </div>
-          <p class="mt-2 text-muted">Cargando productos...</p>
+  <div class="product-grid-scroll-area p-1 overflow-scroll">
+    <div
+      class="row g-3 content"
+      :class="{
+        'row-cols-2': windowWidth < 800,
+        'row-cols-3': windowWidth >= 800,
+      }"
+    >
+      <div v-if="isLoading" class="col-12 text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando productos...</span>
         </div>
+        <p class="mt-2 text-muted">Cargando productos...</p>
+      </div>
 
-        <div v-else-if="products.length === 0 && !isInitialLoad" class="col-12 my-5">
-          <div class="alert alert-warning text-center">
-            No se encontraron productos con los filtros.
-          </div>
+      <div v-else-if="products.length === 0 && !isInitialLoad" class="col-12 my-5">
+        <div class="alert alert-warning text-center">
+          No se encontraron productos con los filtros.
         </div>
+      </div>
 
-        <div v-else v-for="product in products" :key="product.id" class="col">
-          <div
-            class="card product-card-pos shadow-sm text-center border square-aspect-ratio"
-            @click="emit('product-selected', product)"
-            :class="{
-              // Alerta de stock bajo (1 a 4 unidades)
-              'low-stock-alert': product.stock_actual > 0 && product.stock_actual < 5,
-              // Alerta de stock agotado (0 unidades)
-              'out-of-stock': product.stock_actual === 0,
-            }"
-          >
-            <div class="card-body p-2 d-flex flex-column justify-content-center">
-              <h6 class="card-title mb-1 text-primary text-truncate" :title="product.nombre">
-                {{ product.nombre }}
-              </h6>
-              <p class="card-text fw-bold mb-0 fs-5">
-                ${{ parseFloat(product.precio_venta.toString()).toFixed(2) }}
-              </p>
+      <div v-else v-for="product in products" :key="product.id" class="col">
+        <div
+          class="card product-card-pos shadow-sm text-center border"
+          @click="emit('product-selected', product)"
+          :class="{
+            // Alerta de stock bajo (1 a 4 unidades)
+            'low-stock-alert': product.stock_actual > 0 && product.stock_actual < 5,
+            // Alerta de stock agotado (0 unidades)
+            'out-of-stock': product.stock_actual === 0,
+          }"
+        >
+          <h6 class="card-title p-1 pt-3 text-truncate" :title="product.nombre">
+            {{ product.nombre }}
+          </h6>
+          <div class="card-body pt-0 d-flex flex-column justify-content-end">
+            <img
+              :src="product.imagen_url || '/no_image.webp'"
+              class="img-fluid border-0 rounded-3 mb-2 mx-auto"
+              alt=""
+            />
+            <p class="card-text fw-bold mb-0 fs-5">
+              ${{ parseFloat(product.precio_venta.toString()).toFixed(2) }}
+            </p>
 
-              <span
-                class="badge mt-1"
-                :class="{
-                  'text-bg-danger': product.stock_actual < 5,
-                  'text-bg-secondary': product.stock_actual >= 5,
-                }"
-              >
-                {{ product.stock_actual }} en stock
-              </span>
-            </div>
+            <span
+              class="badge mt-1"
+              :class="{
+                'text-bg-danger': product.stock_actual < 5,
+                'text-bg-secondary': product.stock_actual >= 5,
+              }"
+            >
+              {{ product.stock_actual }} en stock
+            </span>
+          </div>
 
-            <div class="card-footer border-top p-1">
-              <small class="text-muted">
-                {{ product.stock_actual === 0 ? 'Sin Stock' : 'Clic para agregar' }}
-              </small>
-            </div>
+          <div class="card-footer border-top p-1">
+            <small class="text-muted">
+              {{ product.stock_actual === 0 ? 'Sin Stock' : 'Clic para agregar' }}
+            </small>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <div v-if="pagination.last_page > 1 && !isLoading" class="d-flex justify-content-center mt-3">
-      <nav>
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-            <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)"
-              >Anterior</a
-            >
-          </li>
-
-          <li
-            class="page-item"
-            :class="{ active: p === pagination.current_page }"
-            v-for="p in pageRange"
-            :key="p"
+  <div v-if="pagination.last_page > 1 && !isLoading" class="d-flex justify-content-center mt-3">
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)"
+            >Anterior</a
           >
-            <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
-          </li>
+        </li>
 
-          <li
-            class="page-item"
-            :class="{ disabled: pagination.current_page === pagination.last_page }"
+        <li
+          class="page-item"
+          :class="{ active: p === pagination.current_page }"
+          v-for="p in pageRange"
+          :key="p"
+        >
+          <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+        </li>
+
+        <li
+          class="page-item"
+          :class="{ disabled: pagination.current_page === pagination.last_page }"
+        >
+          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)"
+            >Siguiente</a
           >
-            <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)"
-              >Siguiente</a
-            >
-          </li>
-        </ul>
-      </nav>
-    </div>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -249,18 +252,12 @@ onMounted(() => {
 
 <style scoped>
 .product-grid-pos-container {
-  min-height: 250px;
   display: flex;
   flex-direction: column;
 }
 
-/* 1. AJUSTE CRÍTICO DE ALTURA */
-.product-grid-scroll-area {
-  max-height: 450px;
-  overflow-y: auto;
-  padding-right: 5px;
-  margin-bottom: 10px;
-  flex-grow: 1;
+.product-grid-scroll-area::-webkit-scrollbar {
+  display: none;
 }
 
 /* 2. FORZAR DIMENSIONES CUADRADAS PARA LA TARJETA */
@@ -269,7 +266,9 @@ onMounted(() => {
   transition:
     transform 0.2s,
     box-shadow 0.2s;
-  aspect-ratio: 1 / 1;
+
+  min-height: 280px;
+  z-index: 10000 !important;
 }
 
 .product-card-pos:hover {
@@ -282,10 +281,8 @@ onMounted(() => {
 }
 
 .card-body {
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
 /* -------------------------------------------------------------------------
@@ -314,5 +311,25 @@ onMounted(() => {
 .out-of-stock .card-title {
   /* Forzar color oscuro para que contraste con el fondo claro de la alerta */
   color: var(--bs-dark) !important;
+}
+
+.content {
+  max-height: calc(100vh - 215px);
+}
+
+.img-fluid {
+  max-height: 80px;
+  object-fit: contain;
+  width: auto;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.text-truncate {
+  text-wrap: stable;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* number of lines to show */
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 </style>

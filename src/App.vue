@@ -1,9 +1,9 @@
 <template>
   <div id="app" class="app-layout">
     <template v-if="authStore.isAuthenticated">
-      <NavBar @show-cierre-modal="showCerrarCajaModal = true" />
+      <!--       <NavBar @show-cierre-modal="showCerrarCajaModal = true" /> -->
       <div class="main-container">
-        <AsideMenu />
+        <AsideMenu @show-cierre-modal="showCerrarCajaModal = true" />
         <main class="app-content">
           <RouterView />
         </main>
@@ -21,13 +21,13 @@
       @close="showCerrarCajaModal = false"
       @closed="handleCajaClosed"
     />
+    <div id="teleported-layer"></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { watch, onMounted, ref } from 'vue'
 import AsideMenu from './components/navigation/AsideMenu.vue'
-import NavBar from './components/navigation/NavBar.vue'
 import { useThemeStore } from './store/themeStore'
 import { useAuthStore } from './store/authStore'
 import router from './router'

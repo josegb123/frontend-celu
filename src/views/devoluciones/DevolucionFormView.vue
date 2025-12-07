@@ -275,8 +275,10 @@ const resetForm = () => {
       <h2>Registrar Devolución</h2>
       <p class="text-muted mb-0">Gestión de devoluciones de productos por venta.</p>
     </div>
-
     <div class="card p-4">
+      <router-link :to="{ name: 'DevolucionGestion' }" class="btn btn-secondary mb-4 col-4">
+        <i class="bi bi-arrow-left me-2"></i> Volver a Gestión de Devoluciones
+      </router-link>
       <form @submit.prevent="handleSubmit">
         <!-- Sale Search Section -->
         <div class="mb-4">

@@ -26,7 +26,7 @@
               <option value="">Todos los Estados</option>
               <option value="finalizada">Finalizada</option>
               <option value="pendiente_pago">Pendiente de Pago</option>
-              <option value="cancelada">Cancelada</option>
+              <option value="reembolsada">Reembolsada</option>
             </select>
           </div>
           <div class="col-md-3">

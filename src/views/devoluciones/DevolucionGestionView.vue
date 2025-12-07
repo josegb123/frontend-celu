@@ -13,7 +13,7 @@ const fetchDevolucionesPendientes = async () => {
   loading.value = true
   try {
     devolucionesPendientes.value = await DevolucionService.getDevolucionesPendientes()
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error fetching devoluciones pendientes:', err)
     showNotification('Error al cargar devoluciones pendientes', 'error')
   } finally {
@@ -28,7 +28,8 @@ const updateStatus = async (id: number, newStatus: string) => {
     showNotification(`Estado de devolución ${id} actualizado a "${newStatus}"`, 'success')
     // Re-fetch data to reflect the change
     await fetchDevolucionesPendientes()
-  } catch (err: any) {
+  } catch (err) {
+    // Handle error
     console.error(`Error updating status for devolucion ${id}:`, err)
     showNotification(`Error al actualizar estado de devolución ${id}`, 'error')
   } finally {
@@ -47,6 +48,13 @@ onMounted(fetchDevolucionesPendientes)
     </div>
 
     <div class="card p-4">
+      <div class="row">
+        <div class="col-3">
+          <router-link :to="{ name: 'DevolucionForm' }" class="btn btn-primary mb-3 w-100">
+            <i class="bi bi-plus-lg me-2"></i> Nueva Devolución
+          </router-link>
+        </div>
+      </div>
       <div v-if="loading" class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Cargando...</span>
@@ -60,8 +68,6 @@ onMounted(fetchDevolucionesPendientes)
         <table class="table table-hover table-striped">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Venta ID</th>
               <th>Producto</th>
               <th>ID Único</th>
               <th>Cliente</th>
@@ -73,22 +79,26 @@ onMounted(fetchDevolucionesPendientes)
           </thead>
           <tbody>
             <tr v-for="dev in devolucionesPendientes" :key="dev.id">
-              <td>{{ dev.id }}</td>
-              <td>{{ dev.venta_id }}</td>
               <td>{{ dev.producto?.nombre ?? 'N/A' }}</td>
               <td>{{ dev.id_unico_producto }}</td>
-              <td>{{ dev.cliente?.nombre ?? 'N/A' }} ({{ dev.cliente?.ruc_ci ?? '' }})</td>
+              <td>
+                {{ dev.cliente?.nombre ?? 'N/A' }} ({{
+                  dev.cliente?.cedula ?? 'Sin Identificación'
+                }})
+              </td>
               <td>{{ dev.motivo }}</td>
-              <td>${{ (dev.costo_unitario || 0).toFixed(2) }}</td>
+              <td>${{ dev.costo_unitario || 0 }}</td>
               <td>{{ dev.estado_gestion }}</td>
+
               <td>
                 <div class="dropdown">
                   <button
-                    class="btn btn-sm btn-secondary dropdown-toggle"
+                    class="btn btn-sm btn-warning dropdown-toggle"
                     type="button"
                     :id="`dropdownMenuButton-${dev.id}`"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
+                    data-boundary="viewport"
                   >
                     Acciones
                   </button>
@@ -124,5 +134,12 @@ onMounted(fetchDevolucionesPendientes)
 </template>
 
 <style scoped>
-/* Add any specific styles here */
+.table-responsive {
+  min-height: 70vh;
+}
+
+.table-responsive,
+.table {
+  overflow-y: visible !important;
+}
 </style>

@@ -4,7 +4,7 @@
     <td>{{ venta.cliente_nombre || 'Cliente Genérico' }}</td>
     <td>{{ venta.usuario_vendedor || 'N/A' }}</td>
     <td>
-      <span :class="`badge bg-${estadoColor}`">{{ estadoTexto }}</span>
+      <span :class="`badge text-bg-${estadoColor}`">{{ estadoTexto }}</span>
     </td>
     <td class="fw-bold">${{ venta?.total_venta }}</td>
     <td>{{ formattedDate }}</td>
