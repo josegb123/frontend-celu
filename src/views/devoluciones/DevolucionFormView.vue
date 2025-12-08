@@ -8,57 +8,59 @@ import VentaService, {
   type VentaIndexResponse,
   type VentaShowResponse,
 } from '@/services/VentaService'
-import ClienteService, { type Cliente } from '@/services/ClienteService'
-import { useNotification } from '@/composables/useNotification' // Assuming a notification composable exists
+import ClienteService from '@/services/ClienteService'
+import { useNotification } from '@/composables/useNotification'
 import { isAxiosError } from 'axios'
+import type { ICliente } from '@/interfaces/ICliente'
 
 // Notification composable
 const { showNotification } = useNotification()
 
-// Form Data for submission
-// Se añade cliente_id al formulario de devolución
-const devolucionForm = ref<CreateDevolucionData>({
-  venta_id: null as number | null,
+interface ProductReturnListItem {
+  producto_id: number
+  nombre_producto_historico: string
+  precio_unitario: number
+  id_unico_producto: string
+  motivo: string
+  notas: string
+  selected: boolean
+}
+
+// --- FORM DATA & UI STATES ---
+
+// Ajuste de tipo para mitigar el error TS, permitiendo 'null' para cliente_id
+type DevolucionFormType = CreateDevolucionData & { cliente_id: string | number | null }
+
+const devolucionForm = ref<DevolucionFormType>({
+  venta_id: null,
+  cliente_id: null as unknown as number,
   productos_devueltos: [],
 })
 
-// UI States
-const loading = ref(false) // For general loading (e.g., sale search)
-const submitting = ref(false) // For form submission
+const loading = ref(false)
+const submitting = ref(false)
 const error = ref<string | null>(null)
 
-// Sale Search
+// --- VENTA SEARCH ---
 const ventaSearchQuery = ref('')
 const searchedVentas = ref<VentaIndexResponse[]>([])
 const selectedVenta = ref<VentaShowResponse | null>(null)
 
-// Client Search
+// --- CLIENTE SEARCH ---
 const clienteSearchQuery = ref('')
-const searchedClientes = ref<Cliente[]>([])
-const selectedCliente = ref<Cliente | null>(null)
+const searchedClientes = ref<ICliente[]>([])
+const selectedCliente = ref<ICliente | null>(null)
 const loadingClientes = ref(false)
-let isSelectingCliente = false // Flag to prevent watch trigger on select
+let isSelectingCliente = false
 
-// Products from the selected sale, with return-specific data
-const productsForReturn = ref<
-  {
-    producto_id: number
-    nombre_producto_historico: string
-    precio_unitario: number
-    id_unico_producto: string
-    motivo: string
-    notas: string
-    selected: boolean
-  }[]
->([])
+const productsForReturn = ref<ProductReturnListItem[]>([])
 
-// Watcher for sale search query
+// --- WATCHERS ---
+
 watch(ventaSearchQuery, async (newQuery) => {
   if (newQuery.length >= 1) {
-    // Changed from 3 to 1
     loading.value = true
     try {
-      // Assuming getIndex can search by query string (e.g., sale ID, client name etc.)
       const response = await VentaService.getIndex({ search: newQuery })
       searchedVentas.value = response.data
     } catch (err: unknown) {
@@ -76,7 +78,7 @@ watch(ventaSearchQuery, async (newQuery) => {
 // Watcher for client search query
 watch(clienteSearchQuery, async (newQuery) => {
   if (isSelectingCliente) {
-    return // Do not trigger search when a client is being selected
+    return
   }
   if (newQuery.length >= 2) {
     loadingClientes.value = true
@@ -96,13 +98,14 @@ watch(clienteSearchQuery, async (newQuery) => {
   }
 })
 
+// --- RECENT SALES ---
 const recentVentas = ref<VentaIndexResponse[]>([])
 const loadingRecentVentas = ref(false)
 
 const fetchRecentVentas = async () => {
   loadingRecentVentas.value = true
   try {
-    const response = await VentaService.getIndex({ page: 1, per_page: 5 }) // Fetch last 5 sales
+    const response = await VentaService.getIndex({ page: 1, per_page: 5 })
     recentVentas.value = response.data
   } catch (err: unknown) {
     const message =
@@ -119,7 +122,7 @@ onMounted(() => {
   fetchRecentVentas()
 })
 
-// Select Sale
+// --- SALE SELECTION ---
 const selectVenta = async (venta: VentaIndexResponse) => {
   loading.value = true
   ventaSearchQuery.value = `Venta #${venta.venta_id} - ${venta.cliente_nombre}`
@@ -129,13 +132,9 @@ const selectVenta = async (venta: VentaIndexResponse) => {
     selectedVenta.value = fullVentaDetails
     devolucionForm.value.venta_id = fullVentaDetails.venta_id
 
-    // Pre-fill client from the sale
-    if (fullVentaDetails.cliente) {
-      selectCliente(fullVentaDetails.cliente)
-    } else {
-      // Reset client if the sale has no client
-      selectCliente(null)
-    }
+    // 🎯 CAMBIO CLAVE: NO AUTO-SELECCIONAMOS EL CLIENTE.
+    // Solo limpiamos los campos por si había algo antes de la búsqueda de la venta.
+    selectCliente(null) // Esto limpia selectedCliente y clienteSearchQuery.value
 
     // Map products from the sale for the return form
     productsForReturn.value = fullVentaDetails.detalles_completos.map((detalle) => ({
@@ -161,31 +160,43 @@ const selectVenta = async (venta: VentaIndexResponse) => {
   }
 }
 
-// Select Client
-const selectCliente = (cliente: Cliente | null) => {
-  isSelectingCliente = true // Set flag to prevent watcher from firing
+// --- CLIENT SELECTION (Usado solo por selección manual) ---
+const selectCliente = (cliente: ICliente | null) => {
+  isSelectingCliente = true
   if (cliente) {
     selectedCliente.value = cliente
-    clienteSearchQuery.value = `${cliente.nombre} (${cliente.ruc_ci ?? 'N/A'})`
+    // Se concatenan nombre y apellidos para el display
+    clienteSearchQuery.value = `${cliente.nombre} ${cliente.apellidos} (${cliente.cedula ?? 'N/A'})`
+    // Asignar el ID al formulario
+    devolucionForm.value.cliente_id = cliente.id
   } else {
     selectedCliente.value = null
     clienteSearchQuery.value = ''
+    // Limpiar el ID del formulario
+    devolucionForm.value.cliente_id = 1
   }
   searchedClientes.value = []
 
-  // Reset the flag after the DOM has updated, allowing for new searches
-  // Using setTimeout to push this to the end of the execution queue
   setTimeout(() => {
     isSelectingCliente = false
   }, 0)
 }
 
-// Computed property to check if any product is selected for return
+// --- COMPUTED PROPERTIES ---
 const anyProductSelected = computed(() => {
-  return productsForReturn.value.some((p) => p.selected)
+  return productsForReturn.value.some((p: ProductReturnListItem) => p.selected)
 })
 
-// Handle Form Submission
+// Validación: Se requiere Venta, Cliente (explícitamente seleccionado) y productos
+const isFormValid = computed(() => {
+  return (
+    devolucionForm.value.venta_id !== null &&
+    selectedCliente.value !== null && // 🎯 Mantenemos la necesidad de que sea seleccionado
+    anyProductSelected.value
+  )
+})
+
+// --- FORM SUBMISSION ---
 const handleSubmit = async () => {
   submitting.value = true
   error.value = null
@@ -196,12 +207,18 @@ const handleSubmit = async () => {
     return
   }
 
+  // 🎯 MANTENEMOS: Validación obligatoria de cliente y mostramos la alerta visual
+  if (!selectedCliente.value || devolucionForm.value.cliente_id === null) {
+    error.value = 'Debe seleccionar o asignar un cliente a la devolución.'
+    submitting.value = false
+    return
+  }
+
   const productosDevueltosPayload: ProductoDevueltoData[] = []
   let hasInputError = false
 
-  productsForReturn.value.forEach((item) => {
+  productsForReturn.value.forEach((item: ProductReturnListItem) => {
     if (item.selected) {
-      // Validate required fields for selected items
       if (!item.id_unico_producto || !item.motivo) {
         hasInputError = true
         return
@@ -209,9 +226,9 @@ const handleSubmit = async () => {
       productosDevueltosPayload.push({
         producto_id: item.producto_id,
         id_unico_producto: item.id_unico_producto,
-        cantidad: 1, // Always 1 per unique item entry in the backend
+        cantidad: 1,
         motivo: item.motivo,
-        costo_unitario: item.precio_unitario, // Using the sale price as cost for refund
+        costo_unitario: item.precio_unitario,
         notas: item.notas,
       })
     }
@@ -232,15 +249,15 @@ const handleSubmit = async () => {
 
   devolucionForm.value.productos_devueltos = productosDevueltosPayload
 
-  // Añadir el cliente_id al payload si hay un cliente seleccionado
-  const finalPayload: CreateDevolucionData = { ...devolucionForm.value }
-  if (selectedCliente.value) {
-    finalPayload.cliente_id = selectedCliente.value.id
-  }
+  const finalPayload: CreateDevolucionData = {
+    venta_id: devolucionForm.value.venta_id,
+    cliente_id: devolucionForm.value.cliente_id,
+    productos_devueltos: devolucionForm.value.productos_devueltos,
+  } as CreateDevolucionData
+
   try {
     await DevolucionService.createDevolucion(finalPayload)
     showNotification('Devolución registrada con éxito!', 'success')
-    // Reset form after successful submission
     resetForm()
   } catch (err: unknown) {
     let message = 'Error desconocido al registrar la devolución.'
@@ -259,7 +276,11 @@ const handleSubmit = async () => {
 
 // Function to reset the form
 const resetForm = () => {
-  devolucionForm.value = { venta_id: null, productos_devueltos: [] }
+  devolucionForm.value = {
+    venta_id: null,
+    cliente_id: null,
+    productos_devueltos: [],
+  } as unknown as DevolucionFormType
   selectedVenta.value = null
   productsForReturn.value = []
   selectedCliente.value = null
@@ -280,7 +301,6 @@ const resetForm = () => {
         <i class="bi bi-arrow-left me-2"></i> Volver a Gestión de Devoluciones
       </router-link>
       <form @submit.prevent="handleSubmit">
-        <!-- Sale Search Section -->
         <div class="mb-4">
           <label for="ventaSearch" class="form-label"
             >Buscar Venta <span class="text-danger">*</span></label
@@ -293,6 +313,7 @@ const resetForm = () => {
               v-model="ventaSearchQuery"
               placeholder="Buscar venta por ID, cliente, etc."
               autocomplete="off"
+              :class="{ 'is-valid': selectedVenta }"
             />
             <button class="btn btn-outline-secondary" type="button" @click="resetForm()">
               Limpiar/Reiniciar
@@ -322,12 +343,14 @@ const resetForm = () => {
           </div>
         </div>
 
-        <!-- Selected Sale Details -->
         <div v-if="selectedVenta" class="mb-4 p-3 border rounded bg-light">
           <h5>Detalles de la Venta Seleccionada:</h5>
           <p><strong>ID Venta:</strong> {{ selectedVenta.venta_id }}</p>
+
           <div class="mb-3 position-relative">
-            <label for="clienteSearch" class="form-label">Cliente Asociado a la Devolución</label>
+            <label for="clienteSearch" class="form-label">
+              Cliente Asociado a la Devolución <span class="text-danger">*</span>
+            </label>
             <input
               type="text"
               class="form-control"
@@ -335,7 +358,14 @@ const resetForm = () => {
               v-model="clienteSearchQuery"
               placeholder="Buscar cliente para asociar a la devolución..."
               autocomplete="off"
+              :class="{
+                'is-invalid': !selectedCliente && selectedVenta,
+                'is-valid': selectedCliente,
+              }"
             />
+            <div v-if="!selectedCliente && selectedVenta" class="invalid-feedback d-block">
+              Debe buscar y seleccionar un cliente para asociar la devolución.
+            </div>
             <div v-if="loadingClientes" class="text-center mt-2">
               <div class="spinner-border spinner-border-sm" role="status">
                 <span class="visually-hidden">Buscando...</span>
@@ -353,7 +383,7 @@ const resetForm = () => {
                 :key="cliente.id"
                 @click="selectCliente(cliente)"
               >
-                {{ cliente.nombre }} ({{ cliente.ruc_ci ?? 'N/A' }})
+                {{ cliente.nombre }} {{ cliente.apellidos }} ({{ cliente.cedula ?? 'N/A' }})
               </button>
             </div>
           </div>
@@ -426,11 +456,7 @@ const resetForm = () => {
 
         <div v-if="error" class="alert alert-danger mt-3">{{ error }}</div>
 
-        <button
-          type="submit"
-          class="btn btn-primary mt-3"
-          :disabled="submitting || !anyProductSelected"
-        >
+        <button type="submit" class="btn btn-primary mt-3" :disabled="submitting || !isFormValid">
           <span
             v-if="submitting"
             class="spinner-border spinner-border-sm"
@@ -441,9 +467,8 @@ const resetForm = () => {
         </button>
       </form>
 
-      <!-- Recent Sales Table -->
       <div v-if="!selectedVenta" class="mt-4">
-        <h5>Ventas Recientes para Acceso Rápido:</h5>
+        <h5>Ventas Recientes:</h5>
         <div v-if="loadingRecentVentas" class="text-center py-3">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Cargando...</span>
@@ -467,7 +492,7 @@ const resetForm = () => {
             <tbody>
               <tr v-for="venta in recentVentas" :key="venta.venta_id">
                 <td>{{ venta.venta_id }}</td>
-                <td>{{ venta.cliente_nombre }}</td>
+                <td>{{ venta.cliente_nombre ?? 'Cliente Anónimo' }}</td>
                 <td>${{ venta.total_venta }}</td>
                 <td>{{ new Date(venta.created_at).toLocaleDateString() }}</td>
                 <td>

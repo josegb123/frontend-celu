@@ -11,7 +11,10 @@
       </button>
     </div>
 
-    <div class="card p-4 p-md-5 w-40 shadow-lg border-1 rounded-3">
+    <div
+      class="card p-4 p-md-5 w-40 shadow-lg border border-secondary-subtle rounded-3 w-100"
+      style="max-width: 450px"
+    >
       <div class="card-header border-0 pt-0 pb-3 text-center bg-transparent">
         <h1 class="text-primary fw-bolder mb-2 fs-2">{{ brandingName }}</h1>
         <p class="text-muted fs-6">Inicia sesión para gestionar tu negocio.</p>

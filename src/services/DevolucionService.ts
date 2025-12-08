@@ -14,7 +14,7 @@ export interface ProductoDevueltoData {
 export interface CreateDevolucionData {
   venta_id: number | null
   productos_devueltos: ProductoDevueltoData[]
-  cliente_id?: number
+  cliente_id?: number | string
 }
 
 // For Devolucion objects returned from API

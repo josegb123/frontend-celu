@@ -1,4 +1,6 @@
 import laravelApi from '@/http/laravelApi'
+import type { ICliente } from '@/interfaces/ICliente'
+import type { IUser } from '@/interfaces/IUser'
 import type { AxiosResponse } from 'axios'
 
 // DTO para el detalle del ítem
@@ -42,13 +44,8 @@ export interface VentaIndexResponse {
   brutotal: number
   total_venta: number
   metodo_pago: MetodoPagoRequest
-  user: {
-    name: string | null
-  }
-  cliente: {
-    nombre: string | null
-    id: number | null
-  }
+  user: IUser
+  cliente: ICliente
   created_at: string
 }
 

@@ -85,6 +85,11 @@
         </p>
         <ul class="nav flex-column">
           <li class="nav-item">
+            <router-link :to="{ name: 'Clientes' }" class="nav-link text-white"
+              ><i class="bi bi-person me-2"></i><span>Clientes</span></router-link
+            >
+          </li>
+          <li class="nav-item">
             <router-link :to="{ name: 'cuentas' }" class="nav-link text-white"
               ><i class="bi bi-wallet2 me-2"></i><span>Cuentas por Cobrar</span></router-link
             >

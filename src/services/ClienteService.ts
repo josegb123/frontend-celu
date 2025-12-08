@@ -1,99 +1,127 @@
-// /services/ClienteService.js (Nuevo Archivo)
-
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
-
-// --- Interfaces de Datos ---
-
-/**
- * Define la estructura de un objeto Cliente tal como viene de la API.
- */
-export interface ClienteAPI {
-  id: number
-  cedula: number // Número de identificación (cedula/ruc)
-  nombre: string // Primer nombre del cliente
-  apellidos: string // Apellidos del cliente
-  telefono: string | null
-  email: string | null
-  direccion: string | null
-  // Nota: No incluiremos 'ruc_ci' o 'nombre_completo' aquí, sino que los calcularemos
-  // o los manejaremos en el frontend si es necesario, o usaremos directamente
-  // las propiedades de la API (nombre y apellidos).
-}
-
-/**
- * Define la estructura de la respuesta paginada de Laravel.
- */
-interface PaginatedClienteResponse {
-  data: ClienteAPI[] // El array de clientes está aquí, dentro de 'data'
-  meta: {
-    // Ignoramos los detalles de meta
-    current_page: number
-    last_page: number
-    total: number
-    // ... otros campos meta
-  }
-}
-
-/**
- * Interfaz de Cliente simplificada para el Frontend (la que usa PosView.vue)
- *
- * NOTA: Esta interfaz es la que ya usas en PosView.vue (id, nombre, ruc_ci).
- * Para evitar problemas de compatibilidad, deberás asegurarte que tu interfaz
- * en @/interfaces/IPostInterfaces se parezca a esta, o usar esta directamente.
- */
-export interface Cliente {
-  id: number
-  nombre: string // Nombre a mostrar (ej. nombre + apellidos)
-  ruc_ci: string | null // Cédula/RUC/CI del cliente
-}
+import type {
+  ICliente,
+  IClientePaginatedResponse,
+  StoreUpdateClientePayload,
+} from '@/interfaces/ICliente'
 
 // --- Clase de Servicio ---
 
 class ClienteService {
   private endpoint = '/clientes'
 
-  /**
-   * Adapta la estructura del Cliente de la API a la estructura Cliente simplificada del Frontend.
-   */
-  private adaptCliente(clienteApi: ClienteAPI): Cliente {
-    // Concatenamos nombre y apellidos para el campo 'nombre' que usa el frontend
-    const nombreCompleto = `${clienteApi.nombre} ${clienteApi.apellidos}`.trim()
+  // --------------------------------------------------------------------------
+  // Métodos CRUD
+  // --------------------------------------------------------------------------
 
-    return {
-      id: clienteApi.id,
-      nombre: nombreCompleto,
-      // Usamos la cedula (convertida a string) o 'N/A' como ruc_ci
-      ruc_ci: clienteApi.cedula ? String(clienteApi.cedula) : null,
-      // Nota: Si necesitas teléfono o dirección en PosView, tendrías que
-      // extender la interfaz Cliente del frontend.
+  /**
+   * Obtiene la lista paginada de clientes.
+   * Permite buscar por nombre o cédula.
+   * @param page Número de página actual.
+   * @param search Término de búsqueda (nombre o cédula).
+   * @returns Promise<IClientePaginatedResponse>
+   */
+  public async index(page: number = 1, search: string = ''): Promise<IClientePaginatedResponse> {
+    try {
+      const params = {
+        page: page,
+        ...(search && { search: search }),
+      }
+
+      const response: AxiosResponse<IClientePaginatedResponse> = await laravelApi.get(
+        this.endpoint,
+        { params },
+      )
+
+      return response.data
+    } catch (error) {
+      console.error('Error al obtener la lista de clientes:', error)
+      throw error
     }
   }
 
   /**
-   * Busca clientes por un término (nombre, cédula).
-   * @returns Promise<Cliente[]> El array de clientes adaptados, o un array vacío.
+   * Busca clientes por un término (nombre, cédula) para uso rápido (ej: POS).
+   * @returns Promise<ICliente[]> El array de clientes.
    */
-  public async search(query: string): Promise<Cliente[]> {
+  public async search(query: string): Promise<ICliente[]> {
     if (query.length < 3) return []
     try {
-      // Usamos el query parameter 'search' para filtrar, asumiendo que el backend lo soporta
-      const response: AxiosResponse<PaginatedClienteResponse> = await laravelApi.get(
+      const response: AxiosResponse<IClientePaginatedResponse> = await laravelApi.get(
         `${this.endpoint}?search=${query}&page=1`,
       )
 
-      // Accedemos a response.data.data, tal como muestra tu respuesta de API
       const results = response.data?.data
 
       if (Array.isArray(results)) {
-        // Mapeamos los resultados usando el adaptador
-        return results.map(this.adaptCliente)
+        return results as ICliente[]
       }
       return []
     } catch (error) {
       console.error('Error al buscar clientes:', error)
       return []
     }
+  }
+
+  /**
+   * Crea un nuevo registro de cliente.
+   * @param payload Datos validados para el nuevo cliente.
+   * @returns Promise<ICliente> El cliente recién creado.
+   */
+  public async store(payload: StoreUpdateClientePayload): Promise<ICliente> {
+    const response: AxiosResponse<{ data: ICliente }> = await laravelApi.post(
+      this.endpoint,
+      payload,
+    )
+    return response.data.data
+  }
+
+  /**
+   * Obtiene un cliente específico.
+   * @param id ID del cliente.
+   * @returns Promise<ICliente>
+   */
+  public async show(id: number | string): Promise<ICliente> {
+    const response: AxiosResponse<{ data: ICliente }> = await laravelApi.get(
+      `${this.endpoint}/${id}`,
+    )
+    return response.data.data
+  }
+
+  /**
+   * Actualiza un registro de cliente existente.
+   * @param id ID del cliente a actualizar.
+   * @param payload Datos validados para la actualización.
+   * @returns Promise<ICliente> El cliente actualizado.
+   */
+  public async update(id: number | string, payload: StoreUpdateClientePayload): Promise<ICliente> {
+    const response: AxiosResponse<{ data: ICliente }> = await laravelApi.put(
+      `${this.endpoint}/${id}`,
+      payload,
+    )
+    return response.data.data
+  }
+
+  /**
+   * Elimina suavemente un registro de cliente (Soft Delete).
+   * @param id ID del cliente a eliminar.
+   * @returns Promise<void>
+   */
+  public async destroy(id: number | string): Promise<void> {
+    await laravelApi.delete(`${this.endpoint}/${id}`)
+  }
+
+  /**
+   * Restaura un registro de cliente eliminado suavemente.
+   * @param id ID del cliente a restaurar.
+   * @returns Promise<ICliente> El cliente restaurado.
+   */
+  public async restore(id: number | string): Promise<ICliente> {
+    const response: AxiosResponse<{ data: ICliente }> = await laravelApi.post(
+      `${this.endpoint}/${id}/restore`,
+    )
+    return response.data.data
   }
 }
 

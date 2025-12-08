@@ -144,6 +144,15 @@ const routes: Array<RouteRecordRaw> = [
       requireAuth: true,
     },
   },
+  {
+    path: '/clientes',
+    name: 'Clientes',
+    component: () => import('@/views/ClientesAdminView.vue'),
+    meta: {
+      title: 'Gestión de Clientes',
+      requireAuth: true,
+    },
+  },
 ]
 // --- 2. CREACIÓN DEL ROUTER ---
 const router = createRouter({
