@@ -276,7 +276,7 @@ function handleVentaGuardada() {
 }
 
 // ----------------------------------------------------
-// GESTIÓN DE MODALES Y RESTRICCIÓN DE CAJA 🚨
+// GESTIÓN DE MODALES Y RESTRICCIÓN DE CAJA
 // ----------------------------------------------------
 
 /**

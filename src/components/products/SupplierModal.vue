@@ -72,18 +72,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
-
-// --- INTERFAZ LOCAL ---
-interface Proveedor {
-  id: number
-  nombreComercial: string
-  telefono: string | null
-  email: string | null
-}
+import type { Proveedor } from '@/interfaces/IProveedores'
 
 // --- PROPS y EMITS ---
-const props = defineProps<{
+defineProps<{
   show: boolean
   suppliers: Proveedor[]
   productName: string

@@ -52,6 +52,7 @@
             <th>Producto</th>
             <th class="text-center">Cant.</th>
             <th class="text-end">Precio Unit.</th>
+            <th class="text-end">Estado</th>
             <th class="text-end">Subtotal</th>
           </tr>
         </thead>
@@ -60,6 +61,7 @@
             <td>{{ item.nombre_producto_historico || `Producto ID: ${item.id}` }}</td>
             <td class="text-center">{{ item.cantidad }}</td>
             <td class="text-end">${{ item.precio_unitario }}</td>
+            <td class="text-end fw-bold">{{ item.estado }}</td>
             <td class="text-end fw-bold">${{ item.subtotal }}</td>
           </tr>
         </tbody>

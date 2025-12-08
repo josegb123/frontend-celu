@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import laravelApi from '@/http/laravelApi'
 import { AxiosError } from 'axios'
-// Importaciones de la API de setup
 import { ref, computed } from 'vue'
 // Importación del nuevo servicio y tipos
 import { cajaService, type TipoMovimiento } from '@/services/CajaService'
@@ -14,9 +13,9 @@ export interface CajaDiaria {
   user_id: number
   fondo_inicial: number
 
-  // Campos que pueden ser nulos hasta el cierre de la caja
   monto_cierre_fisico: number | null
-  // Eliminamos monto_cierre_teorico aquí, ya que lo calcularemos en el store
+  monto_cierre_teorico: number | null
+
   estado: 'abierta' | 'cerrada'
   fecha_apertura: string
   fecha_cierre: string | null
@@ -38,8 +37,6 @@ export interface ReporteCierre {
 }
 
 // ----------------------------------------------------
-// CAMBIO DE ESTRUCTURA: Migración a la API de Setup
-// ----------------------------------------------------
 
 export const useCajaStore = defineStore('caja', () => {
   // --- ESTADO  ---
@@ -47,18 +44,19 @@ export const useCajaStore = defineStore('caja', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // NUEVO ESTADO: Monto calculado a partir de movimientos
+  // ESTADO: Monto calculado a partir de movimientos
   const montoTeoricoActual = ref(0)
 
-  // --- GETTERS (reemplaza 'getters') ---
+  // --- GETTERS ---
   const isCajaAbierta = computed(() => !!cajaActiva.value && cajaActiva.value.estado === 'abierta')
+  // El ID puede ser null si no hay caja abierta.
   const cajaDiariaId = computed(() => cajaActiva.value?.id || null)
   const fondoInicial = computed(() => cajaActiva.value?.fondo_inicial || 0)
 
   // GETTER: Expone el estado calculado
   const getMontoTeorico = computed(() => montoTeoricoActual.value)
 
-  // --- ACTIONS (reemplaza 'actions') ---
+  // --- ACTIONS ---
 
   /**
    * @description Calcula el monto teórico actual (Fondo Inicial + Ingresos Efectivo - Egresos Efectivo).
@@ -74,7 +72,6 @@ export const useCajaStore = defineStore('caja', () => {
       isLoading.value = true
 
       // 1. Obtener los movimientos de EFECTIVO para la caja activa.
-      // Filtramos por caja_diaria_id y método de pago.
       const response = await cajaService.getMovimientos({
         caja_diaria_id: currentCajaId,
         metodo_pago: 'efectivo', // Solo el efectivo afecta el saldo físico
@@ -85,7 +82,14 @@ export const useCajaStore = defineStore('caja', () => {
 
       // 2. Sumar o restar los montos
       response.data.forEach((movimiento) => {
+        // Asegurar la conversión y verificación de datos numéricos
         const monto = parseFloat(movimiento.monto)
+
+        if (isNaN(monto)) {
+          // Manejo defensivo: Ignorar movimientos con monto no numérico
+          console.warn(`Movimiento ID con monto no numérico omitido: ${movimiento.monto}`)
+          return
+        }
 
         if (movimiento.tipo === 'Ingreso') {
           totalMovimientosEfectivo += monto
@@ -142,7 +146,7 @@ export const useCajaStore = defineStore('caja', () => {
       })
 
       cajaActiva.value = response.data.caja
-      // Llamar al cálculo (debería ser igual al fondo inicial, pero asegura el estado)
+      // El cálculo inicial debe ser igual al fondo inicial, pero se llama para asegurar el estado
       await calcularMontoTeorico()
       return true
     } catch (err: unknown) {
@@ -194,7 +198,6 @@ export const useCajaStore = defineStore('caja', () => {
 
   /**
    * @description Implementación del registro de movimiento manual (ej: egreso).
-   * Se utiliza en la interfaz de egresos/ingresos manuales.
    */
   async function registrarMovimientoManual(
     monto: number,
@@ -202,6 +205,7 @@ export const useCajaStore = defineStore('caja', () => {
     tipoMovimientoId: number,
   ) {
     const currentCajaId = cajaDiariaId.value
+    // Si la caja está null, lanzamos un error que debe ser capturado por la interfaz
     if (currentCajaId === null) {
       error.value = 'No hay caja activa para registrar el movimiento.'
       throw new Error('No hay caja activa.')

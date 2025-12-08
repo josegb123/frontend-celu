@@ -82,6 +82,7 @@
       :show="showAbonoModal"
       @close="showAbonoModal = false"
       @abono-success="handleAbonoSuccess"
+      :cajaId="cajaId"
     />
   </div>
 </template>
@@ -101,6 +102,7 @@ import CuentaPorCobrarService, {
 } from '@/services/CuentaPorCobrarService'
 import type { IAbono } from '@/interfaces/IAbono'
 import type { dataCuentaPorCobrar } from '@/interfaces/ICuentaPorCobrar'
+import { useCajaStore } from '@/store/useCajaStore'
 
 // --- ESTADO LOCAL ---
 const cuentas = ref<dataCuentaPorCobrar[]>([])
@@ -196,6 +198,9 @@ const openAbonoModal = (cuenta: dataCuentaPorCobrar | null) => {
   // Si se viene del botón global, la cuenta es null. Si se viene de la tabla, es la cuenta seleccionada.
   abonoTargetCuenta.value = cuenta
 
+  if (!cajaStore.isCajaAbierta && !cajaStore.isLoading) {
+    cajaStore.fetchCajaActiva()
+  }
   // Si la cuenta tiene saldo cero, no abrir el modal
   if (cuenta && Number(cuenta.monto_pendiente) <= 0) {
     alert('La cuenta ya está saldada o no tiene monto pendiente.')
@@ -226,9 +231,12 @@ const handleAbonoSuccess = (abono: IAbono) => {
     showDetailsModal.value = true
   }
 }
-
+const cajaStore = useCajaStore()
+const cajaId = cajaStore.cajaDiariaId
 // --- CICLO DE VIDA ---
-onMounted(fetchCuentas)
+onMounted(() => {
+  fetchCuentas()
+})
 </script>
 
 <style scoped>

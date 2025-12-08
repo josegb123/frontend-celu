@@ -63,7 +63,7 @@ const fetchDashboardData = async () => {
     // 2. Tablas/Listados
     const [stock, clientes, ventas] = await Promise.all([
       estadisticasService.getProductosBajoStock(),
-      estadisticasService.getTopClientes(),
+      estadisticasService.getTopClientesPorMonto(),
       estadisticasService.getUltimasVentas(),
     ])
 

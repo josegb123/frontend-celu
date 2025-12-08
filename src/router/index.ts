@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import VentaPOS from '@/views/VentaPOS.vue'
 import DevolucionFormView from '@/views/devoluciones/DevolucionFormView.vue' // Import
 import DevolucionGestionView from '@/views/devoluciones/DevolucionGestionView.vue' // Import
+import ReportesAdminView from '@/views/ReportesAdminView.vue' // New Import
 
 // --- 1. DEFINICIÓN DE RUTAS ---
 const routes: Array<RouteRecordRaw> = [
@@ -131,6 +132,15 @@ const routes: Array<RouteRecordRaw> = [
     component: DevolucionGestionView,
     meta: {
       title: 'Gestión de Devoluciones',
+      requireAuth: true,
+    },
+  },
+  {
+    path: '/admin/reportes', // Nueva ruta para reportes
+    name: 'AdminReports',
+    component: ReportesAdminView,
+    meta: {
+      title: 'Reportes y Estadísticas',
       requireAuth: true,
     },
   },

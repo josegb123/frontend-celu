@@ -126,9 +126,7 @@
         v-if="montoPendiente > 0"
         :class="[
           'alert fs-6 py-2',
-          tipoVentaSeleccionado === 1
-            ? 'bg-danger-subtle text-danger'
-            : 'bg-warning-subtle text-dark',
+          tipoVentaSeleccionado === 1 ? 'text-bg-danger' : 'text-bg-warning',
         ]"
       >
         <i class="bi bi-exclamation-triangle me-2"></i> Pendiente

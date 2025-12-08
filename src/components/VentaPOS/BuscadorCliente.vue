@@ -37,14 +37,14 @@ const performSearch = async (query: string) => {
   errorMessage.value = null
 
   // Mínimo de 3 caracteres para buscar, para no sobrecargar la API
-  if (query.length < 3) {
+  if (query.length < 2) {
     isLoading.value = false
     return
   }
 
   isLoading.value = true
   try {
-    const data = await ClienteService.searchClientes(query)
+    const data = await ClienteService.search(query)
     searchResults.value = data
   } catch (error) {
     errorMessage.value = 'Error al buscar clientes. Intente de nuevo.'

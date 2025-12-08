@@ -24,7 +24,7 @@
     <Teleport to="#teleported-layer">
       <ul
         v-if="isMenuOpen"
-        class="dropdown-menu dropdown-menu-end shadow-lg"
+        class="dropdown-menu dropdown-menu-end border rounded shadow-lg"
         :class="{ show: isMenuOpen }"
         :style="menuPositionStyle"
         ref="dropdownMenuRef"
@@ -118,8 +118,8 @@ const totalNotificaciones = computed(() => {
 
 // --- Lógica de Teleport y Floating UI ---
 const isMenuOpen = ref(false)
-const dropdownAnchorRef = ref(null) // El botón/avatar
-const dropdownMenuRef = ref(null) // El menú <ul> (teletransportado)
+const dropdownAnchorRef = ref<HTMLElement | null>(null) // El botón/avatar
+const dropdownMenuRef = ref<HTMLElement | null>(null) // El menú <ul> (teletransportado)
 
 // Configuración de Floating UI para calcular la posición
 const { floatingStyles, update } = useFloating(dropdownAnchorRef, dropdownMenuRef, {
@@ -134,7 +134,6 @@ const { floatingStyles, update } = useFloating(dropdownAnchorRef, dropdownMenuRe
 // Estilos dinámicos para el menú
 const menuPositionStyle = computed(() => ({
   // Floating UI provee 'top', 'left' y 'position: absolute'
-  position: 'absolute',
   ...floatingStyles.value,
   zIndex: '9999', // Asegura que esté por encima de cualquier otro elemento
 }))
@@ -144,9 +143,8 @@ const handleOutsideClick = (event: MouseEvent) => {
   if (!isMenuOpen.value) return
 
   const target = event.target as Node
-  const isAnchor = dropdownAnchorRef.value && dropdownAnchorRef.value.contains(target)
-  const isMenu = dropdownMenuRef.value && dropdownMenuRef.value.contains(target)
-
+  const isAnchor = dropdownAnchorRef.value?.contains(target)
+  const isMenu = dropdownMenuRef.value?.contains(target)
   if (!isAnchor && !isMenu) {
     isMenuOpen.value = false
   }

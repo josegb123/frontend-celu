@@ -115,6 +115,7 @@ const props = defineProps<{
   // La cuenta a la que se aplica el abono. Debe incluir el monto_pendiente.
   cuenta: dataCuentaPorCobrar | null
   show: boolean
+  cajaId: number | null
 }>()
 
 const emit = defineEmits<{
@@ -181,6 +182,7 @@ const submitAbono = async () => {
     monto: montoAbono.value,
     metodo_pago: metodo.value,
     referencia_pago: referencia.value || null,
+    caja_diaria_id: props.cajaId,
   }
 
   isProcessing.value = true

@@ -67,8 +67,9 @@
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import ProductoService, { type Producto } from '@/services/ProductoService'
+import ProductoService from '@/services/ProductoService'
 import { debounce } from 'lodash'
+import type { IProducto } from '@/interfaces/IProductoInterfaces'
 
 // --- 1. Definiciones de Props y Emits ---
 
@@ -78,13 +79,13 @@ import { debounce } from 'lodash'
  * @param producto - El objeto Producto seleccionado.
  */
 const emit = defineEmits<{
-  (e: 'product-selected', producto: Producto): void
+  (e: 'product-selected', producto: IProducto): void
 }>()
 
 // --- 2. Estado Local ---
 
 const searchQuery = ref('')
-const searchResults = ref<Producto[]>([])
+const searchResults = ref<IProducto[]>([])
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 
@@ -137,7 +138,7 @@ watch(searchQuery, (newQuery) => {
  * Emite el producto seleccionado al componente padre y limpia la búsqueda.
  * @param producto El producto seleccionado
  */
-const selectProduct = (producto: Producto) => {
+const selectProduct = (producto: IProducto) => {
   emit('product-selected', producto)
   // Limpiamos la búsqueda después de la selección
   searchQuery.value = ''

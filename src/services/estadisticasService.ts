@@ -1,5 +1,22 @@
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
+import type {
+  ProductoBajoStock,
+  ProductoBajaRotacion,
+  ValorPedidosProveedoresResponse,
+  ValorPedidosProveedoresRequest,
+  TopClientesFrecuencia,
+  TopClientesFrecuenciaRequest,
+  TopProductoVendido,
+  TopClientePorMonto,
+  VentasPorPeriodoResponse,
+  VentasPorPeriodoApiRequest,
+  HistorialGananciasResponse,
+  ProductosBajoStockRequest,
+  ProductosBajaRotacionRequest,
+  TicketPromedioResponse,
+  ExportarVentasExcelRequest,
+} from '../interfaces/estadisticas' // Import all interfaces
 
 // ----------------------------------------------------
 // INTERFACES DE DATOS DE ESTADÍSTICAS
@@ -21,62 +38,7 @@ export interface LaravelPagination<T> {
   total: number
 }
 
-/**
- * Métrica base para un Top N (ej: Top Clientes, Top Productos)
- */
-export interface TopMetric {
-  id?: number
-  nombre_producto?: string // Para Top Productos
-  nombre_cliente?: string // Para Top Clientes
-  monto_total?: number // Monto total de compras del cliente
-  unidades_vendidas?: number // Para Top Productos
-}
-
-/**
- * Métrica para Ventas por Período e Historial de Ganancias
- */
-export interface TimeSeriesData {
-  beneficio_bruto: number
-  beneficio: number
-  periodo: string
-  data: [
-    {
-      periodo_fecha: string // Ej: "2025-11"
-      ventas_totales?: number
-      beneficio?: number // Para historial de ganancias (Margen Bruto)
-    },
-  ]
-}
-
-/**
- * Métrica para productos con bajo stock
- */
-export interface LowStockProduct {
-  id: number
-  nombre: string
-  stock: number
-  umbral?: number // Opcional, si el backend lo devuelve
-}
-
-/**
- * Parámetros de consulta para las series de tiempo (Time Series)
- */
-export interface TimeSeriesParams {
-  periodo?: 'day' | 'month' | 'year'
-  fecha_inicio?: string
-  fecha_fin?: string
-}
-
-/**
- * Parámetros de consulta para inventario
- */
-export interface StockParams {
-  umbral?: number // El límite para considerar bajo stock
-}
-
-/**
- * Interfaz Mínima para una Venta (Usado en getUltimasVentas)
- */
+// Interfaz Mínima para una Venta (Usado en getUltimasVentas)
 export interface VentaMinimal {
   venta_id: number
   total_venta: number
@@ -96,20 +58,17 @@ class EstadisticasService {
   private endpoint = '/estadisticas'
   private ventasEndpoint = '/ventas' // Endpoint para ventas
 
-  // Nota: Hemos eliminado el helper handleError para usar throw error directamente,
-  // lo cual satisface a TS si el error es relanzado.
-
   /**
    * Obtiene el Top 10 de productos más vendidos.
    */
-  public async getTopProductos(): Promise<{ data: TopMetric[] }> {
+  public async getTopProductosVendidos(): Promise<{ data: TopProductoVendido[] }> {
     try {
-      const response: AxiosResponse<{ data: TopMetric[] }> = await laravelApi.get(
+      const response: AxiosResponse<{ data: TopProductoVendido[] }> = await laravelApi.get(
         `${this.endpoint}/top-productos`,
       )
       return response.data
     } catch (error) {
-      console.error('Error en getTopProductos:', error)
+      console.error('Error en getTopProductosVendidos:', error)
       throw error
     }
   }
@@ -117,14 +76,14 @@ class EstadisticasService {
   /**
    * Obtiene el Top 10 de clientes por monto de compra.
    */
-  public async getTopClientes(): Promise<{ data: TopMetric[] }> {
+  public async getTopClientesPorMonto(): Promise<{ data: TopClientePorMonto[] }> {
     try {
-      const response: AxiosResponse<{ data: TopMetric[] }> = await laravelApi.get(
+      const response: AxiosResponse<{ data: TopClientePorMonto[] }> = await laravelApi.get(
         `${this.endpoint}/top-clientes`,
       )
       return response.data
     } catch (error) {
-      console.error('Error en getTopClientes:', error)
+      console.error('Error en getTopClientesPorMonto:', error)
       throw error
     }
   }
@@ -133,11 +92,13 @@ class EstadisticasService {
    * Obtiene las ventas totales agrupadas por día, mes o año.
    */
   public async getVentasPorPeriodo(
-    params: TimeSeriesParams = {},
-  ): Promise<{ periodo: string; data: TimeSeriesData[] }> {
+    params: VentasPorPeriodoApiRequest = {},
+  ): Promise<VentasPorPeriodoResponse> {
     try {
-      const response: AxiosResponse<{ periodo: string; data: TimeSeriesData[] }> =
-        await laravelApi.get(`${this.endpoint}/ventas-por-periodo`, { params })
+      const response: AxiosResponse<VentasPorPeriodoResponse> = await laravelApi.get(
+        `${this.endpoint}/ventas-por-periodo`,
+        { params },
+      )
       return response.data
     } catch (error) {
       console.error('Error en getVentasPorPeriodo:', error)
@@ -149,10 +110,10 @@ class EstadisticasService {
    * Obtiene los productos cuyo stock está bajo un umbral.
    */
   public async getProductosBajoStock(
-    params: StockParams = {},
-  ): Promise<{ umbral: number; data: LowStockProduct[] }> {
+    params: ProductosBajoStockRequest = {},
+  ): Promise<{ umbral: number; data: ProductoBajoStock[] }> {
     try {
-      const response: AxiosResponse<{ umbral: number; data: LowStockProduct[] }> =
+      const response: AxiosResponse<{ umbral: number; data: ProductoBajoStock[] }> =
         await laravelApi.get(`${this.endpoint}/productos-bajo-stock`, { params })
       return response.data
     } catch (error) {
@@ -162,14 +123,66 @@ class EstadisticasService {
   }
 
   /**
+   * Obtiene los productos con baja rotación.
+   */
+  public async getProductosBajaRotacion(
+    params: ProductosBajaRotacionRequest = {},
+  ): Promise<{ periodo_dias: number; data: ProductoBajaRotacion[] }> {
+    try {
+      const response: AxiosResponse<{ periodo_dias: number; data: ProductoBajaRotacion[] }> =
+        await laravelApi.get(`${this.endpoint}/productos-baja-rotacion`, { params })
+      return response.data
+    } catch (error) {
+      console.error('Error en getProductosBajaRotacion:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtiene el valor total de pedidos a proveedores por período.
+   */
+  public async getValorPedidosProveedores(
+    params: ValorPedidosProveedoresRequest,
+  ): Promise<ValorPedidosProveedoresResponse> {
+    try {
+      const response: AxiosResponse<ValorPedidosProveedoresResponse> = await laravelApi.get(
+        `${this.endpoint}/valor-pedidos-proveedores`,
+        { params },
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error en getValorPedidosProveedores:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtiene los clientes con mayor frecuencia de compra.
+   */
+  public async getTopClientesFrecuencia(
+    params: TopClientesFrecuenciaRequest = {},
+  ): Promise<{ periodo_dias: number; limit: number; data: TopClientesFrecuencia[] }> {
+    try {
+      const response: AxiosResponse<{
+        periodo_dias: number
+        limit: number
+        data: TopClientesFrecuencia[]
+      }> = await laravelApi.get(`${this.endpoint}/top-clientes-frecuencia`, { params })
+      return response.data
+    } catch (error) {
+      console.error('Error en getTopClientesFrecuencia:', error)
+      throw error
+    }
+  }
+
+  /**
    * Obtiene el historial de ganancias (margen bruto) por periodo.
-   * Este es el método que se usará para obtener el "Margen Bruto (Mes)" en el Dashboard.
    */
   public async getHistorialGanancias(
-    params: TimeSeriesParams = {},
-  ): Promise<{ data: TimeSeriesData[] }> {
+    params: VentasPorPeriodoApiRequest = {},
+  ): Promise<HistorialGananciasResponse> {
     try {
-      const response: AxiosResponse<{ data: TimeSeriesData[] }> = await laravelApi.get(
+      const response: AxiosResponse<HistorialGananciasResponse> = await laravelApi.get(
         `${this.endpoint}/historial-ganancias`,
         { params },
       )
@@ -180,14 +193,12 @@ class EstadisticasService {
     }
   }
 
-  // --- Métodos Adicionales del Dashboard ---
-
   /**
    * Obtiene el Ticket Promedio (AOV).
    */
-  public async getTicketPromedio(): Promise<{ monto_promedio_venta: number }> {
+  public async getTicketPromedio(): Promise<TicketPromedioResponse> {
     try {
-      const response: AxiosResponse<{ monto_promedio_venta: number }> = await laravelApi.get(
+      const response: AxiosResponse<TicketPromedioResponse> = await laravelApi.get(
         `${this.endpoint}/ticket-promedio`,
       )
       return response.data
@@ -199,23 +210,36 @@ class EstadisticasService {
 
   /**
    * Obtiene las últimas 10 ventas.
-   * Corregido: Ahora espera la respuesta paginada de Laravel.
    */
   public async getUltimasVentas(): Promise<{ data: VentaMinimal[] }> {
     try {
-      // 1. Definimos el tipo de respuesta esperado: LaravelPagination<VentaMinimal>
       const response: AxiosResponse<LaravelPagination<VentaMinimal>> = await laravelApi.get(
         this.ventasEndpoint,
         {
           params: { per_page: 10, order_by: 'created_at', direction: 'desc' },
         },
       )
-
-      // 2. Extraemos el array de ventas ('data') del objeto de paginación
-      // y lo devolvemos en el formato anterior { data: [...] }
       return { data: response.data.data }
     } catch (error) {
       console.error('Error en getUltimasVentas:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Descarga un reporte de ventas agrupadas en formato Excel.
+   */
+  public async exportarVentasExcel(
+    params: ExportarVentasExcelRequest = {},
+  ): Promise<AxiosResponse> {
+    try {
+      const response = await laravelApi.get(`${this.endpoint}/exportar-ventas-excel`, {
+        params,
+        responseType: 'blob', // Importante para manejar archivos binarios
+      })
+      return response
+    } catch (error) {
+      console.error('Error al exportar ventas a Excel:', error)
       throw error
     }
   }

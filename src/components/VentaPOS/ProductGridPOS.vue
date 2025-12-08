@@ -65,18 +65,24 @@
     </div>
   </div>
 
-  <div v-if="pagination.last_page > 1 && !isLoading" class="d-flex justify-content-center mt-3">
+  <div
+    v-if="pagination.meta.last_page > 1 && !isLoading"
+    class="d-flex justify-content-center mt-3"
+  >
     <nav>
       <ul class="pagination pagination-sm mb-0">
-        <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)"
+        <li class="page-item" :class="{ disabled: pagination.meta.current_page === 1 }">
+          <a
+            class="page-link"
+            href="#"
+            @click.prevent="changePage(pagination.meta.current_page - 1)"
             >Anterior</a
           >
         </li>
 
         <li
           class="page-item"
-          :class="{ active: p === pagination.current_page }"
+          :class="{ active: p === pagination.meta.current_page }"
           v-for="p in pageRange"
           :key="p"
         >
@@ -85,9 +91,12 @@
 
         <li
           class="page-item"
-          :class="{ disabled: pagination.current_page === pagination.last_page }"
+          :class="{ disabled: pagination.meta.current_page === pagination.meta.last_page }"
         >
-          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)"
+          <a
+            class="page-link"
+            href="#"
+            @click.prevent="changePage(pagination.meta.current_page + 1)"
             >Siguiente</a
           >
         </li>
@@ -99,11 +108,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, reactive, computed } from 'vue'
 import { debounce } from 'lodash'
-import ProductoService, {
-  type Producto,
-  type PaginatedResponse,
-} from '@/services/ProductoService.js'
-
+import ProductoService from '@/services/ProductoService.js'
+import type { IProductoPaginated, IProducto } from '@/interfaces/IProductoInterfaces'
 // --- CONSTANTES ---
 const ITEMS_PER_PAGE = 18
 
@@ -113,23 +119,27 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'product-selected', product: Producto): void
+  (e: 'product-selected', product: IProducto): void
 }>()
 
 // --- ESTADO LOCAL ---
-const products = ref<Producto[]>([])
+const products = ref<IProducto[]>([])
 const isLoading = ref(false)
 const isInitialLoad = ref(true)
 const currentPage = ref(1)
-const pagination = reactive<PaginatedResponse<Producto>>({
-  current_page: 1,
+const pagination = reactive<IProductoPaginated>({
   data: [],
-  last_page: 1,
-  total: 0,
   meta: {
     total: 0,
+    current_page: 0,
+    from: 0,
+    last_page: 0,
+    links: [],
+    path: '',
+    per_page: ITEMS_PER_PAGE,
+    to: 0,
   },
-  per_page: ITEMS_PER_PAGE,
+  links: null,
 })
 
 // --- LÓGICA COMPUTADA ---
@@ -139,8 +149,8 @@ const pagination = reactive<PaginatedResponse<Producto>>({
  */
 const pageRange = computed(() => {
   const pages: (number | string)[] = []
-  const lastPage = pagination.last_page
-  const current = pagination.current_page
+  const lastPage = pagination.meta.last_page
+  const current = pagination.meta.current_page
 
   if (lastPage <= 5) {
     for (let i = 1; i <= lastPage; i++) {
@@ -186,14 +196,14 @@ const fetchProducts = async () => {
   }
 
   try {
-    const response: PaginatedResponse<Producto> = await ProductoService.getProductos(params)
+    const response: IProductoPaginated = await ProductoService.getProductos(params)
 
     products.value = response.data
     // Actualizar el estado reactivo de paginación
-    pagination.current_page = response.current_page
-    pagination.last_page = response.last_page
-    pagination.total = response.total
-    pagination.per_page = response.per_page
+    pagination.meta.current_page = response.meta.current_page
+    pagination.meta.last_page = response.meta.last_page
+    pagination.meta.total = response.meta.total
+    pagination.meta.per_page = response.meta.per_page
   } catch (error) {
     console.error('Error al cargar productos para POS:', error)
   } finally {
@@ -206,7 +216,7 @@ const fetchProducts = async () => {
  * Cambia la página y recarga los productos.
  */
 const changePage = (page: number | string) => {
-  if (typeof page === 'number' && page >= 1 && page <= pagination.last_page) {
+  if (typeof page === 'number' && page >= 1 && page <= pagination.meta.last_page) {
     currentPage.value = page
     fetchProducts()
   }
@@ -268,7 +278,6 @@ onMounted(() => {
     box-shadow 0.2s;
 
   min-height: 280px;
-  z-index: 10000 !important;
 }
 
 .product-card-pos:hover {
@@ -286,7 +295,7 @@ onMounted(() => {
 }
 
 /* -------------------------------------------------------------------------
-   3. ESTILOS DE ALERTA DE STOCK BAJO (LOW STOCK ALERT)
+  3. ESTILOS DE ALERTA DE STOCK BAJO (LOW STOCK ALERT)
    ------------------------------------------------------------------------- */
 
 /* Estilo para stock bajo (1 a 4 unidades): Fondo rojo claro y semitransparente */
@@ -314,7 +323,7 @@ onMounted(() => {
 }
 
 .content {
-  max-height: calc(100vh - 215px);
+  max-height: calc(100vh - 265px);
 }
 
 .img-fluid {

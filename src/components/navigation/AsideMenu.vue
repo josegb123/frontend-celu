@@ -108,6 +108,11 @@
               <i class="bi bi-people me-2"></i><span>Usuarios</span>
             </router-link>
           </li>
+          <li class="nav-item">
+            <router-link :to="{ name: 'AdminReports' }" class="nav-link text-white">
+              <i class="bi bi-graph-up me-2"></i><span>Reportes y Estadísticas</span>
+            </router-link>
+          </li>
         </ul>
       </div>
     </nav>

@@ -18,6 +18,7 @@
             class="btn-close btn-close-white"
             @click="closeModal"
             aria-label="Cerrar"
+            data-bs-dismiss="modal"
           ></button>
         </div>
 
@@ -120,7 +121,7 @@
 
               <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0 fs-6">
-                  <thead class="table-light">
+                  <thead>
                     <tr>
                       <th style="width: 35%">Producto (*)</th>
                       <th style="width: 15%" class="text-center">Cant. (*)</th>
@@ -267,7 +268,11 @@ const props = defineProps<{
   ventaToEdit: VentaIndexResponse | null
 }>()
 
-const emit = defineEmits(['close', 'venta-guardada'])
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'venta-guardada'): void
+  (e: 'show-notification', data: { message: string; isError: boolean }): void
+}>()
 
 // ----------------------------------------------------
 // ESTADO
@@ -282,6 +287,7 @@ const initialFormData: VentaFormDTO = {
   cliente_id: null,
   tipo_venta_id: 1,
   descuento_total: 0,
+  abono_inicial: null,
   metodo_pago: 'efectivo',
   estado: 'finalizada',
   iva_porcentaje: 0,
@@ -359,11 +365,13 @@ const mapShowResponseToDTO = (data: VentaShowResponse): VentaFormDTO => {
     metodo_pago: data.metodo_pago,
     estado: (data.estado as VentaEstado) || null,
     iva_porcentaje: data.totales_financieros.iva_porcentaje,
+    abono_inicial: data.totales_financieros.abono_inicial,
     items: data.detalles_completos.map((detalle) => ({
       producto_id: detalle.producto_id,
       cantidad: detalle.cantidad,
       precio_unitario: detalle.precio_unitario,
       descuento: 0, // Asumimos descuento es 0 si no viene detallado en el ítem
+
       // Usamos el nombre histórico para mostrar en el campo de texto
       iva_porcentaje: 0,
       nombre_producto_temporal: detalle.nombre_producto_historico,
@@ -488,6 +496,8 @@ const resetForm = () => {
  * Emite el evento 'close' y resetea el formulario.
  */
 const closeModal = () => {
+  document.body.classList.remove('modal-open')
+  document.body.focus()
   emit('close')
   // Se llama a resetForm en el watcher cuando props.show pasa a false
 }

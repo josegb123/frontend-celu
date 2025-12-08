@@ -58,6 +58,10 @@ defineProps<{
   /** Si es true, usa el color rojo (Error); si es false, usa el color verde (Éxito). */
   isError: boolean
 }>()
+
+defineEmits<{
+  (e: 'close'): void
+}>()
 </script>
 
 <style scoped>

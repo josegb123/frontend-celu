@@ -85,32 +85,20 @@
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { type Producto } from '@/services/ProductoService.js'
-
-// --- INTERFAZ LOCAL PARA PROVEEDOR ---
-// Definimos la estructura básica del proveedor tal como viene en el producto
-interface Proveedor {
-  id: number
-  nombreComercial: string
-  telefono: string | null
-  email: string | null
-}
-
-interface ProductosWithProvider extends Producto {
-  proveedores: Proveedor[]
-}
+import type { IProducto } from '@/interfaces/IProductoInterfaces'
+import type { Proveedor } from '@/interfaces/IProveedores'
 
 // --- SETUP REACTIVO ---
 const isImageError = ref(false)
 
 // --- PROPIEDADES Y EMITS ---
 const props = defineProps<{
-  product: ProductosWithProvider
+  product: IProducto
   stockStatus: 'agotado' | 'bajo' | 'normal'
 }>()
 
 const emit = defineEmits<{
-  (e: 'edit', product: Producto): void
+  (e: 'edit', product: IProducto): void
   (e: 'delete', productId: number): void
   (e: 'showSuppliers', proveedores: Proveedor[], productName: string): void
 }>()

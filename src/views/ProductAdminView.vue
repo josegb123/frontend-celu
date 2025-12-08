@@ -80,8 +80,7 @@ import CategoryManagerModal from '@/components/products/CategoryManagerModal.vue
 
 // Servicios
 import CategoriaService from '@/services/CategoriaService.js'
-import type { ICategoria } from '@/interfaces/ICategoria'
-import { type Producto } from '@/services/ProductoService.js'
+import type { IProducto, Categoria } from '@/interfaces/IProductoInterfaces'
 import type { Ref } from 'vue'
 
 // --- ESTADO GLOBAL DE LA VISTA ---
@@ -91,8 +90,8 @@ const searchQuery = ref('')
 const selectedCategoriaId = ref<number | null>(null) // Mantenemos el nombre correcto
 
 // Datos y Edición
-const categories: Ref<ICategoria[]> = ref([])
-const productToEdit = ref<Producto | null>(null)
+const categories: Ref<Categoria[]> = ref([])
+const productToEdit = ref<IProducto | null>(null)
 
 // Modales
 const notification = ref({
@@ -151,7 +150,7 @@ onMounted(() => {
 
 // --- HANDLERS ---
 
-const startEditing = (product: Producto) => {
+const startEditing = (product: IProducto) => {
   productToEdit.value = product
   openProductFormModal()
 }

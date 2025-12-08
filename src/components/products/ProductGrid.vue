@@ -33,18 +33,25 @@
     </div>
   </div>
 
-  <div v-if="!isLoading && pagination.last_page > 1" class="d-flex justify-content-center mt-4">
+  <div
+    v-if="!isLoading && pagination.meta.last_page > 1"
+    class="d-flex justify-content-center mt-4"
+  >
     <nav aria-label="Navegación de Productos">
       <ul class="pagination">
-        <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)">
+        <li class="page-item" :class="{ disabled: pagination.meta.current_page === 1 }">
+          <a
+            class="page-link"
+            href="#"
+            @click.prevent="changePage(pagination.meta.current_page - 1)"
+          >
             Anterior
           </a>
         </li>
 
         <li
           class="page-item"
-          :class="{ active: p === pagination.current_page }"
+          :class="{ active: p === pagination.meta.current_page }"
           v-for="p in pageRange"
           :key="p"
         >
@@ -53,9 +60,13 @@
 
         <li
           class="page-item"
-          :class="{ disabled: pagination.current_page === pagination.last_page }"
+          :class="{ disabled: pagination.meta.current_page === pagination.meta.last_page }"
         >
-          <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)">
+          <a
+            class="page-link"
+            href="#"
+            @click.prevent="changePage(pagination.meta.current_page + 1)"
+          >
             Siguiente
           </a>
         </li>
@@ -64,7 +75,7 @@
   </div>
 
   <div v-if="!isLoading && products.length > 0" class="text-center mt-2 text-muted small">
-    Mostrando {{ pagination.data.length }} de {{ pagination.total }} productos.
+    Mostrando {{ pagination.data.length }} de {{ pagination.meta.total }} productos.
   </div>
 
   <ConfirmationModal
@@ -89,22 +100,12 @@
 import { ref, onMounted, watch, reactive, computed } from 'vue'
 import ProductCard from '@/components/products/ProductCard.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
-import ProductoService, {
-  type Producto,
-  type PaginatedResponse,
-} from '@/services/ProductoService.js'
+import ProductoService from '@/services/ProductoService.js'
 import SupplierModal from './SupplierModal.vue'
-
+import type { IProducto, IProductoPaginated } from '@/interfaces/IProductoInterfaces'
+import type { Proveedor } from '@/interfaces/IProveedores'
 // --- CONSTANTES ---
 const ITEMS_PER_PAGE = 20
-
-// --- TIPOS LOCALES ---
-interface Proveedor {
-  id: number
-  nombreComercial: string
-  telefono: string | null
-  email: string | null
-}
 
 // --- PROPS y EMITS ---
 const props = defineProps<{
@@ -113,13 +114,13 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'editProduct', product: Producto): void
+  (e: 'editProduct', product: IProducto): void
   (e: 'productsUpdated'): void
   (e: 'showNotification', result: { message: string; isError: boolean }): void
 }>()
 
 // --- ESTADO LOCAL ---
-const products = ref<Producto[]>([])
+const products = ref<IProducto[]>([])
 const isLoading = ref(false)
 
 const isConfirmModalVisible = ref(false)
@@ -128,15 +129,19 @@ const isDeleting = ref(false)
 
 const currentPage = ref(1)
 
-const pagination = reactive<PaginatedResponse<Producto>>({
-  current_page: 1,
+const pagination = reactive<IProductoPaginated>({
   data: [],
-  last_page: 1,
-  total: 0,
   meta: {
     total: 0,
+    current_page: 0,
+    from: 0,
+    last_page: 0,
+    links: [],
+    path: '',
+    per_page: ITEMS_PER_PAGE,
+    to: 0,
   },
-  per_page: ITEMS_PER_PAGE,
+  links: null,
 })
 
 //  ESTADO PARA EL MODAL DE PROVEEDORES
@@ -154,8 +159,8 @@ const supplierModalData = reactive<{ suppliers: Proveedor[]; productName: string
  */
 const pageRange = computed(() => {
   const pages: (number | string)[] = []
-  const lastPage = pagination.last_page
-  const current = pagination.current_page
+  const lastPage = pagination.meta.last_page
+  const current = pagination.meta.current_page
 
   // Lógica para mostrar solo algunas páginas (ej: 1, 2, ..., N)
   if (lastPage <= 7) {
@@ -221,7 +226,7 @@ const handleShowSuppliers = (suppliers: Proveedor[], productName: string) => {
 }
 // ----------------------------------------------
 
-const getStockStatus = (product: Producto): 'agotado' | 'bajo' | 'normal' => {
+const getStockStatus = (product: IProducto): 'agotado' | 'bajo' | 'normal' => {
   if (product.stock_actual <= 0) {
     return 'agotado'
   }
@@ -265,7 +270,7 @@ const fetchProducts = async () => {
   }
 
   try {
-    const response: PaginatedResponse<Producto> = await ProductoService.getProductos(params)
+    const response: IProductoPaginated = await ProductoService.getProductos(params)
 
     products.value = response.data
     Object.assign(pagination, response)
@@ -284,7 +289,7 @@ const fetchProducts = async () => {
  * Cambia la página y recarga los productos.
  */
 const changePage = (page: number | string) => {
-  if (typeof page === 'number' && page >= 1 && page <= pagination.last_page) {
+  if (typeof page === 'number' && page >= 1 && page <= pagination.meta.last_page) {
     currentPage.value = page
     fetchProducts()
   }

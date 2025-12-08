@@ -58,6 +58,7 @@ export interface DetalleVentaResponse {
   producto_id: number
   cantidad: number
   precio_unitario: number
+  estado: string
   subtotal: number
   nombre_producto_historico: string
 }
@@ -71,6 +72,7 @@ export interface VentaShowResponse extends VentaIndexResponse {
     iva_monto: number
     iva_porcentaje: number
     descuento_total: number
+    abono_inicial: number
   }
   detalles_completos: DetalleVentaResponse[]
   cliente_nombre: string | null
