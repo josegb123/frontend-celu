@@ -416,8 +416,8 @@ const registrarVenta = async () => {
   }
 
   try {
-    await VentaService.registrarVenta(ventaData)
-
+    const resultado = await VentaService.registrarVenta(ventaData)
+    VentaService.imprimirFacturaPos(resultado.venta.venta_id)
     let mensaje = `Venta registrada. `
     if (isCredito) {
       mensaje = `Venta a Crédito registrada. Pendiente: $${montoPendiente.value}`

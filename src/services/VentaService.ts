@@ -51,6 +51,7 @@ export interface VentaIndexResponse {
 
 // Interfaz para el Detalle de Ítem dentro de VentaShowResource
 export interface DetalleVentaResponse {
+  cantidad_devuelta: number
   id: number
   producto_id: number
   cantidad: number
@@ -246,6 +247,33 @@ class VentaService {
     } catch (error) {
       console.error(`Error al eliminar permanentemente la venta ${id}:`, error)
       throw error
+    }
+  }
+
+  // ----------------------------------------------------------------------------------
+  // ✅ NUEVO MÉTODO AÑADIDO: IMPRESIÓN DE FACTURA POS
+  // ----------------------------------------------------------------------------------
+
+  /**
+   * Llama al backend para generar el PDF de la factura POS y abre la ventana de impresión.
+   *
+   * @param id El ID de la venta.
+   */
+  public imprimirFacturaPos(id: number): void {
+    const baseUrl = laravelApi.defaults.baseURL
+
+    // La ruta que definiste en Laravel es: /ventas/{venta}/imprimir-pos
+    const url = `${baseUrl}${this.endpoint}/${id}/imprimir-pos`
+
+    try {
+      // Abrir el PDF en una nueva pestaña/ventana
+      window.open(url, '_blank')
+    } catch (error) {
+      console.error(`Error al intentar abrir la factura POS para la venta ${id}:`, error)
+      // Si hay un error de navegador (bloqueo de pop-up, etc.)
+      alert(
+        'Error al abrir la ventana de impresión. Verifique los bloqueadores de ventanas emergentes.',
+      )
     }
   }
 }

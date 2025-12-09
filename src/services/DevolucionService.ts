@@ -1,50 +1,72 @@
 import axios from 'axios'
 import laravelApi from '@/http/laravelApi'
 
-// For createDevolucion(data)
-export interface ProductoDevueltoData {
-  producto_id: number
-  id_unico_producto: string
-  cantidad: number // Should always be 1
+// 1. TIPOS CORREGIDOS PARA EL PAYLOAD DE CREACIÓN
+
+export interface DevolucionItemPayload {
+  // Campo clave usado por el backend para buscar el ítem de la venta original
+  detalle_venta_id: number
+
+  // Cantidad real que se está devolviendo
+  cantidad: number
+
   motivo: string
-  costo_unitario: number
   notas?: string | null
+
+  // ❌ Eliminados: producto_id, id_unico_producto, costo_unitario (obtenidos del detalle de venta)
 }
 
 export interface CreateDevolucionData {
   venta_id: number | null
-  productos_devueltos: ProductoDevueltoData[]
-  cliente_id?: number | string
+
+  // Método para el egreso financiero
+  metodo_reembolso: string
+
+  // La colección de ítems devueltos usa la nueva interfaz
+  items_devueltos: DevolucionItemPayload[]
+
+  // ❌ Eliminado: cliente_id (obtenido directamente de la venta)
 }
 
-// For Devolucion objects returned from API
+// 2. TIPOS CORREGIDOS PARA EL OBJETO DEVOLUCION (Respuesta de la API)
+
 export interface Devolucion {
   id: number
   venta_id: number
+  // Campo clave en el modelo de Laravel
+  detalle_venta_id: number
+
   producto_id: number
   cliente_id: number
-  id_unico_producto: string
+
+  // ❌ Eliminado: id_unico_producto (ya no existe en el modelo)
+
   cantidad: number
   motivo: string
-  costo_unitario: number
+  costo_unitario: number // Se mantiene en el objeto devuelto para auditoría
   notas: string | null
-  estado_gestion: string // 'Pendiente', 'Contactado', 'Finalizada'
+  estado_gestion: string
   created_at: string
   updated_at: string
-  // Relationships (simplified for now)
+
+  // Relaciones
   producto?: { id: number; nombre: string }
   cliente?: { id: number; nombre: string; cedula: string | null }
   venta?: { id: number; total: number }
+  detalleVenta?: any // Nueva relación para la trazabilidad
 }
 
-// For updateDevolucionStatus(id, newStatus)
+// 3. TIPOS DE RESPUESTA AJUSTADOS
+
 interface UpdateStatusData {
   estado_gestion: string
 }
 
 interface DevolucionResponse {
   message: string
-  devoluciones: Devolucion[] // Changed to array since store returns multiple
+  venta_id: number
+  nuevo_estado: string
+  devoluciones_creadas: Devolucion[] // Colección de objetos Devolucion creados
 }
 
 interface SingleDevolucionResponse {
@@ -52,25 +74,30 @@ interface SingleDevolucionResponse {
   devolucion: Devolucion
 }
 
+// 4. CLASE SERVICIO (Sin cambios en métodos, solo en tipos)
+
 class DevolucionService {
   private endpoint = '/devoluciones'
 
+  // El método recibe la interfaz CreateDevolucionData corregida
   async createDevolucion(data: CreateDevolucionData): Promise<DevolucionResponse> {
     try {
+      // Usamos el endpoint '/devoluciones' que mapea al store refactorizado
       const response = await laravelApi.post<DevolucionResponse>(this.endpoint, data)
       return response.data
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message || 'Error al crear la devolución.')
+        // Aseguramos que se lance el mensaje de error del backend (ej. validación, stock, etc.)
+        throw new Error(error.response.data.message || 'Error al procesar la devolución.')
       }
-      throw new Error('Error de red o desconocido al crear la devolución.')
+      throw new Error('Error de red o desconocido al procesar la devolución.')
     }
   }
 
   async getDevolucionesPendientes(): Promise<Devolucion[]> {
     try {
       const response = await laravelApi.get<Devolucion[]>(`${this.endpoint}/pendientes`)
-      return response.data
+      return response.data.data
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         throw new Error(error.response.data.message || 'Error al obtener devoluciones pendientes.')

@@ -5,9 +5,75 @@ import { useNotification } from '@/composables/useNotification'
 
 const { showNotification } = useNotification()
 
+// -----------------------------------------------------------
+// 🚨 NOTA IMPORTANTE: AJUSTE DEL TIPO DE DATOS
+// -----------------------------------------------------------
+// Para que la función de contacto funcione, tu interfaz Devolucion (en DevolucionService)
+// debe extenderse para incluir las relaciones necesarias (producto y proveedor).
+/* Ejemplo de estructura necesaria en '@/services/DevolucionService':
+export interface Devolucion {
+  // ...
+  producto?: { 
+    id: number; 
+    nombre: string;
+    proveedor?: { 
+      telefono_whatsapp: string; // <-- Campo clave
+      nombre: string;
+    } 
+  }
+}
+*/
+
 const devolucionesPendientes = ref<Devolucion[]>([])
 const loading = ref(true)
 const updatingStatus = ref<number | null>(null) // To track which item is being updated
+
+// -----------------------------------------------------------
+// --- LÓGICA DE WHATSAPP ---
+// -----------------------------------------------------------
+
+/**
+ * Genera el enlace de WhatsApp con el número limpio y un mensaje predefinido.
+ * @param phoneNumber Número de teléfono (debe incluir código de país, ej: 57310xxxxxxx).
+ * @param productName Nombre del producto para incluir en el mensaje.
+ * @returns URL de WhatsApp.
+ */
+const getWhatsAppLink = (phoneNumber: string, productName: string): string => {
+  // Limpia el número si tiene caracteres no numéricos
+  const cleanNumber = phoneNumber.replace(/\D/g, '')
+
+  // Mensaje pre-llenado
+  const message = `Hola, estamos gestionando una devolución del producto *${productName}* (${new Date().toLocaleDateString()}). Por favor, indiquen los pasos a seguir.`
+  const encodedMessage = encodeURIComponent(message)
+
+  return `https://wa.me/${cleanNumber}?text=${encodedMessage}`
+}
+
+/**
+ * Abre una nueva ventana con el enlace de WhatsApp al proveedor del producto.
+ * @param dev Objeto de devolución completo.
+ */
+const contactarProveedor = (dev: Devolucion) => {
+  // ⚠️ AJUSTA LA RUTA DEL OBJETO (ej: dev.producto?.proveedor?.telefono_whatsapp)
+  // según cómo tu API de Laravel retorna la relación.
+  const whatsappNumber = dev.producto?.proveedores?.telefono
+  const productName = dev.producto?.nombre ?? 'Producto Desconocido'
+
+  if (whatsappNumber) {
+    const link = getWhatsAppLink(whatsappNumber, productName)
+    window.open(link, '_blank')
+    showNotification(`Abriendo chat de WhatsApp para ${productName}...`, 'info')
+  } else {
+    showNotification(
+      `Proveedor no encontrado o número de WhatsApp no disponible para ${productName}.`,
+      'warning',
+    )
+  }
+}
+
+// -----------------------------------------------------------
+// --- LÓGICA DE ESTADO Y FETCH ---
+// -----------------------------------------------------------
 
 const fetchDevolucionesPendientes = async () => {
   loading.value = true
@@ -104,12 +170,25 @@ onMounted(fetchDevolucionesPendientes)
                   </button>
                   <ul class="dropdown-menu" :aria-labelledby="`dropdownMenuButton-${dev.id}`">
                     <li>
+                      <button class="dropdown-item text-success" @click="contactarProveedor(dev)">
+                        <i class="bi bi-whatsapp me-2"></i> Contactar Proveedor
+                      </button>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+
+                    <li>
                       <button
                         class="dropdown-item"
                         :disabled="updatingStatus === dev.id"
                         @click="updateStatus(dev.id, 'Contactado')"
                       >
-                        Contactar Proveedor
+                        Marcar como Contactado
+                        <span
+                          v-if="updatingStatus === dev.id"
+                          class="spinner-border spinner-border-sm ms-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
                       </button>
                     </li>
                     <li>
@@ -119,9 +198,14 @@ onMounted(fetchDevolucionesPendientes)
                         @click="updateStatus(dev.id, 'Finalizada')"
                       >
                         Finalizar (Pérdida/Descarte)
+                        <span
+                          v-if="updatingStatus === dev.id"
+                          class="spinner-border spinner-border-sm ms-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
                       </button>
                     </li>
-                    <!-- Add more actions if needed -->
                   </ul>
                 </div>
               </td>
