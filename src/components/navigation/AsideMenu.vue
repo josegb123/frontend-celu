@@ -60,18 +60,18 @@
               ><i class="bi bi-box me-2"></i><span>Productos</span></router-link
             >
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-if="isAdmin">
             <router-link :to="{ name: 'DevolucionGestion' }" class="nav-link text-white"
               ><i class="bi bi-arrow-counterclockwise me-2"></i
               ><span>Devoluciones</span></router-link
             >
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-if="isAdmin">
             <router-link :to="{ name: 'Proveedores' }" class="nav-link text-white"
               ><i class="bi bi-truck me-2"></i><span>Proveedores</span></router-link
             >
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-if="isAdmin">
             <router-link :to="{ name: 'RecibirPedidos' }" class="nav-link text-white"
               ><i class="bi bi-truck-flatbed me-2"></i><span>Recibir Pedidos</span></router-link
             >
@@ -103,7 +103,7 @@
         </ul>
       </div>
 
-      <div class="menu-section">
+      <div class="menu-section" v-if="isAdmin">
         <p class="menu-title text-white-50 px-3 py-1 mb-1" v-if="!layoutStore.isSidebarCollapsed">
           Administración
         </p>
@@ -150,6 +150,7 @@ import { storeToRefs } from 'pinia'
 import { useLayoutStore } from '@/store/layoutStore'
 import UserProfileMenu from '../users/UserProfileMenu.vue'
 import { useThemeStore } from '@/store/themeStore'
+import { computed } from 'vue' // Added
 
 // Definiciones
 
@@ -159,6 +160,15 @@ const layoutStore = useLayoutStore()
 const authStore = useAuthStore()
 const { isAuthenticated } = storeToRefs(authStore)
 const themeStore = useThemeStore()
+
+// Added computed properties for roles
+const isAdmin = computed(() => {
+  return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
+})
+
+// const isVendedor = computed(() => { // Not used directly in template but good for consistency
+//   return authStore.user?.role === 'vendedor'
+// })
 
 function handleShowCierreModal() {
   emit('showCierreModal')

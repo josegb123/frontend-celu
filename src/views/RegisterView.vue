@@ -50,7 +50,7 @@
           <label for="role" class="form-label">Selecciona un rol:</label>
           <select class="form-select" name="role" id="role" v-model="role" required>
             <option disabled value="">-- Selecciona una opción --</option>
-            <option value="user">Usuario</option>
+            <option value="vendedor">Vendedor</option>
             <option value="admin">Administrador</option>
           </select>
         </div>
@@ -65,10 +65,17 @@
         </router-link>
       </form>
     </div>
+    <notification-modal
+      :is-visible="mostrarModalNotificacion"
+      :message="notificationMessage"
+      :is-error="notificationIsError"
+      @close="closeNotificationModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import NotificationModal from '@/components/utils/NotificationModal.vue'
 import RegisterService from '@/services/RegisterService'
 import { ref, onMounted } from 'vue'
 
@@ -77,26 +84,50 @@ const password = ref('')
 const name = ref('')
 const role = ref('')
 
+// --- ESTADO PARA MODALES DE NOTIFICACIÓN ---
+const mostrarModalNotificacion = ref(false)
+const notificationMessage = ref('')
+const notificationIsError = ref(false)
+
+/**
+ * Muestra el modal de notificación con el mensaje y estado apropiado.
+ * @param message - Mensaje a mostrar.
+ * @param isError - Indica si es un mensaje de error.
+ */
+const showNotification = (message: string, isError: boolean = false) => {
+  notificationMessage.value = message
+  notificationIsError.value = isError
+  mostrarModalNotificacion.value = true
+}
+
+/**
+ * Cierra el modal de notificación.
+ */
+const closeNotificationModal = () => {
+  mostrarModalNotificacion.value = false
+}
+
 const authUser = async () => {
   // Validación básica del lado del cliente (si faltan campos)
   if (!name.value || !email.value || !password.value || !role.value) {
-    alert('Por favor, completa todos los campos.')
+    showNotification('Por favor, completa todos los campos.')
     return
   }
 
   const register = new RegisterService()
+  try {
+    const success = await register.register(name.value, email.value, password.value, role.value)
 
-  const success = await register.register(name.value, email.value, password.value, role.value)
-
-  if (success) {
-    alert('Exito: Usuario registrado con éxito.')
-    // Opcional: limpiar el formulario
-    name.value = ''
-    email.value = ''
-    password.value = ''
-    role.value = '' // Se limpia para que el usuario deba seleccionar de nuevo
-  } else {
-    alert('Fallo en algun lugar: Error al registrar usuario.')
+    if (success) {
+      showNotification('Exito: Usuario registrado con éxito.')
+      // Opcional: limpiar el formulario
+      name.value = ''
+      email.value = ''
+      password.value = ''
+      role.value = '' // Se limpia para que el usuario deba seleccionar de nuevo
+    }
+  } catch (error) {
+    showNotification('Fallo en algun lugar: ' + error, true)
   }
 }
 

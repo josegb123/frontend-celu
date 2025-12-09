@@ -259,21 +259,32 @@ class VentaService {
    *
    * @param id El ID de la venta.
    */
-  public imprimirFacturaPos(id: number): void {
-    const baseUrl = laravelApi.defaults.baseURL
-
-    // La ruta que definiste en Laravel es: /ventas/{venta}/imprimir-pos
-    const url = `${baseUrl}${this.endpoint}/${id}/imprimir-pos`
+  public async imprimirFacturaPos(id: number): Promise<void> {
+    const url = `${this.endpoint}/${id}/imprimir-pos`; // Use relative path with laravelApi
 
     try {
-      // Abrir el PDF en una nueva pestaña/ventana
-      window.open(url, '_blank')
+      const response = await laravelApi.get(url, {
+        responseType: 'blob', // Important: responseType must be 'blob' for binary data
+        headers: {
+          'Accept': 'application/pdf', // Request a PDF
+        },
+      });
+
+      // Create a blob URL for the PDF
+      const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      
+      // Open the new URL in a new tab
+      window.open(fileURL, '_blank');
+
+      // Clean up the URL after a short delay (optional, but good practice)
+      setTimeout(() => window.URL.revokeObjectURL(fileURL), 100);
+
     } catch (error) {
-      console.error(`Error al intentar abrir la factura POS para la venta ${id}:`, error)
-      // Si hay un error de navegador (bloqueo de pop-up, etc.)
+      console.error(`Error al intentar imprimir la factura POS para la venta ${id}:`, error);
       alert(
-        'Error al abrir la ventana de impresión. Verifique los bloqueadores de ventanas emergentes.',
-      )
+        'Error al imprimir la factura. Verifique si la venta existe o si hay problemas de conexión/autenticación.',
+      );
+      throw error; // Re-throw to propagate the error if needed
     }
   }
 }

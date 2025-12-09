@@ -7,6 +7,7 @@ interface User {
   id: number | null
   name: string | null
   email: string | null
+  role: string | null // Added role
 }
 
 interface AuthResponse {
@@ -19,7 +20,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     isAuthenticated: false as boolean,
     accessToken: localStorage.getItem('access_token') || null,
-    user: { id: null, name: null, email: null } as User,
+    user: { id: null, name: null, email: null, role: null } as User, // Initialize role
   }),
 
   actions: {
@@ -65,9 +66,7 @@ export const useAuthStore = defineStore('auth', {
         this.accessToken = null
         localStorage.removeItem('access_token')
         this.isAuthenticated = false
-        this.user = { id: null, name: null, email: null }
-
-        // Debugging: Señalización de éxito
+        this.user = { id: null, name: null, email: null, role: null } // Clear role
       }
       return true
     },
@@ -75,7 +74,7 @@ export const useAuthStore = defineStore('auth', {
     async checkSession() {
       if (!this.accessToken) {
         this.isAuthenticated = false
-        this.user = { id: null, name: null, email: null }
+        this.user = { id: null, name: null, email: null, role: null } // Clear role
         return false
       }
 

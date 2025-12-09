@@ -13,13 +13,14 @@
         <button class="btn btn-outline-info" @click="$emit('ver-detalle', venta.venta_id)">
           <i class="bi bi-eye"></i>
         </button>
-        <button class="btn btn-outline-secondary" @click="$emit('editar', venta)">
+        <button class="btn btn-outline-secondary" @click="$emit('editar', venta)" v-if="isAdmin">
           <i class="bi bi-pencil"></i>
         </button>
         <button
           class="btn btn-outline-danger"
           @click="$emit('eliminar', venta.venta_id)"
           :disabled="venta.estado === 'cancelada'"
+          v-if="isAdmin"
         >
           <i class="bi bi-trash"></i>
         </button>
@@ -31,10 +32,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { VentaIndexResponse } from '../../services/VentaService'
+import { useAuthStore } from '@/store/authStore' // Added import
 
 const props = defineProps<{
   venta: VentaIndexResponse
 }>()
+
+const authStore = useAuthStore() // Added
+const isAdmin = computed(() => { // Added
+  return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
+})
 
 const estadoColor = computed(() => {
   switch (props.venta.estado) {

@@ -73,10 +73,14 @@
       </div>
 
       <div class="card-actions d-flex justify-content-between gap-2 mt-auto">
-        <button class="btn btn-sm btn-outline-primary w-50" @click="$emit('edit', product)">
+        <button
+          class="btn btn-sm btn-outline-primary w-50"
+          @click="$emit('edit', product)"
+          v-if="isAdmin"
+        >
           <i class="bi bi-pencil-square"></i> Editar
         </button>
-        <button class="btn btn-sm btn-outline-danger w-50" @click="requestDelete">
+        <button class="btn btn-sm btn-outline-danger w-50" @click="requestDelete" v-if="isAdmin">
           <i class="bi bi-trash"></i> Eliminar
         </button>
       </div>
@@ -87,6 +91,12 @@
 import { computed, ref } from 'vue'
 import type { IProducto } from '@/interfaces/IProductoInterfaces'
 import type { Proveedor } from '@/interfaces/IProveedores'
+import { useAuthStore } from '@/store/authStore'
+const authStore = useAuthStore() // Added
+const isAdmin = computed(() => {
+  // Added
+  return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
+})
 
 // --- SETUP REACTIVO ---
 const isImageError = ref(false)

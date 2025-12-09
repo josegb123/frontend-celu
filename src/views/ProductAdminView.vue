@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <div class="col-12 col-md-4 d-grid">
+      <div class="col-12 col-md-4 d-grid" v-if="isAdmin">
         <button class="btn btn-primary" @click="openProductFormModal">
           <i class="bi bi-plus-circle me-2"></i> Crear Producto
         </button>
@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue' // Added computed
 
 // Componentes
 import ProductFormModal from '@/components/products/ProductFormModal.vue'
@@ -82,6 +82,7 @@ import CategoryManagerModal from '@/components/products/CategoryManagerModal.vue
 import CategoriaService from '@/services/CategoriaService.js'
 import type { IProducto, Categoria } from '@/interfaces/IProductoInterfaces'
 import type { Ref } from 'vue'
+import { useAuthStore } from '@/store/authStore' // Added
 
 // --- ESTADO GLOBAL DE LA VISTA ---
 
@@ -101,6 +102,11 @@ const notification = ref({
 })
 const categoryModalVisible = ref(false)
 const productFormModalVisible = ref(false)
+
+const authStore = useAuthStore() // Added
+const isAdmin = computed(() => { // Added
+  return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
+})
 
 // --- MÉTODOS DE MANEJO DE ESTADO ---
 

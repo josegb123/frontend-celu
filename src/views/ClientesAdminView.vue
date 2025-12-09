@@ -95,10 +95,18 @@
                 <button class="btn btn-sm btn-info me-2" @click="openViewModal(cliente)">
                   <i class="bi bi-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-warning me-2" @click="openEditModal(cliente)">
+                <button
+                  class="btn btn-sm btn-warning me-2"
+                  v-if="isAdmin"
+                  @click="openEditModal(cliente)"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" @click="openConfirmationModal(cliente)">
+                <button
+                  class="btn btn-sm btn-danger"
+                  v-if="isAdmin"
+                  @click="openConfirmationModal(cliente)"
+                >
                   <i class="bi bi-trash"></i>
                 </button>
               </td>
@@ -423,7 +431,12 @@
 import { ref, watch, onMounted, computed, watchEffect } from 'vue'
 import ClienteService from '@/services/ClienteService'
 import { isAxiosError } from 'axios'
-// Nota: Importa tus interfaces desde '@/interfaces/ICliente' en un proyecto real.
+import { useAuthStore } from '@/store/authStore'
+const authStore = useAuthStore() // Added
+const isAdmin = computed(() => {
+  // Added
+  return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
+})
 
 // --------------------------------------------------------------------------
 // --- DECLARACIONES DE INTERFACES LOCALES ---

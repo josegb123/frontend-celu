@@ -20,9 +20,21 @@ export interface ItemVenta {
   subtotal: number
 }
 
-/** Interfaz para el Cliente. */
+/** Interfaz para el Cliente (completa). */
 export interface Cliente {
-  id: number
-  nombre: string
-  ruc_ci: string | null
+  id: number;
+  cedula: string;
+  nombre: string;
+  apellidos: string;
+  telefono: string;
+  email: string;
+  direccion: string;
+  aval_id?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** Interfaz para un Aval. */
+export interface Aval {
+  id: number | null;
 }

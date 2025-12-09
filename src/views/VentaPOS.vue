@@ -155,6 +155,8 @@
                   @close="showClienteModal = false"
                 />
 
+                <AvalSelector @aval-selected="handleAvalSelected" />
+
                 <hr class="my-3" />
 
                 <PaymentForm
@@ -203,10 +205,11 @@ import ProductGridPOS from '../components/VentaPOS/ProductGridPOS.vue'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 import CajaBloqueador from '@/components/shared/CajaBloqueador.vue'
+import AvalSelector from '@/components/ventas/AvalSelector.vue' // Added import
 import { useCajaStore } from '@/store/useCajaStore'
 
 // Interfaces
-import type { Cliente, ItemVenta, ProductoVentaBase } from '@/interfaces/IPostInterfaces'
+import type { Cliente, ItemVenta, ProductoVentaBase, Aval } from '@/interfaces/IPostInterfaces' // Added Aval interface
 import type { Ref } from 'vue'
 
 // --- Inicialización de Stores ---
@@ -225,6 +228,8 @@ const clienteGenerico: Cliente = {
   ruc_ci: null,
 }
 const clienteSeleccionado = ref<Cliente>(clienteGenerico)
+const selectedAval = ref<Aval | null>(null) // Added for aval data
+const hasPendingDuesForAval = ref<boolean>(false) // Added for aval pending dues
 
 // --- 2. Estado del Carrito y Control de Stock ---
 const itemsVenta: Ref<ItemVenta[]> = ref([])
@@ -434,6 +439,21 @@ function handleCancelarVenta() {
 }
 
 /**
+ * MANEJO DE SELECCIÓN DE AVAL: Recibe el ID del aval seleccionado y su estado de cuentas pendientes.
+ */
+function handleAvalSelected(avalData: { id: number | null; hasPendingDues: boolean }) {
+  selectedAval.value = { id: avalData.id } // Store the ID
+  hasPendingDuesForAval.value = avalData.hasPendingDues
+
+  if (avalData.hasPendingDues) {
+    showNotification(
+      '¡Atención! El aval seleccionado tiene cuentas por cobrar pendientes.',
+      true,
+    )
+  }
+}
+
+/**
  * REACTIVIDAD POST-VENTA: Se llama cuando PaymentForm registra la venta con éxito.
  */
 const handleVentaRegistrada = (mensaje: string) => {
@@ -444,6 +464,8 @@ const handleVentaRegistrada = (mensaje: string) => {
   itemsVenta.value = []
   clienteSeleccionado.value = clienteGenerico
   descuento.value = 0.0
+  selectedAval.value = null // Reset selected aval
+  hasPendingDuesForAval.value = false // Reset pending dues status
 
   // 3. Cerrar el modal y mostrar notificación de éxito (Ahora con NotificationModal)
   showClienteModal.value = false
