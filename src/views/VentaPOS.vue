@@ -42,14 +42,37 @@
                   <tr v-for="item in itemsVenta" :key="item.id">
                     <td class="align-middle fs-7">{{ item.nombre }}</td>
                     <td class="align-middle text-center">
-                      <input
-                        type="number"
-                        v-model.number="item.cantidad"
-                        min="1"
-                        :max="item.stock_actual"
-                        class="form-control form-control-xs text-center border-secondary"
-                        style="width: 55px; display: inline-block; height: 25px"
-                      />
+                      <div class="d-flex justify-content-center align-items-center">
+                        <div class="input-group" style="width: 90px">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            @click="item.cantidad > 1 ? item.cantidad-- : null"
+                            :disabled="item.cantidad <= 1"
+                          >
+                            -
+                          </button>
+
+                          <input
+                            type="text"
+                            v-model.number="item.cantidad"
+                            class="form-control form-control-sm text-center border-secondary p-0"
+                            style="width: 30px; height: 25px"
+                            min="1"
+                            :max="item.stock_actual"
+                          />
+
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            @click="item.cantidad < item.stock_actual ? item.cantidad++ : null"
+                            :disabled="item.cantidad >= item.stock_actual"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
                       <span
                         v-if="item.cantidad > item.stock_actual"
                         class="text-danger small d-block"
@@ -155,7 +178,7 @@
                   @close="showClienteModal = false"
                 />
 
-                <AvalSelector @aval-selected="handleAvalSelected" />
+                <AvalSelector @aval-selected="handleAvalSelected" v-if="!isVentaContado" />
 
                 <hr class="my-3" />
 
@@ -167,6 +190,7 @@
                   :items="itemsVenta"
                   :cliente="clienteSeleccionado"
                   :cliente-generico="clienteGenerico"
+                  @update:is-contado="handleContadoChange"
                   @venta-registrada="handleVentaRegistrada"
                 />
               </div>
@@ -215,6 +239,11 @@ import type { Ref } from 'vue'
 // --- Inicialización de Stores ---
 const cajaStore = useCajaStore() // Inicializamos el store de la caja
 
+const isVentaContado = ref(false) // Estado local en el padre
+
+const handleContadoChange = (newValue: boolean) => {
+  isVentaContado.value = newValue
+}
 // --- 1. Estado de Cliente ---
 interface NotificationState {
   isVisible: boolean
@@ -225,8 +254,13 @@ interface NotificationState {
 const clienteGenerico: Cliente = {
   id: 0,
   nombre: 'Consumidor Final',
-  cedula: null,
+  cedula: '',
+  apellidos: '',
+  telefono: '',
+  email: '',
+  direccion: '',
 }
+
 const clienteSeleccionado = ref<Cliente>(clienteGenerico)
 const selectedAval = ref<Aval | null>(null) // Added for aval data
 const hasPendingDuesForAval = ref<boolean>(false) // Added for aval pending dues
@@ -446,10 +480,7 @@ function handleAvalSelected(avalData: { id: number | null; hasPendingDues: boole
   hasPendingDuesForAval.value = avalData.hasPendingDues
 
   if (avalData.hasPendingDues) {
-    showNotification(
-      '¡Atención! El aval seleccionado tiene cuentas por cobrar pendientes.',
-      true,
-    )
+    showNotification('¡Atención! El aval seleccionado tiene cuentas por cobrar pendientes.', true)
   }
 }
 

@@ -183,6 +183,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'venta-registrada', mensaje: string): void
   (e: 'close'): void
+  (e: 'update:is-contado', isContado: boolean): void
 }>()
 
 // --- 2. Estado y Constantes ---
@@ -262,9 +263,23 @@ const cambio = computed(() => {
   return 0
 })
 
+const isTipoContado = computed(() => {
+  // Si tipoVentaSeleccionado es 1 (Contado), devuelve true.
+  // Para 2 (Crédito) o 3 (Plan Separe), devuelve false.
+  return tipoVentaSeleccionado.value === 1
+})
+
+// --- Watch para emitir el estado al padre ---
+watch(
+  isTipoContado,
+  (newValue) => {
+    emit('update:is-contado', newValue)
+  },
+  { immediate: true },
+)
+
 const montoPendiente = computed(() => {
   const isCreditoOrSepare = tipoVentaSeleccionado.value === 2 || tipoVentaSeleccionado.value === 3
-
   if (isCreditoOrSepare) {
     const pendiente = props.totalPagar - abonoInicial.value
     return Math.max(0, pendiente)
