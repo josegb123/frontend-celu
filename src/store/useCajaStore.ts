@@ -2,11 +2,14 @@ import { defineStore } from 'pinia'
 import laravelApi from '@/http/laravelApi'
 import { AxiosError } from 'axios'
 import { ref, computed } from 'vue'
-// Importación del nuevo servicio y tipos
+
+// Importación del nuevo servicio y tipos (asumo que CajaService y TipoMovimiento están definidos)
 import { cajaService, type TipoMovimiento } from '@/services/CajaService'
 
+// --- INTERFACES ---
+
 /**
- * 1. INTERFACE: Define la estructura de la Caja Diaria.
+ * Define la estructura de la Caja Diaria.
  */
 export interface CajaDiaria {
   id: number
@@ -25,12 +28,12 @@ export interface CajaDiaria {
 }
 
 /**
- * 2. INTERFACE: Define la estructura del reporte que devuelve el backend al cerrar la caja.
+ * Define la estructura del reporte que devuelve el backend al cerrar la caja.
  */
 export interface ReporteCierre {
   id: number
   fondo_inicial: number
-  monto_teorico: number // El reporte SÍ tiene que devolverlo al final
+  monto_teorico: number
   monto_fisico: number
   diferencia: number
   estado: 'cerrada'
@@ -44,22 +47,20 @@ export const useCajaStore = defineStore('caja', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // ESTADO: Monto calculado a partir de movimientos
+  // ESTADO: Monto calculado a partir de movimientos de efectivo
   const montoTeoricoActual = ref(0)
 
   // --- GETTERS ---
   const isCajaAbierta = computed(() => !!cajaActiva.value && cajaActiva.value.estado === 'abierta')
-  // El ID puede ser null si no hay caja abierta.
   const cajaDiariaId = computed(() => cajaActiva.value?.id || null)
   const fondoInicial = computed(() => cajaActiva.value?.fondo_inicial || 0)
 
-  // GETTER: Expone el estado calculado
   const getMontoTeorico = computed(() => montoTeoricoActual.value)
 
   // --- ACTIONS ---
 
   /**
-   * @description Calcula el monto teórico actual (Fondo Inicial + Ingresos Efectivo - Egresos Efectivo).
+   * Calcula el monto teórico actual (Fondo Inicial + Ingresos Efectivo - Egresos Efectivo).
    */
   async function calcularMontoTeorico(): Promise<void> {
     const currentCajaId = cajaDiariaId.value
@@ -71,22 +72,20 @@ export const useCajaStore = defineStore('caja', () => {
     try {
       isLoading.value = true
 
-      // 1. Obtener los movimientos de EFECTIVO para la caja activa.
+      // Obtener los movimientos de EFECTIVO para la caja activa.
       const response = await cajaService.getMovimientos({
         caja_diaria_id: currentCajaId,
-        metodo_pago: 'efectivo', // Solo el efectivo afecta el saldo físico
-        per_page: 500, // Ajuste para intentar obtener todos los movimientos de una caja
+        metodo_pago: 'efectivo',
+        per_page: 500,
       })
 
       let totalMovimientosEfectivo = 0
 
-      // 2. Sumar o restar los montos
+      // Sumar o restar los montos
       response.data.forEach((movimiento) => {
-        // Asegurar la conversión y verificación de datos numéricos
         const monto = parseFloat(movimiento.monto)
 
         if (isNaN(monto)) {
-          // Manejo defensivo: Ignorar movimientos con monto no numérico
           console.warn(`Movimiento ID con monto no numérico omitido: ${movimiento.monto}`)
           return
         }
@@ -98,7 +97,7 @@ export const useCajaStore = defineStore('caja', () => {
         }
       })
 
-      // 3. Cálculo Final: Fondo Inicial + Flujo de Efectivo
+      // Cálculo Final: Fondo Inicial + Flujo de Efectivo
       montoTeoricoActual.value = fondoInicial.value + totalMovimientosEfectivo
     } catch (err) {
       error.value = 'Fallo al calcular el monto teórico de la caja.'
@@ -137,6 +136,9 @@ export const useCajaStore = defineStore('caja', () => {
     }
   }
 
+  /**
+   * Abre una nueva sesión de caja.
+   */
   async function openCaja(fondoInicialParam: number): Promise<boolean> {
     isLoading.value = true
     error.value = null
@@ -146,7 +148,6 @@ export const useCajaStore = defineStore('caja', () => {
       })
 
       cajaActiva.value = response.data.caja
-      // El cálculo inicial debe ser igual al fondo inicial, pero se llama para asegurar el estado
       await calcularMontoTeorico()
       return true
     } catch (err: unknown) {
@@ -158,6 +159,9 @@ export const useCajaStore = defineStore('caja', () => {
     }
   }
 
+  /**
+   * Cierra la caja activa.
+   */
   async function closeCaja(montoCierreFisico: number): Promise<ReporteCierre | false> {
     if (!cajaActiva.value) {
       error.value = 'No hay una caja activa para cerrar.'
@@ -173,7 +177,6 @@ export const useCajaStore = defineStore('caja', () => {
         `/cajas/${cajaId}/cierre`,
         {
           monto_cierre_fisico: montoCierreFisico,
-          // Enviar el teórico calculado al backend para que haga la validación/registro final
           monto_cierre_teorico: getMontoTeorico.value,
         },
       )
@@ -189,15 +192,18 @@ export const useCajaStore = defineStore('caja', () => {
     }
   }
 
+  /**
+   * Limpia el estado de la caja activa.
+   */
   function clearCajaActiva(): void {
     cajaActiva.value = null
     error.value = null
     isLoading.value = false
-    montoTeoricoActual.value = 0 // Resetear
+    montoTeoricoActual.value = 0
   }
 
   /**
-   * @description Implementación del registro de movimiento manual (ej: egreso).
+   * Implementación del registro de movimiento manual (ej: egreso).
    */
   async function registrarMovimientoManual(
     monto: number,
@@ -205,7 +211,6 @@ export const useCajaStore = defineStore('caja', () => {
     tipoMovimientoId: number,
   ) {
     const currentCajaId = cajaDiariaId.value
-    // Si la caja está null, lanzamos un error que debe ser capturado por la interfaz
     if (currentCajaId === null) {
       error.value = 'No hay caja activa para registrar el movimiento.'
       throw new Error('No hay caja activa.')
@@ -232,6 +237,37 @@ export const useCajaStore = defineStore('caja', () => {
     }
   }
 
+  /**
+   * @description Sincroniza el ID de la caja activa forzosamente.
+   * Usado por componentes que lo descubren de forma asíncrona (ej: AbonoModal).
+   * Si el store está vacío, llama a fetchCajaActiva() para cargar todos los detalles.
+   * @param newCajaId El ID de la caja activa.
+   */
+  async function setCajaDiariaId(newCajaId: number | null): Promise<void> {
+    if (newCajaId === null) {
+      clearCajaActiva()
+      return
+    }
+
+    // Si el ID ya está seteado y coincide, salimos.
+    if (cajaActiva.value && cajaActiva.value.id === newCajaId) {
+      return
+    }
+
+    // Si no hay caja cargada, forzamos la carga completa desde la API.
+    if (!cajaActiva.value) {
+      await fetchCajaActiva()
+    } else {
+      // Si hay una caja cargada pero el ID es diferente, asumimos que fue una
+      // recarga en segundo plano (u otro flujo) y forzamos el recálculo por si acaso.
+      // Nota: Mutamos directamente solo el ID para simplificar el flujo AbonoModal/Store.
+      cajaActiva.value.id = newCajaId
+    }
+
+    // Recalculamos el monto teórico después de cualquier cambio forzado.
+    await calcularMontoTeorico()
+  }
+
   // --- RETORNO FINAL (API de Setup) ---
   return {
     cajaActiva,
@@ -241,13 +277,14 @@ export const useCajaStore = defineStore('caja', () => {
     isCajaAbierta,
     cajaDiariaId,
     fondoInicial,
-    montoTeoricoActual: getMontoTeorico, // Exponemos el valor calculado
+    montoTeoricoActual: getMontoTeorico,
     // Actions
     fetchCajaActiva,
     openCaja,
     closeCaja,
     clearCajaActiva,
-    calcularMontoTeorico, // Para recálculo bajo demanda
-    registrarMovimientoManual, // Para registrar retiros/ingresos
+    calcularMontoTeorico,
+    registrarMovimientoManual,
+    setCajaDiariaId,
   }
 })

@@ -47,6 +47,30 @@ export interface VentaMinimal {
   // Añade aquí más campos que necesites de la venta (ej: estado, metodo_pago)
 }
 
+// Interfaz para productos con bajo stock
+export interface LowStockProduct {
+  id: number
+  nombre: string
+  stock_actual: number
+  stock_minimo: number
+  diferencia: number
+}
+
+// Interfaz para métricas top
+export interface TopMetric {
+  label: string
+  value: string | number
+  change?: number
+  change_type?: 'increase' | 'decrease'
+}
+
+// Interfaz para datos de series temporales
+export interface TimeSeriesData {
+  date: string
+  value: number
+  label?: string
+}
+
 // ----------------------------------------------------
 // CLASE DE SERVICIO
 // ----------------------------------------------------

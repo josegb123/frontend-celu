@@ -1,5 +1,5 @@
 import type { IAbono } from './IAbono'
-import { type ICliente } from './ICliente'
+import type { ICliente } from './ICliente'
 import type { IVenta } from './IVenta'
 
 export interface ICuentaPorCobrarShow {

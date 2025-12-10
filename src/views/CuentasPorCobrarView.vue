@@ -83,6 +83,8 @@
       @close="showAbonoModal = false"
       @abono-success="handleAbonoSuccess"
       :cajaId="cajaId"
+      :onLoadCajaId="handleLoadCajaId"
+      @update:cajaId="handleUpdateCajaId"
     />
   </div>
 </template>
@@ -102,11 +104,15 @@ import CuentaPorCobrarService, {
 } from '@/services/CuentaPorCobrarService'
 import type { IAbono } from '@/interfaces/IAbono'
 import type { dataCuentaPorCobrar } from '@/interfaces/ICuentaPorCobrar'
+
+// Importación del Store
 import { useCajaStore } from '@/store/useCajaStore'
 
-// --- ESTADO LOCAL ---
+// --- ESTADO Y STORES ---
 const cuentas = ref<dataCuentaPorCobrar[]>([])
 const isLoading = ref(false)
+const cajaStore = useCajaStore()
+const cajaId = cajaStore.cajaDiariaId // Propiedad reactiva para pasar al modal
 
 // --- ESTADO DE PAGINACIÓN ---
 const currentPage = ref(1)
@@ -124,6 +130,33 @@ const selectedCuenta = ref<dataCuentaPorCobrar | null>(null)
 
 const showAbonoModal = ref(false)
 const abonoTargetCuenta = ref<dataCuentaPorCobrar | null>(null)
+
+// --- LÓGICA DE CAJA DIARIA (PROP FALTANTE) ---
+
+/**
+ * Función que el AbonoModal utiliza para solicitar la carga del ID de Caja
+ * si su valor es nulo en el momento de abrirse.
+ * Esta función llama al store y devuelve el resultado.
+ * * @returns {Promise<number | null>} El ID de la caja activa o null si no se encuentra.
+ */
+const handleLoadCajaId = async (): Promise<number | null> => {
+  if (cajaStore.cajaDiariaId !== null) {
+    return cajaStore.cajaDiariaId
+  }
+  if (!cajaStore.isLoading) {
+    await cajaStore.fetchCajaActiva()
+  }
+  return cajaStore.cajaDiariaId
+}
+
+/**
+ * Maneja la actualización del ID de Caja que el AbonoModal nos proporciona
+ * (lo usa para actualizar el store padre)
+ * @param newCajaId El nuevo ID de caja proporcionado por el modal.
+ */
+const handleUpdateCajaId = (newCajaId: number) => {
+  cajaStore.setCajaDiariaId(newCajaId)
+}
 
 // --- LÓGICA DE DATOS Y FILTROS ---
 
@@ -198,10 +231,9 @@ const openAbonoModal = (cuenta: dataCuentaPorCobrar | null) => {
   // Si se viene del botón global, la cuenta es null. Si se viene de la tabla, es la cuenta seleccionada.
   abonoTargetCuenta.value = cuenta
 
-  if (!cajaStore.isCajaAbierta && !cajaStore.isLoading) {
-    cajaStore.fetchCajaActiva()
-  }
-  // Si la cuenta tiene saldo cero, no abrir el modal
+  // La lógica de precarga del store se ha movido o simplificado,
+  // ya que ahora el AbonoModal maneja la validación de la carga.
+  // Solo verificamos si tiene saldo > 0
   if (cuenta && Number(cuenta.monto_pendiente) <= 0) {
     alert('La cuenta ya está saldada o no tiene monto pendiente.')
     return
@@ -231,11 +263,14 @@ const handleAbonoSuccess = (abono: IAbono) => {
     showDetailsModal.value = true
   }
 }
-const cajaStore = useCajaStore()
-const cajaId = cajaStore.cajaDiariaId
+
 // --- CICLO DE VIDA ---
 onMounted(() => {
   fetchCuentas()
+  // Intentar cargar la caja al inicio, por si acaso.
+  if (!cajaStore.isCajaAbierta && !cajaStore.isLoading) {
+    cajaStore.fetchCajaActiva()
+  }
 })
 </script>
 

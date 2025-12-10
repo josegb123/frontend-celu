@@ -225,7 +225,7 @@ interface NotificationState {
 const clienteGenerico: Cliente = {
   id: 0,
   nombre: 'Consumidor Final',
-  ruc_ci: null,
+  cedula: null,
 }
 const clienteSeleccionado = ref<Cliente>(clienteGenerico)
 const selectedAval = ref<Aval | null>(null) // Added for aval data

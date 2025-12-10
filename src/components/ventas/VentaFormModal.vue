@@ -358,7 +358,7 @@ const formatCurrency = (val: number): string => {
  */
 const mapShowResponseToDTO = (data: VentaShowResponse): VentaFormDTO => {
   return {
-    cliente_id: data.cliente?.id || null,
+    cliente_id: (data.cliente?.id as number) || null,
     tipo_venta_id: 1,
     descuento_total: data.totales_financieros.descuento_total,
     caja_diaria_id: data.caja_diaria_id || null,

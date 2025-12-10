@@ -355,8 +355,8 @@
 
             <dt class="col-sm-4">Cliente Aval:</dt>
             <dd class="col-sm-8">
-              <span v-if="viewCliente.aval_nombre_completo" class="fw-bold text-primary">
-                {{ viewCliente.aval_nombre_completo }} (ID: {{ viewCliente.aval_id }})
+              <span v-if="viewCliente.aval_nombre" class="fw-bold text-primary">
+                {{ viewCliente.aval_nombre }} (ID: {{ viewCliente.aval_id }})
               </span>
               <span v-else-if="viewCliente.aval_id">
                 ID: {{ viewCliente.aval_id }} (Nombre no encontrado)
@@ -434,39 +434,13 @@ import { isAxiosError } from 'axios'
 import { useAuthStore } from '@/store/authStore'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
+import { type ICliente } from '@/interfaces/ICliente'
+
 const authStore = useAuthStore() // Added
 const isAdmin = computed(() => {
   // Added
   return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
 })
-
-// --------------------------------------------------------------------------
-// --- DECLARACIONES DE INTERFACES LOCALES ---
-// --------------------------------------------------------------------------
-interface ISaldo {
-  cliente_id: number
-  cuenta_por_cobrar_id: number | null
-  monto_original: string
-  monto_pendiente: string
-  estado: string
-  motivo: string
-}
-
-interface ICliente {
-  id: number | string
-  cedula: string | number | null
-  nombre: string
-  apellidos: string | null
-  telefono: string | null
-  email: string | null
-  direccion: string | null
-  aval_id: number | null
-  estado_financiero?: ISaldo[]
-  is_aval?: boolean // Propiedad calculada en el frontend
-  aval_nombre_completo?: string | null
-}
-
-// Interfaz eliminada: IClientePaginatedResponse (ya no se usa directamente)
 
 interface StoreUpdateClientePayload {
   // Aquí usamos la forma flexible para el formulario
@@ -660,7 +634,7 @@ const fetchClientes = async () => {
   try {
     const response = await ClienteService.index(currentPage.value, searchQuery.value)
 
-    let fetchedClientes: ICliente[] = response.data
+    const fetchedClientes: ICliente[] = response.data
 
     // logica para marcar aval
     const avalIds = new Set(fetchedClientes.map((c) => c.aval_id).filter((id) => id !== null))
@@ -695,24 +669,16 @@ const saveCliente = async () => {
   isSaving.value = true
   formError.value = null
 
-  let cedulaPayload: number | null = null
-
-  if (currentCliente.value.cedula) {
-    // Intenta convertir la cédula a número. Si falla (NaN), usa null.
-    const numCedula = Number(currentCliente.value.cedula)
-    cedulaPayload = isNaN(numCedula) ? null : numCedula
-  }
-
   // 🎯 CORRECCIÓN TIPADO 2345: Aseguramos que el payload respete number | null
   const payload = {
     nombre: currentCliente.value.nombre as string,
-    apellidos: currentCliente.value.apellidos,
-    cedula: cedulaPayload, // Ahora es Number | null
-    telefono: currentCliente.value.telefono,
-    email: currentCliente.value.email,
-    direccion: currentCliente.value.direccion,
-    aval_id: currentCliente.value.aval_id,
-  }
+    apellidos: currentCliente.value.apellidos === '' ? null : currentCliente.value.apellidos,
+    cedula: currentCliente.value.cedula ?? null,
+    telefono: currentCliente.value.telefono ?? null,
+    email: currentCliente.value.email ?? null,
+    direccion: currentCliente.value.direccion ?? null,
+    aval_id: currentCliente.value.aval_id ?? null,
+  } as StoreUpdateClientePayload
 
   try {
     if (isEditMode.value && currentCliente.value.id) {
@@ -760,7 +726,7 @@ const openCreateModal = () => {
   currentCliente.value = {
     nombre: '',
     cedula: null,
-    apellidos: null,
+    apellidos: '',
     telefono: null,
     email: null,
     direccion: null,
@@ -801,7 +767,7 @@ const openViewModal = async (cliente: ICliente) => {
     const fullCliente = await ClienteService.show(cliente.id)
 
     // Inicializar el nombre del aval
-    fullCliente.aval_nombre_completo = null
+    fullCliente.aval_nombre = ''
 
     // 2. Si el cliente tiene un aval (aval_id), buscamos sus detalles
     if (fullCliente.aval_id) {
@@ -809,7 +775,7 @@ const openViewModal = async (cliente: ICliente) => {
         const avalDetails = await ClienteService.show(fullCliente.aval_id)
 
         // 3. Asignar el nombre completo al cliente
-        fullCliente.aval_nombre_completo = `${avalDetails.nombre} ${avalDetails.apellidos || ''}`
+        fullCliente.aval_nombre = `${avalDetails.nombre} ${avalDetails.apellidos || ''}`
       } catch (err) {
         console.error('Error fetching aval details:', err)
         // Mostrar notificación de advertencia si no se puede obtener el aval

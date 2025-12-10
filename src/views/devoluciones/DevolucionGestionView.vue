@@ -56,7 +56,7 @@ const getWhatsAppLink = (phoneNumber: string, productName: string): string => {
 const contactarProveedor = (dev: Devolucion) => {
   // ⚠️ AJUSTA LA RUTA DEL OBJETO (ej: dev.producto?.proveedor?.telefono_whatsapp)
   // según cómo tu API de Laravel retorna la relación.
-  const whatsappNumber = dev.producto?.proveedores?.telefono
+  const whatsappNumber = dev.producto?.proveedor?.telefono
   const productName = dev.producto?.nombre ?? 'Producto Desconocido'
 
   if (whatsappNumber) {
@@ -146,7 +146,7 @@ onMounted(fetchDevolucionesPendientes)
           <tbody>
             <tr v-for="dev in devolucionesPendientes" :key="dev.id">
               <td>{{ dev.producto?.nombre ?? 'N/A' }}</td>
-              <td>{{ dev.id_unico_producto }}</td>
+              <td>{{ dev.producto?.id || 'N/A' }}</td>
               <td>
                 {{ dev.cliente?.nombre ?? 'N/A' }} ({{
                   dev.cliente?.cedula ?? 'Sin Identificación'

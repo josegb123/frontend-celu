@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { debounce } from 'lodash'
-import ClienteService, { type Cliente } from '@/services/ClienteService'
+import ClienteService from '@/services/ClienteService'
+import type { ICliente } from '@/interfaces/ICliente'
 
 // --- 1. Definiciones de Props y Emits ---
 
@@ -9,14 +10,14 @@ const props = defineProps<{
   /**
    * Recibe el cliente actualmente seleccionado (ej. 'Consumidor Final') para mostrarlo.
    */
-  currentCliente: Cliente
+  currentCliente: ICliente
 }>()
 
 const emit = defineEmits<{
   /**
    * Emite el objeto Cliente seleccionado al componente padre.
    */
-  (e: 'cliente-selected', cliente: Cliente): void
+  (e: 'cliente-selected', cliente: ICliente): void
   /**
    * Se usa para cerrar el modal desde el interior, si es necesario.
    */
@@ -26,7 +27,7 @@ const emit = defineEmits<{
 // --- 2. Estado Local ---
 
 const searchQuery = ref('')
-const searchResults = ref<Cliente[]>([])
+const searchResults = ref<ICliente[]>([])
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 
@@ -63,7 +64,7 @@ watch(searchQuery, (newQuery) => {
 
 // --- 4. Lógica de Selección ---
 
-const selectCliente = (cliente: Cliente) => {
+const selectCliente = (cliente: ICliente) => {
   // 1. Emitir el cliente seleccionado al componente padre (PosView.vue)
   emit('cliente-selected', cliente)
 
@@ -83,7 +84,7 @@ const selectCliente = (cliente: Cliente) => {
       <p class="mb-0 small">
         Cliente Actual: <span class="fw-bold text-primary">{{ props.currentCliente.nombre }}</span>
       </p>
-      <small class="text-muted small">Cédula/RUC: {{ props.currentCliente.ruc_ci || 'N/A' }}</small>
+      <small class="text-muted small">Cédula/RUC: {{ props.currentCliente.cedula || 'N/A' }}</small>
     </div>
 
     <h6 class="mb-2 fs-6">Buscar nuevo cliente:</h6>
@@ -124,7 +125,7 @@ const selectCliente = (cliente: Cliente) => {
         >
           <div>
             <p class="mb-0 fw-bold small">{{ cliente.nombre }}</p>
-            <small class="text-muted small">Cédula/RUC: {{ cliente.ruc_ci || 'N/A' }}</small>
+            <small class="text-muted small">Cédula/RUC: {{ cliente.cedula || 'N/A' }}</small>
           </div>
           <span class="badge text-bg-primary rounded-pill small">Seleccionar</span>
         </a>

@@ -32,10 +32,12 @@ import { useThemeStore } from './store/themeStore'
 import { useAuthStore } from './store/authStore'
 import router from './router'
 import CerrarCajaModal from './components/shared/CerrarCajaModal.vue'
+import { useCajaStore } from './store/useCajaStore'
 
 // Inicialización de Stores
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
+const cajaStore = useCajaStore()
 
 const showCerrarCajaModal = ref(false)
 
@@ -52,6 +54,9 @@ function applyThemeAttribute(isDark: boolean) {
 // Lógica de chequeo de sesión al inicio
 onMounted(() => {
   authStore.checkSession()
+  if (!cajaStore.isCajaAbierta && !cajaStore.isLoading) {
+    cajaStore.fetchCajaActiva()
+  }
 })
 
 watch(
@@ -68,7 +73,6 @@ watch(
 async function handleCajaClosed() {
   showCerrarCajaModal.value = false
 
-  // Una vez que la caja está cerrada, intentamos el logout de nuevo.
   const loggedOut = await authStore.logout()
 
   if (loggedOut) {

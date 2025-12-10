@@ -11,7 +11,7 @@ export interface links {
   links: link[]
 }
 
-export interface dataCuentaPorCobrar {
+export interface ICuentaPorCobrar {
   id: number
   venta_id: number
   cliente_id: number | string
@@ -22,6 +22,9 @@ export interface dataCuentaPorCobrar {
   created_at: string
   updated_at: string
   deleted_at: string | null
+}
+
+export interface dataCuentaPorCobrar extends ICuentaPorCobrar {
   cliente: ICliente
 }
 

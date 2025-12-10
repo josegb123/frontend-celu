@@ -116,11 +116,13 @@ const props = defineProps<{
   cuenta: dataCuentaPorCobrar | null
   show: boolean
   cajaId: number | null
+  onLoadCajaId: () => Promise<number | null>
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'abono-success', abono: IAbono): void // Evento para que la vista principal recargue o actualice la cuenta
+  (e: 'update:cajaId', cajaId: number): void // Evento para actualizar el store/prop de la vista padre
 }>()
 
 // --- ESTADO LOCAL ---
@@ -132,24 +134,69 @@ const successMessage = ref<string | null>(null)
 const errorMessage = ref<string | null>(null)
 const errors = ref<FormErrors>({})
 
-// --- LÓGICA ---
+// NUEVOS ESTADOS para manejar la Caja Diaria
+const cajaError = ref<string | null>(null)
+const isLoadingCaja = ref(false)
+
+// --- LÓGICA DE CAJA DIARIA ---
 
 /**
- * Resetea el formulario al abrir el modal o si se cierra.
+ * Verifica si cajaId está cargado. Si no lo está, intenta cargarlo.
+ */
+const checkCajaId = async () => {
+  if (props.cajaId !== null) {
+    cajaError.value = null
+    return true
+  }
+
+  isLoadingCaja.value = true
+  cajaError.value = null
+  errorMessage.value = null
+
+  try {
+    const newCajaId = await props.onLoadCajaId()
+    if (newCajaId) {
+      // 1. Éxito: Emitir el nuevo ID a la vista padre para que lo guarde en el Store
+      emit('update:cajaId', newCajaId)
+      return true
+    } else {
+      // 2. Falla: No hay caja activa
+      cajaError.value =
+        'Error: No se encontró una Caja Diaria activa para tu usuario. Debes iniciar una sesión de caja para registrar abonos. (Sugerencia: Ve al inicio y vuelve a cargar la página o inicia caja).'
+      return false
+    }
+  } catch {
+    // 2. Falla: Error de API al intentar cargar
+    cajaError.value =
+      'Error al intentar conectar o cargar la Caja Diaria activa. Por favor, verifica tu sesión e inténtalo de nuevo.'
+    return false
+  } finally {
+    isLoadingCaja.value = false
+  }
+}
+
+// --- LÓGICA DEL FORMULARIO ---
+
+/**
+ * Resetea el formulario y verifica la Caja Diaria al abrir el modal.
  */
 watch(
   () => props.show,
-  (newValue) => {
+  async (newValue) => {
     if (newValue) {
-      // Al abrir, resetear
+      // Al abrir, resetear y verificar la caja
       montoAbono.value = props.cuenta ? Number(props.cuenta.monto_pendiente) : 0.0
       metodo.value = 'efectivo'
       referencia.value = ''
       successMessage.value = null
       errorMessage.value = null
       errors.value = {}
+
+      // Intentar cargar la caja si es nula
+      await checkCajaId()
     }
   },
+  { immediate: true },
 )
 
 /**
@@ -166,6 +213,12 @@ const validateForm = (): boolean => {
     errors.value.monto = `El monto excede el saldo pendiente ($${Number(props.cuenta.monto_pendiente).toFixed(2)}).`
   }
 
+  // Validación de Caja Diaria
+  if (props.cajaId === null) {
+    cajaError.value = 'Error crítico: No hay Caja Diaria activa para registrar el ingreso.'
+    return false
+  }
+
   return Object.keys(errors.value).length === 0
 }
 
@@ -173,8 +226,17 @@ const validateForm = (): boolean => {
  * Envía la solicitud de registro del abono a la API.
  */
 const submitAbono = async () => {
+  // 1. Validación de formulario y caja
   if (!props.cuenta || !validateForm()) {
+    // Si la caja no se valida aquí, validateForm ya habrá establecido cajaError.value
     return
+  }
+
+  // 2. Comprobación final del ID de caja
+  if (!props.cajaId) {
+    // Esto solo debería ocurrir si el chequeo inicial falló
+    await checkCajaId()
+    if (!props.cajaId) return // Fallar si el reintento también falla
   }
 
   const payload: StoreAbonoPayload = {
@@ -182,7 +244,7 @@ const submitAbono = async () => {
     monto: montoAbono.value,
     metodo_pago: metodo.value,
     referencia_pago: referencia.value || null,
-    caja_diaria_id: props.cajaId,
+    caja_diaria_id: props.cajaId, // Ahora sabemos que tiene un valor o la operación está bloqueada
   }
 
   isProcessing.value = true
@@ -202,6 +264,7 @@ const submitAbono = async () => {
       emit('close')
     }, 1500)
   } catch (error) {
+    // Manejo de errores de API
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 422) {
         const errorData = error.response.data as { errors?: FormErrors; message?: string }
@@ -227,7 +290,6 @@ const submitAbono = async () => {
   }
 }
 </script>
-
 <style scoped>
 .modal {
   background-color: rgba(0, 0, 0, 0.6);

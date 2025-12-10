@@ -22,11 +22,11 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import laravelApi from '@/http/laravelApi'
-import { Client } from '@/interfaces/Client' // Assuming a Client interface exists
+import type { ICliente } from '@/interfaces/ICliente'
 
 const emit = defineEmits(['aval-selected'])
 
-const clients = ref<Client[]>([])
+const clients = ref<ICliente[]>([])
 const selectedAvalId = ref<number | null>(null)
 const hasPendingDues = ref<boolean>(false)
 

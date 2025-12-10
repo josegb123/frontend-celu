@@ -104,7 +104,7 @@ interface DetalleLocal extends IDetallePedidoProveedorRequest {
 const emit = defineEmits(['submit:pedido', 'success', 'error'])
 
 const numeroFacturaProveedor = ref<string>('')
-const fechaEntrega = ref<string>(new Date().toISOString().split('T')[0])
+const fechaEntrega = ref<string>(new Date().toISOString().split('T')[0] || '')
 const selectedProveedorId = ref<number | null>(null)
 
 const productos = ref<DetalleLocal[]>([]) // Usamos el tipo extendido
@@ -155,7 +155,7 @@ const addDetalle = () => {
 }
 
 const updateDetalle = (index: number, detalle: DetalleLocal | null) => {
-  if (detalle) {
+  if (detalle && productos.value[index]) {
     // Usamos Object.assign para asegurar la reactividad
     Object.assign(productos.value[index], detalle)
   } else {
@@ -196,9 +196,10 @@ const handleSubmit = async () => {
     proveedor_id: selectedProveedorId.value,
     monto_total: montoTotal.value,
     // Limpiar el tipo temporal antes de enviar
-    productos: validProductos.map(
-      ({ nombre_producto_temporal, ...rest }) => rest,
-    ) as IDetallePedidoProveedorRequest[],
+    productos: validProductos.map((producto) => {
+      const { nombre_producto_temporal, ...rest } = producto
+      return rest
+    }) as IDetallePedidoProveedorRequest[],
   }
 
   try {
@@ -208,7 +209,7 @@ const handleSubmit = async () => {
 
     // Reset form
     numeroFacturaProveedor.value = ''
-    fechaEntrega.value = new Date().toISOString().split('T')[0]
+    fechaEntrega.value = new Date().toISOString().split('T')[0] || ''
     selectedProveedorId.value = null
     productos.value = []
   } catch (error: any) {

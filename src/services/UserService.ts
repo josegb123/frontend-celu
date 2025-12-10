@@ -1,5 +1,6 @@
 import apiClient from '@/http/laravelApi'
-import type { IUser, IPaginatedUsers } from '@/interfaces/IUser'
+import type { IUser } from '@/interfaces/IUser'
+import type { PaginatedResponse } from '@/interfaces/ILaravelPaginated'
 
 // --- INTERFACES ---
 
@@ -39,7 +40,7 @@ class UserService {
    * @param options Opciones de consulta (página, búsqueda, rol, por página).
    * @returns Una promesa que resuelve con los datos paginados de usuarios.
    */
-  public async getUsers(options: UserQueryOptions = {}): Promise<IPaginatedUsers> {
+  public async getUsers(options: UserQueryOptions = {}): Promise<PaginatedResponse<IUser>> {
     try {
       const params = new URLSearchParams()
 

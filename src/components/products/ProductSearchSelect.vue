@@ -36,7 +36,8 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import ProductoService, { type Producto } from '@/services/ProductoService'
+import ProductoService from '@/services/ProductoService'
+import type { IProducto } from '@/interfaces/IProductoInterfaces'
 import { useInventoryStore } from '@/store/InventoryStore'
 
 // Tipado: Asumimos que Producto ya está importado correctamente
@@ -46,15 +47,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', id: number): void
-  (e: 'selectProduct', product: Producto): void // Emite el objeto completo
+  (e: 'selectProduct', product: IProducto): void // Emite el objeto completo
 }>()
 
 const inventoryStore = useInventoryStore()
 
 const searchQuery = ref('')
-const searchResults = ref<Producto[]>([])
+const searchResults = ref<IProducto[]>([])
 const isDropdownOpen = ref(false)
-const selectedProduct = ref<Producto | null>(null)
+const selectedProduct = ref<IProducto | null>(null)
 
 // --- Lógica de Debounce ---
 const DEBOUNCE_DELAY = 300
@@ -108,7 +109,7 @@ const performSearch = async () => {
   }
 }
 
-const selectProduct = (product: Producto) => {
+const selectProduct = (product: IProducto) => {
   selectedProduct.value = product
   searchQuery.value = product.nombre
   isDropdownOpen.value = false

@@ -1,6 +1,6 @@
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
-import type { PaginatedResponse } from './ProductoService' // Reusamos la interfaz de paginación
+import type { PaginatedResponse } from '@/interfaces/ILaravelPaginated' // Reusamos la interfaz de paginación
 import type { ProductoBajoStock } from '@/interfaces/IProductoBajoStock'
 
 /**

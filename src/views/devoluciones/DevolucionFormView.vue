@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
 import DevolucionService, {
-  // 1. TIPOS: CreateDevolucionData se actualiza para el nuevo payload
   type DevolucionItemPayload,
   type CreateDevolucionData,
 } from '@/services/DevolucionService'
@@ -41,7 +40,7 @@ type DevolucionFormType = {
 
 const devolucionForm = ref<DevolucionFormType>({
   venta_id: null,
-  metodo_reembolso: 'Efectivo', // Establecer un default o solicitar al usuario
+  metodo_reembolso: 'SaldoCliente', // Cambiado a 'SaldoCliente' como default
   items_devueltos: [],
 })
 
@@ -154,7 +153,7 @@ const isFormValid = computed(() => {
   return devolucionForm.value.venta_id !== null && anyProductSelected.value
 })
 
-// --- FORM SUBMISSION ---
+// --- FORM SUBMISSION (DEVOLUCIÓN PARCIAL) ---
 const handleSubmit = async () => {
   submitting.value = true
   error.value = null
@@ -228,11 +227,61 @@ const handleSubmit = async () => {
   }
 }
 
+// --- ANULACIÓN TOTAL DE VENTA ---
+const handleAnularVenta = async () => {
+  if (!selectedVenta.value || !devolucionForm.value.venta_id) {
+    showNotification('Debe seleccionar una venta para anular.', 'error')
+    return
+  }
+
+  // 1. Confirmación de usuario
+  const motivo = prompt(
+    'ADVERTENCIA: Está a punto de ANULAR COMPLETAMENTE esta venta. Esto revertirá inventario, cartera y caja.\n\nPor favor, ingrese el motivo de la anulación total:',
+    'Error de registro',
+  )
+
+  if (!motivo) {
+    showNotification('Anulación cancelada por el usuario.', 'warning')
+    return
+  }
+
+  // 2. Obtener método de reembolso (Usamos el valor del select, ya adaptado en el template)
+  const metodoReembolso = devolucionForm.value.metodo_reembolso
+
+  submitting.value = true
+  error.value = null
+
+  try {
+    // 3. Llamada al nuevo endpoint del servicio
+    // Asegúrate de que DevolucionService.anularVenta existe y toma { ventaId, motivo, metodoReembolso }
+    await DevolucionService.anularVenta({
+      ventaId: devolucionForm.value.venta_id,
+      motivo: motivo,
+      metodoReembolso: metodoReembolso,
+    })
+
+    showNotification('Venta anulada y transacciones revertidas con éxito!', 'success')
+    resetForm()
+  } catch (err: unknown) {
+    let message = 'Error desconocido al anular la venta.'
+    if (isAxiosError(err) && err.response) {
+      message = err.response.data.message || message
+    } else if (err instanceof Error) {
+      message = err.message
+    }
+    console.error('Error al anular la venta:', message)
+    error.value = message
+    showNotification('Error al anular la venta', 'error')
+  } finally {
+    submitting.value = false
+  }
+}
+
 // Function to reset the form
 const resetForm = () => {
   devolucionForm.value = {
     venta_id: null,
-    metodo_reembolso: 'Efectivo',
+    metodo_reembolso: 'SaldoCliente', // Default de vuelta a Saldo Cliente
     items_devueltos: [],
   }
   selectedVenta.value = null
@@ -316,13 +365,14 @@ const resetForm = () => {
               v-model="devolucionForm.metodo_reembolso"
               required
             >
-              <option value="Efectivo">Efectivo</option>
-              <option value="Transferencia">Transferencia</option>
-              <option value="Tarjeta">Reverso a Tarjeta</option>
-              <option value="Nota Crédito">Nota de Crédito (Saldo a Favor)</option>
+              <option value="Efectivo">Efectivo (Egreso de Caja)</option>
+              <option value="Transferencia">Transferencia (Egreso de Caja)</option>
+              <option value="Tarjeta">Reverso a Tarjeta (Egreso de Caja)</option>
+              <option value="SaldoCliente">Nota de Crédito (Saldo a Favor)</option>
             </select>
             <small class="form-text text-muted"
-              >Seleccione cómo se realizará el egreso del dinero al cliente.</small
+              >Seleccione cómo se realizará el egreso del dinero al cliente. **El Saldo a Favor es
+              la opción por defecto en Cartera.**</small
             >
           </div>
 
@@ -410,15 +460,33 @@ const resetForm = () => {
 
         <div v-if="error" class="alert alert-danger mt-3">{{ error }}</div>
 
-        <button type="submit" class="btn btn-primary mt-3" :disabled="submitting || !isFormValid">
-          <span
-            v-if="submitting"
-            class="spinner-border spinner-border-sm"
-            role="status"
-            aria-hidden="true"
-          ></span>
-          {{ submitting ? 'Procesando Devolución...' : 'Registrar Devolución' }}
-        </button>
+        <div class="d-flex justify-content-between mt-3">
+          <button type="submit" class="btn btn-primary" :disabled="submitting || !isFormValid">
+            <span
+              v-if="submitting"
+              class="spinner-border spinner-border-sm"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            {{ submitting ? 'Procesando Devolución...' : 'Registrar Devolución' }}
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-danger"
+            :disabled="submitting || !selectedVenta"
+            @click="handleAnularVenta"
+            v-if="selectedVenta"
+          >
+            <span
+              v-if="submitting"
+              class="spinner-border spinner-border-sm"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            {{ submitting ? 'Anulando Venta...' : 'ANULAR VENTA (Total)' }}
+          </button>
+        </div>
       </form>
 
       <div v-if="!selectedVenta" class="mt-4">

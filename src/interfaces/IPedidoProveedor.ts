@@ -10,6 +10,7 @@ export interface IProductoPedido {
   precio_compra: number | null
   precio_venta: number | null
 }
+
 interface IPedidoProveedorBase {
   numero_factura_proveedor: string
   fecha_entrega: string
@@ -17,9 +18,14 @@ interface IPedidoProveedorBase {
 }
 
 export interface IPedidoProveedorRequest extends IPedidoProveedorBase {
-  metodo_pago: string
   monto_total: number
-  productos: IProductoPedido[]
+  productos: IProductoRecibido[]
+}
+
+export interface IProductoRecibido {
+  producto_id: number
+  cantidad: number
+  precio_compra: number | null
 }
 
 // ---- Responses ----
