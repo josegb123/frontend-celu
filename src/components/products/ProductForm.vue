@@ -1,223 +1,248 @@
 <template>
-  <div class="card shadow-sm mb-4">
-    <div
-      class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
-    >
-      <h5 class="mb-0">{{ isEditing ? 'Editar Producto' : 'Crear Producto' }}</h5>
-      <button
-        type="button"
-        class="btn-close btn-close-white"
-        aria-label="Cerrar"
-        @click="resetAndClose"
-      ></button>
-    </div>
-    <div class="card-body">
-      <form @submit.prevent="submitForm" method="POST">
-        <div class="row mb-3">
-          <div class="col-md-12">
-            <label for="nombre" class="form-label">Nombre del Producto</label>
-            <input type="text" id="nombre" class="form-control" v-model="form.nombre" required />
-            <div v-if="errors.nombre" class="text-danger small">{{ errors.nombre[0] }}</div>
-          </div>
-          <div class="col-md-12">
-            <label for="codigo_barra" class="form-label">Código de Barras</label>
-            <input type="text" id="codigo_barra" class="form-control" v-model="form.codigo_barra" />
-          </div>
+  <div
+    class="modal fade show d-block shadow-sm mb-4 bg-dark"
+    style="--bs-bg-opacity: 0.5"
+    arial-modal="true"
+    v-if="isVisible"
+    id="exampleModal"
+    tabindex="-1"
+    :aria-labelledby="isEditing ? 'Editar Producto' : 'Crear Producto'"
+    role="dialog"
+  >
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable p-3">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="mb-0">{{ isEditing ? 'Editar Producto' : 'Crear Producto' }}</h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            aria-label="Cerrar"
+            @click="resetAndClose"
+          ></button>
         </div>
-
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="precio_compra" class="form-label">Precio Compra ($)</label>
-            <input
-              type="number"
-              step="0.01"
-              id="precio_compra"
-              class="form-control"
-              v-model.number="form.precio_compra"
-              required
-            />
-            <div v-if="errors.precio_compra" class="text-danger small">
-              {{ errors.precio_compra[0] }}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <label for="precio_venta" class="form-label">Precio Venta ($)</label>
-            <input
-              type="number"
-              step="0.01"
-              id="precio_venta"
-              class="form-control"
-              v-model.number="form.precio_venta"
-              required
-            />
-            <div v-if="errors.precio_venta" class="text-danger small">
-              {{ errors.precio_venta[0] }}
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="row mb-3">
-            <div class="col-6">
-              <label for="stock_actual" class="form-label">Stock Actual</label>
-              <input
-                type="number"
-                id="stock_actual"
-                class="form-control"
-                v-model.number="form.stock_actual"
-                required
-              />
-            </div>
-            <div class="col-6">
-              <label for="stock_reservado" class="form-label">Stock Reservado</label>
-              <input
-                type="number"
-                id="stock_reservado"
-                class="form-control"
-                v-model.number="form.stock_reservado"
-                required
-              />
+        <div class="modal-body">
+          <form @submit.prevent="submitForm" method="POST">
+            <div class="row mb-3">
+              <div class="col-md-12">
+                <label for="nombre" class="form-label">Nombre del Producto</label>
+                <input
+                  type="text"
+                  id="nombre"
+                  class="form-control"
+                  v-model="form.nombre"
+                  required
+                />
+                <div v-if="errors.nombre" class="text-danger small">{{ errors.nombre[0] }}</div>
+              </div>
+              <div class="col-md-12">
+                <label for="codigo_barra" class="form-label">Código de Barras</label>
+                <input
+                  type="text"
+                  id="codigo_barra"
+                  class="form-control"
+                  v-model="form.codigo_barra"
+                />
+              </div>
             </div>
 
-            <div class="col-6">
-              <label for="stock_minimo" class="form-label">Stock Mínimo</label>
-              <input
-                type="number"
-                id="stock_minimo"
-                class="form-control"
-                v-model.number="form.stock_minimo"
-                required
-              />
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="precio_compra" class="form-label">Precio Compra ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  id="precio_compra"
+                  class="form-control"
+                  v-model.number="form.precio_compra"
+                  required
+                />
+                <div v-if="errors.precio_compra" class="text-danger small">
+                  {{ errors.precio_compra[0] }}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="precio_venta" class="form-label">Precio Venta ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  id="precio_venta"
+                  class="form-control"
+                  v-model.number="form.precio_venta"
+                  required
+                />
+                <div v-if="errors.precio_venta" class="text-danger small">
+                  {{ errors.precio_venta[0] }}
+                </div>
+              </div>
             </div>
-          </div>
+            <div class="row">
+              <div class="row mb-3">
+                <div class="col-6">
+                  <label for="stock_actual" class="form-label">Stock Actual</label>
+                  <input
+                    type="number"
+                    id="stock_actual"
+                    class="form-control"
+                    v-model.number="form.stock_actual"
+                    required
+                  />
+                </div>
+                <div class="col-6">
+                  <label for="stock_reservado" class="form-label">Stock Reservado</label>
+                  <input
+                    type="number"
+                    id="stock_reservado"
+                    class="form-control"
+                    v-model.number="form.stock_reservado"
+                    required
+                  />
+                </div>
 
-          <div class="row">
-            <label for="categoria_id" class="form-label text-truncate">Categoría</label>
-            <div class="input-group">
-              <select
-                id="categoria_id"
-                class="form-select"
-                v-model.number="form.categoria_id"
-                required
-              >
-                <option disabled value="">Seleccione Categoría</option>
-                <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                  {{ cat.nombre }}
-                </option>
-              </select>
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                @click="$emit('openCategoryModal')"
-                title="Administrar Categorías"
-              >
-                <i class="bi bi-gear-fill"></i>
+                <div class="col-6">
+                  <label for="stock_minimo" class="form-label">Stock Mínimo</label>
+                  <input
+                    type="number"
+                    id="stock_minimo"
+                    class="form-control"
+                    v-model.number="form.stock_minimo"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="row">
+                <label for="categoria_id" class="form-label text-truncate">Categoría</label>
+                <div class="input-group">
+                  <select
+                    id="categoria_id"
+                    class="form-select"
+                    v-model.number="form.categoria_id"
+                    required
+                  >
+                    <option disabled value="">Seleccione Categoría</option>
+                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                      {{ cat.nombre }}
+                    </option>
+                  </select>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="$emit('openCategoryModal')"
+                    title="Administrar Categorías"
+                  >
+                    <i class="bi bi-gear-fill"></i>
+                  </button>
+                </div>
+                <div v-if="errors.categoria_id" class="text-danger small">
+                  {{ errors.categoria_id[0] }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3 mt-3">
+              <div class="col-md-12">
+                <label class="form-label fw-bold">Proveedores asociados</label>
+                <SupplierSelector
+                  :initial-supplier-ids="form.proveedores"
+                  @update:supplier-ids="(ids) => (form.proveedores = ids)"
+                />
+                <div v-if="errors.proveedores" class="text-danger small">
+                  {{ errors.proveedores[0] }}
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="descripcion" class="form-label">Descripción</label>
+              <textarea
+                id="descripcion"
+                class="form-control"
+                rows="2"
+                v-model="form.descripcion"
+              ></textarea>
+            </div>
+
+            <div class="mb-4 border p-3 rounded">
+              <label for="imagen" class="form-label mb-2 fw-bold">Imagen del Producto</label>
+
+              <div v-if="currentImageURL && !imageFile" class="d-flex align-items-center mb-3">
+                <img
+                  :src="currentImageURL"
+                  alt="Miniatura actual"
+                  class="img-thumbnail me-3"
+                  style="width: 80px; height: 80px; object-fit: cover"
+                />
+
+                <div>
+                  <p class="mb-1 small text-muted">Imagen actual:</p>
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    @click="clearCurrentImage"
+                  >
+                    <i class="bi bi-trash"></i> Eliminar Imagen Actual
+                  </button>
+                </div>
+              </div>
+
+              <p v-if="imageURLisBeingCleared" class="mt-1 small text-danger">
+                ⚠️ La imagen será eliminada al guardar. Sube un archivo nuevo para anular.
+              </p>
+
+              <div class="mb-3">
+                <label for="imagen_url_input" class="form-label">O Pegar URL de la Imagen</label>
+                <input
+                  type="url"
+                  id="imagen_url_input"
+                  class="form-control"
+                  v-model="form.imagen_input_url"
+                  placeholder="https://ejemplo.com/mi-producto.jpg"
+                  :disabled="imageFile !== null"
+                />
+                <p class="small text-muted mt-1">
+                  Si pegas una URL, el campo de archivo se ignora.
+                </p>
+              </div>
+              <div :class="{ 'mt-3': currentImageURL }">
+                <input
+                  type="file"
+                  id="imagen"
+                  class="form-control"
+                  @change="handleImageChange"
+                  accept="image/*"
+                />
+                <p v-if="currentImageURL" class="small text-muted mt-1">
+                  Sube un archivo nuevo para reemplazar.
+                </p>
+              </div>
+
+              <div v-if="errors.imagen" class="text-danger small">{{ errors.imagen[0] }}</div>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-outline-secondary" @click="resetForm">
+                {{ isEditing ? 'Cancelar Edición' : 'Limpiar' }}
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+                <span
+                  v-if="isSubmitting"
+                  class="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                {{ isEditing ? 'Actualizar Producto' : 'Crear Producto' }}
               </button>
             </div>
-            <div v-if="errors.categoria_id" class="text-danger small">
-              {{ errors.categoria_id[0] }}
-            </div>
-          </div>
+          </form>
         </div>
-
-        <div class="row mb-3 mt-3">
-          <div class="col-md-12">
-            <label class="form-label fw-bold">Proveedores asociados</label>
-            <SupplierSelector
-              :initial-supplier-ids="form.proveedores"
-              @update:supplier-ids="(ids) => (form.proveedores = ids)"
-            />
-            <div v-if="errors.proveedores" class="text-danger small">
-              {{ errors.proveedores[0] }}
-            </div>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label for="descripcion" class="form-label">Descripción</label>
-          <textarea
-            id="descripcion"
-            class="form-control"
-            rows="2"
-            v-model="form.descripcion"
-          ></textarea>
-        </div>
-
-        <div class="mb-4 border p-3 rounded">
-          <label for="imagen" class="form-label mb-2 fw-bold">Imagen del Producto</label>
-
-          <div v-if="currentImageURL && !imageFile" class="d-flex align-items-center mb-3">
-            <img
-              :src="currentImageURL"
-              alt="Miniatura actual"
-              class="img-thumbnail me-3"
-              style="width: 80px; height: 80px; object-fit: cover"
-            />
-
-            <div>
-              <p class="mb-1 small text-muted">Imagen actual:</p>
-
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-danger"
-                @click="clearCurrentImage"
-              >
-                <i class="bi bi-trash"></i> Eliminar Imagen Actual
-              </button>
-            </div>
-          </div>
-
-          <p v-if="imageURLisBeingCleared" class="mt-1 small text-danger">
-            ⚠️ La imagen será eliminada al guardar. Sube un archivo nuevo para anular.
-          </p>
-
-          <div class="mb-3">
-            <label for="imagen_url_input" class="form-label">O Pegar URL de la Imagen</label>
-            <input
-              type="url"
-              id="imagen_url_input"
-              class="form-control"
-              v-model="form.imagen_input_url"
-              placeholder="https://ejemplo.com/mi-producto.jpg"
-              :disabled="imageFile !== null"
-            />
-            <p class="small text-muted mt-1">Si pegas una URL, el campo de archivo se ignora.</p>
-          </div>
-          <div :class="{ 'mt-3': currentImageURL }">
-            <input
-              type="file"
-              id="imagen"
-              class="form-control"
-              @change="handleImageChange"
-              accept="image/*"
-            />
-            <p v-if="currentImageURL" class="small text-muted mt-1">
-              Sube un archivo nuevo para reemplazar.
-            </p>
-          </div>
-
-          <div v-if="errors.imagen" class="text-danger small">{{ errors.imagen[0] }}</div>
-        </div>
-        <div class="d-flex justify-content-end gap-2">
-          <button type="button" class="btn btn-outline-secondary" @click="resetForm">
-            {{ isEditing ? 'Cancelar Edición' : 'Limpiar' }}
-          </button>
-          <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-            <span
-              v-if="isSubmitting"
-              class="spinner-border spinner-border-sm"
-              role="status"
-              aria-hidden="true"
-            ></span>
-            {{ isEditing ? 'Actualizar Producto' : 'Crear Producto' }}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import ProductoService, { type Producto } from '@/services/ProductoService'
+import ProductoService from '@/services/ProductoService'
+import type { IProducto } from '@/interfaces/IProductoInterfaces'
 import { AxiosError, isAxiosError } from 'axios'
 import type { ICategoria } from '@/interfaces/ICategoria'
 import { useAuthStore } from '@/store/authStore'
@@ -233,9 +258,11 @@ interface ValidationErrorResponse {
 // --- PROPIEDADES ---
 const props = defineProps<{
   /** El producto a editar. Si es null, se está creando. */
-  productToEdit: Producto | null
+  productToEdit: IProducto | null
   /** La lista de categorías disponibles para el selector. */
   categories: ICategoria[]
+  /** Indica si el modal está visible. */
+  isVisible: boolean
 }>()
 
 // --- EMIT EVENTS ---
@@ -264,8 +291,6 @@ interface ProductFormData {
   imagen_input_url: string | null
   proveedores: number[]
 }
-
-const showCategoryModal = ref(false)
 
 const initialFormState: ProductFormData = {
   id: null,
@@ -464,5 +489,26 @@ watch(
 /* Estilo opcional para simular mejor el modal (bordes redondeados, etc.) */
 .btn-close-white {
   filter: invert(1); /* Hace que la X sea blanca */
+}
+
+.modal.show {
+  animation: fadeIn 0.1s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  /* Asegura que el fondo oscuro cubra toda la pantalla */
+  z-index: 1040;
+}
+.modal {
+  /* Asegura que el modal esté sobre el fondo oscuro */
+  z-index: 800;
 }
 </style>

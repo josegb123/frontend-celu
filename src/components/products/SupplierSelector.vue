@@ -28,8 +28,11 @@
     </div>
 
     <div v-if="isLoading" class="text-center small text-primary mt-1">Cargando opciones...</div>
-    <div v-else-if="availableSuppliers.length === 0" class="text-center small text-muted mt-1">
-      No se encontraron proveedores activos.
+    <div
+      v-else-if="availableSuppliers.length === 0 && selectedSuppliers.length === 0"
+      class="text-center small text-muted mt-1"
+    >
+      No se encontraron proveedores activos para seleccionar.
     </div>
 
     <div v-if="selectedSuppliers.length > 0" class="mt-3 d-flex flex-wrap gap-2">
@@ -47,13 +50,14 @@
         ></button>
       </span>
     </div>
-    <div v-else class="small text-muted mt-3">Aún no se ha seleccionado ningún proveedor.</div>
+    <div v-else-if="!isLoading" class="small text-muted mt-3">
+      Aún no se ha seleccionado ningún proveedor.
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits, computed, onMounted } from 'vue'
-// 🚨 Importar el servicio y la interfaz
+import { ref, watch, computed, onMounted } from 'vue'
 import { proveedorService, type Proveedor } from '@/services/proveedorService'
 
 // --- PROPS y EMITS ---
@@ -68,11 +72,8 @@ const emit = defineEmits<{
 }>()
 
 // --- ESTADO LOCAL ---
-// Lista completa de todos los proveedores disponibles
 const allSuppliers = ref<Proveedor[]>([])
-// El ID del proveedor seleccionado actualmente en el <select>
 const supplierToAddId = ref<number | null>(null)
-// Los objetos Proveedor que ya han sido seleccionados
 const selectedSuppliers = ref<Proveedor[]>([])
 const isLoading = ref(false)
 
@@ -82,7 +83,6 @@ const isLoading = ref(false)
  * Proveedores que aún no han sido seleccionados (para llenar el select).
  */
 const availableSuppliers = computed(() => {
-  // Filtramos la lista completa para remover los que ya están en selectedSuppliers
   const selectedIds = new Set(selectedSuppliers.value.map((s) => s.id))
   return allSuppliers.value.filter((s) => !selectedIds.has(s.id))
 })
@@ -102,7 +102,6 @@ const isSelected = (id: number) => {
 const loadAllSuppliers = async () => {
   isLoading.value = true
   try {
-    // 🚨 CAMBIO CLAVE: Llama al nuevo método sin paginar
     allSuppliers.value = await proveedorService.getAllProveedoresNoPaginado()
   } catch (error) {
     console.error('Error al cargar la lista completa de proveedores:', error)
@@ -126,8 +125,16 @@ const addSelectedSupplier = () => {
     emitSupplierIds()
   }
 
-  // Limpiar el select para forzar una nueva selección
+  // MEJORA UX: Limpiar o seleccionar el siguiente disponible.
+  // Opción 1 (Limpiar):
   supplierToAddId.value = null
+
+  // Opción 2 (Seleccionar el siguiente disponible - descomentar si se prefiere):
+  /*
+  supplierToAddId.value = availableSuppliers.value.length > 0
+    ? availableSuppliers.value[0].id
+    : null
+  */
 }
 
 /**
@@ -137,76 +144,72 @@ const removeSupplier = (id: number) => {
   selectedSuppliers.value = selectedSuppliers.value.filter((s) => s.id !== id)
   emitSupplierIds()
 }
-
 const emitSupplierIds = () => {
-  const ids = selectedSuppliers.value.map((s) => s.id)
-  emit('update:supplier-ids', ids)
-}
+  const currentIds = selectedSuppliers.value.map((s) => s.id)
 
-// --- WATCHERS y LÓGICA DE INICIALIZACIÓN ---
+  // *** VERIFICACIÓN CLAVE ***
+  // Solo emitir si los IDs actuales difieren de los que el padre nos pasó inicialmente.
+  // Esto evita la recursión cuando los datos ya están sincronizados.
+  if (!arraysAreEqual(currentIds, props.initialSupplierIds)) {
+    emit('update:supplier-ids', currentIds)
+  }
+}
+const arraysAreEqual = (arr1: number[], arr2: number[]) => {
+  if (arr1.length !== arr2.length) return false
+  const sorted1 = [...arr1].sort((a, b) => a - b)
+  const sorted2 = [...arr2].sort((a, b) => a - b)
+  return sorted1.every((value, index) => value === sorted2[index])
+}
+// --- WATCHERS y LÓGICA DE INICIALIZACIÓN (MEJORADO) ---
 
 /**
  * Lógica de inicialización para el modo edición.
  * Carga los objetos Proveedor completos basados en los IDs iniciales.
- * (Solo necesario si allSuppliers no contiene toda la información)
+ * (Asume que allSuppliers ya ha cargado o lo hará asíncronamente si es necesario)
  */
-const initializeSelectedSuppliers = async (newIds: number[]) => {
-  if (newIds && newIds.length > 0) {
-    try {
-      // Si ya tenemos la lista completa (allSuppliers), la usamos para evitar llamadas extra.
-      if (allSuppliers.value.length > 0) {
-        selectedSuppliers.value = allSuppliers.value.filter((s) => newIds.includes(s.id))
-      } else {
-        // Si allSuppliers está vacío (ej. cargó lento), hacemos llamadas individuales
-        const suppliersPromises = newIds.map((id) =>
-          proveedorService.getById(id).catch((e) => {
-            console.error(`Fallo al cargar proveedor ID ${id}:`, e)
-            return null
-          }),
-        )
+const initializeSelectedSuppliers = (newIds: number[]) => {
+  // 1. Verificar si la data ya está sincronizada al inicio
+  if (
+    arraysAreEqual(
+      selectedSuppliers.value.map((s) => s.id),
+      newIds,
+    )
+  ) {
+    // Si ya coinciden, no hacemos nada más, rompemos la recursión.
+    return
+  }
 
-        const suppliers = await Promise.all(suppliersPromises)
-        selectedSuppliers.value = suppliers.filter((s): s is Proveedor => s !== null)
-      }
-    } catch (error) {
-      console.error('Error al inicializar proveedores seleccionados:', error)
-      selectedSuppliers.value = []
-    }
-  } else {
+  if (newIds && newIds.length > 0 && allSuppliers.value.length > 0) {
+    selectedSuppliers.value = allSuppliers.value.filter((s) => newIds.includes(s.id))
+  } else if (!newIds || newIds.length === 0) {
     selectedSuppliers.value = []
   }
-  emitSupplierIds() // Emitir el estado inicial después de la carga
+
+  // 2. Ejecutar la emisión (que ahora tiene una verificación interna)
+  emitSupplierIds()
 }
 
+// 1. CARGA INICIAL Y PRIMERA INICIALIZACIÓN
+onMounted(async () => {
+  await loadAllSuppliers()
+
+  // Una vez que allSuppliers cargó, inicializa selectedSuppliers con los IDs iniciales.
+  // Esto maneja correctamente el modo edición al cargar el componente.
+  initializeSelectedSuppliers(props.initialSupplierIds)
+})
+
+// 2. REACCIÓN A CAMBIOS POSTERIORES DE LA PROP
 watch(
   () => props.initialSupplierIds,
   (newIds) => {
-    // Si la lista de IDs cambia y la lista completa de opciones ya cargó, inicializamos
-    if (allSuppliers.value.length > 0 || newIds.length > 0) {
-      initializeSelectedSuppliers(newIds)
-    }
+    // Si la prop cambia (ej. el usuario empieza a editar un nuevo producto),
+    // reinicializamos. No necesitamos 'immediate: true' aquí porque la primera
+    // inicialización la maneja el onMounted.
+    initializeSelectedSuppliers(newIds)
   },
-  { immediate: true },
 )
-
-// 🚨 Llama a la carga inicial de todas las opciones al montar el componente
-onMounted(() => {
-  loadAllSuppliers()
-
-  // Si la carga inicial de opciones es exitosa, reinicializamos selectedSuppliers
-  // por si el watcher se ejecutó antes de que 'allSuppliers' estuviera lleno.
-  watch(
-    allSuppliers,
-    (newAllSuppliers) => {
-      if (newAllSuppliers.length > 0) {
-        initializeSelectedSuppliers(props.initialSupplierIds)
-      }
-    },
-    { once: true },
-  )
-})
 </script>
 
 <style scoped>
-/* No se requiere estilo de posicionamiento absoluto como antes */
+/* Estilos si fueran necesarios */
 </style>

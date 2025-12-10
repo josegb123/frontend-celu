@@ -273,6 +273,7 @@ const fetchProducts = async () => {
     const response: IProductoPaginated = await ProductoService.getProductos(params)
 
     products.value = response.data
+    console.log(response)
     Object.assign(pagination, response)
   } catch (error) {
     console.error('Error al cargar productos:', error)

@@ -432,6 +432,8 @@ import { ref, watch, onMounted, computed, watchEffect } from 'vue'
 import ClienteService from '@/services/ClienteService'
 import { isAxiosError } from 'axios'
 import { useAuthStore } from '@/store/authStore'
+import NotificationModal from '@/components/utils/NotificationModal.vue'
+import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 const authStore = useAuthStore() // Added
 const isAdmin = computed(() => {
   // Added
@@ -461,6 +463,7 @@ interface ICliente {
   aval_id: number | null
   estado_financiero?: ISaldo[]
   is_aval?: boolean // Propiedad calculada en el frontend
+  aval_nombre_completo?: string | null
 }
 
 // Interfaz eliminada: IClientePaginatedResponse (ya no se usa directamente)
@@ -788,6 +791,7 @@ const openEditModal = (cliente: ICliente) => {
 
   openFormModal()
 }
+
 const openViewModal = async (cliente: ICliente) => {
   viewCliente.value = null
   showViewModal.value = true
