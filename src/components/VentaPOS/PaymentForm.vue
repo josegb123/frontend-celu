@@ -166,7 +166,7 @@ import VentaService, {
 } from '@/services/VentaService'
 
 import { type ItemVenta } from '@/interfaces/IPostInterfaces'
-import { type Cliente } from '@/interfaces/IPostInterfaces'
+import { type ICliente } from '@/interfaces/ICliente'
 import { useCajaStore } from '@/store/useCajaStore'
 
 // --- 1. Definiciones de Props y Emits ---
@@ -176,8 +176,8 @@ const props = defineProps<{
   impuesto: number
   totalPagar: number
   items: ItemVenta[]
-  cliente: Cliente
-  clienteGenerico: Cliente
+  cliente: ICliente
+  clienteGenerico: ICliente
 }>()
 
 const emit = defineEmits<{

@@ -233,7 +233,8 @@ import AvalSelector from '@/components/ventas/AvalSelector.vue' // Added import
 import { useCajaStore } from '@/store/useCajaStore'
 
 // Interfaces
-import type { Cliente, ItemVenta, ProductoVentaBase, Aval } from '@/interfaces/IPostInterfaces' // Added Aval interface
+import type { ItemVenta, ProductoVentaBase, Aval } from '@/interfaces/IPostInterfaces' // Added Aval interface
+import type { ICliente } from '@/interfaces/ICliente'
 import type { Ref } from 'vue'
 
 // --- Inicialización de Stores ---
@@ -251,17 +252,19 @@ interface NotificationState {
   isError: boolean
 }
 
-const clienteGenerico: Cliente = {
+const clienteGenerico: ICliente = {
   id: 0,
   nombre: 'Consumidor Final',
-  cedula: '',
+  cedula: 0,
   apellidos: '',
   telefono: '',
   email: '',
   direccion: '',
+  aval_id: null,
+  estado_financiero: [],
 }
 
-const clienteSeleccionado = ref<Cliente>(clienteGenerico)
+const clienteSeleccionado = ref<ICliente>(clienteGenerico)
 const selectedAval = ref<Aval | null>(null) // Added for aval data
 const hasPendingDuesForAval = ref<boolean>(false) // Added for aval pending dues
 
@@ -437,7 +440,7 @@ function handleProcesarPago() {
   showClienteModal.value = true
 }
 
-const handleClienteSelected = (cliente: Cliente) => {
+const handleClienteSelected = (cliente: ICliente) => {
   clienteSeleccionado.value = cliente
 }
 
