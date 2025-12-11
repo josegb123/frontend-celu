@@ -5,10 +5,10 @@ import type {
   ProductoBajaRotacion,
   ValorPedidosProveedoresResponse,
   ValorPedidosProveedoresRequest,
-  TopClientesFrecuencia,
+  TopClienteFrecuencia, // Corrected import
   TopClientesFrecuenciaRequest,
-  TopProductoVendido,
-  TopClientePorMonto,
+  TopProducto, // Corrected import
+  TopCliente, // Corrected import
   VentasPorPeriodoResponse,
   VentasPorPeriodoApiRequest,
   HistorialGananciasResponse,
@@ -16,7 +16,9 @@ import type {
   ProductosBajaRotacionRequest,
   TicketPromedioResponse,
   ExportarVentasExcelRequest,
-} from '../interfaces/estadisticas' // Import all interfaces
+  VentasPorCategoriaEstadistica,
+  VentasPorCategoriaResponse,
+} from '@/interfaces/estadisticas' // Import all interfaces
 
 // ----------------------------------------------------
 // INTERFACES DE DATOS DE ESTADÍSTICAS
@@ -85,9 +87,9 @@ class EstadisticasService {
   /**
    * Obtiene el Top 10 de productos más vendidos.
    */
-  public async getTopProductosVendidos(): Promise<{ data: TopProductoVendido[] }> {
+  public async getTopProductosVendidos(): Promise<{ data: TopProducto[] }> {
     try {
-      const response: AxiosResponse<{ data: TopProductoVendido[] }> = await laravelApi.get(
+      const response: AxiosResponse<{ data: TopProducto[] }> = await laravelApi.get(
         `${this.endpoint}/top-productos`,
       )
       return response.data
@@ -100,9 +102,9 @@ class EstadisticasService {
   /**
    * Obtiene el Top 10 de clientes por monto de compra.
    */
-  public async getTopClientesPorMonto(): Promise<{ data: TopClientePorMonto[] }> {
+  public async getTopClientesPorMonto(): Promise<{ data: TopCliente[] }> {
     try {
-      const response: AxiosResponse<{ data: TopClientePorMonto[] }> = await laravelApi.get(
+      const response: AxiosResponse<{ data: TopCliente[] }> = await laravelApi.get(
         `${this.endpoint}/top-clientes`,
       )
       return response.data
@@ -185,12 +187,12 @@ class EstadisticasService {
    */
   public async getTopClientesFrecuencia(
     params: TopClientesFrecuenciaRequest = {},
-  ): Promise<{ periodo_dias: number; limit: number; data: TopClientesFrecuencia[] }> {
+  ): Promise<{ periodo_dias: number; limit: number; data: TopClienteFrecuencia[] }> {
     try {
       const response: AxiosResponse<{
         periodo_dias: number
         limit: number
-        data: TopClientesFrecuencia[]
+        data: TopClienteFrecuencia[]
       }> = await laravelApi.get(`${this.endpoint}/top-clientes-frecuencia`, { params })
       return response.data
     } catch (error) {
@@ -213,6 +215,21 @@ class EstadisticasService {
       return response.data
     } catch (error) {
       console.error('Error en getHistorialGanancias:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtiene las ventas agrupadas por categoría.
+   */
+  public async getVentasPorCategoria(): Promise<VentasPorCategoriaResponse> {
+    try {
+      const response: AxiosResponse<VentasPorCategoriaResponse> = await laravelApi.get(
+        `${this.endpoint}/ventas-por-categoria`,
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error en getVentasPorCategoria:', error)
       throw error
     }
   }
@@ -264,6 +281,24 @@ class EstadisticasService {
       return response
     } catch (error) {
       console.error('Error al exportar ventas a Excel:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Descarga un reporte de ventas agrupadas en formato PDF.
+   */
+  public async exportarVentasPdf(
+    params: VentasPorPeriodoApiRequest = {}, // Use the existing type for params
+  ): Promise<AxiosResponse> {
+    try {
+      const response = await laravelApi.get(`${this.endpoint}/exportar-ventas-pdf`, {
+        params,
+        responseType: 'blob', // Important for binary files
+      })
+      return response
+    } catch (error) {
+      console.error('Error al exportar ventas a PDF:', error)
       throw error
     }
   }

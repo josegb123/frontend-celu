@@ -7,7 +7,7 @@ import type { IUser } from './IUser'
 export interface IProductoPedido {
   producto_id: number
   cantidad: number
-  precio_compra: number | null
+  precio_compra: number
   precio_venta: number | null
 }
 
@@ -20,6 +20,7 @@ interface IPedidoProveedorBase {
 export interface IPedidoProveedorRequest extends IPedidoProveedorBase {
   monto_total: number
   productos: IProductoRecibido[]
+  metodo_pago: string | null
 }
 
 export interface IProductoRecibido {

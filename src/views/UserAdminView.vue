@@ -127,7 +127,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
 import UserService from '@/services/UserService'
-import type { IUser, IPaginatedUsers } from '@/interfaces/IUser'
+import type { IUser } from '@/interfaces/IUser'
 import UserList from '../components/users/UserList.vue'
 import UserForm from '@/components/users/UserForm.vue'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
@@ -151,13 +151,23 @@ const confirmation = ref({
 /**
  * Datos paginados de usuarios obtenidos de la API.
  */
-const paginatedUsers = ref<IPaginatedUsers>({
+const paginatedUsers = ref<any>({
   data: [],
-  links: {},
+  links: {
+    first: null,
+    last: null,
+    prev: null,
+    next: null,
+  },
   meta: {
     current_page: 1,
     last_page: 1,
     total: 0,
+    from: 0,
+    links: [],
+    path: '',
+    per_page: 0,
+    to: 0,
   },
 })
 
@@ -254,8 +264,22 @@ const fetchUsers = async () => {
     // Limpiar lista en caso de error
     paginatedUsers.value = {
       data: [],
-      links: {},
-      meta: { current_page: 1, last_page: 1, total: 0 },
+      links: {
+        first: null,
+        last: null,
+        prev: null,
+        next: null,
+      },
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        total: 0,
+        from: 0,
+        links: [],
+        path: '',
+        per_page: 0,
+        to: 0,
+      },
     }
   } finally {
     loading.value = false
@@ -407,5 +431,8 @@ watch(
 
 onMounted(() => {
   fetchUsers()
+  if (!fetchUsers()) {
+    showNotification({ message: 'Error al cargar los usuarios.', isError: true })
+  }
 })
 </script>

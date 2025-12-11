@@ -65,9 +65,10 @@
                 :key="abono.id"
                 class="list-group-item d-flex justify-content-between align-items-center small py-2"
               >
+                <!--TODO:  Veruficar que abono user este definido -->
                 <span>
                   Abono #{{ abono.id }} registrado por
-                  <strong>{{ abono?.user.name || 'N/A' }}</strong>
+                  <strong>{{ abono?.user!.name || 'N/A' }}</strong>
                 </span>
                 <span class="fw-bold text-success">
                   + ${{ Number(abono.monto_abonado).toFixed(2) }} ({{ abono.metodo_pago }})

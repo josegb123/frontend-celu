@@ -63,7 +63,13 @@ export interface Devolucion {
   updated_at: string
 
   // Relaciones (si son incluidas por el Resource)
-  producto?: { id: number; nombre: string }
+  producto?: {
+    id: number
+    nombre: string
+    proveedor: {
+      telefono: string | null
+    }
+  }
   cliente?: { id: number; nombre: string; cedula: string | null }
   venta?: { id: number; total: number }
   detalleVenta?: DetalleVenta // Corregido: Usamos el tipo específico DetalleVenta

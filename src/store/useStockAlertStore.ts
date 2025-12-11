@@ -79,10 +79,10 @@ export const useStockAlertStore = defineStore('stockAlert', () => {
         })
 
       stockAlertData.value.data = response.data
-      stockAlertData.value.total = response.meta?.total || response.total
-      stockAlertData.value.currentPage = response.current_page
-      stockAlertData.value.lastPage = response.last_page
-      stockAlertData.value.perPage = response.per_page
+      stockAlertData.value.total = response.meta?.total || response.meta.total
+      stockAlertData.value.currentPage = response.meta.current_page
+      stockAlertData.value.lastPage = response.meta.last_page
+      stockAlertData.value.perPage = response.meta.per_page
     } catch (err) {
       console.error('Error al cargar alertas de stock:', err)
       error.value = 'Fallo al conectar con la API para obtener las alertas de stock.'

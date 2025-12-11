@@ -1,6 +1,6 @@
 import type { IUser } from './IUser'
 import { type ICuentaPorCobrar } from './ICuentaPorCobrar'
-export interface IAbonoBase {
+export interface IAbono {
   cuenta_por_cobrar_id: number
   user_id: number
   monto_abonado: number
@@ -10,14 +10,9 @@ export interface IAbonoBase {
   created_at: string
   id: number
   cuenta_por_cobrar?: ICuentaPorCobrar
-}
-
-export interface IAbono extends IAbonoBase {
-  user: IUser
-  fecha_abono: string
-  notas: string | null
-  created_at: string
-  updated_at: string
+  user?: IUser
+  fecha_abono?: string
+  notas?: string | null
 }
 
 export interface StoreAbonoPayload {
@@ -31,5 +26,5 @@ export interface StoreAbonoPayload {
 
 export interface StoreAbonoResponse {
   message: string | null
-  abono: IAbonoBase
+  abono: IAbono
 }

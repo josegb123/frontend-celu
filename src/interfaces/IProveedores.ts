@@ -36,7 +36,7 @@ export interface PaginacionResponse<T> {
     last_page: number
     links: Array<{
       url: string | null
-      label: string
+      label: string | null
       active: boolean
       page: number | null
     }>

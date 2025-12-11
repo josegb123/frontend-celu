@@ -334,8 +334,8 @@ const addDetalleFromTemp = () => {
   const existingIndex = productos.value.findIndex((d) => d.producto_id === tempProduct.value?.id)
 
   if (existingIndex !== -1) {
-    productos.value[existingIndex].cantidad += tempCantidad.value
-    productos.value[existingIndex].precio_compra = tempPrecio.value
+    productos.value[existingIndex]!.cantidad += tempCantidad.value
+    productos.value[existingIndex]!.precio_compra = tempPrecio.value
     showNotification('success', `Cantidad sumada para ${tempProduct.value!.nombre}.`)
   } else {
     productos.value.push({

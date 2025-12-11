@@ -4,11 +4,11 @@ import { ref, onMounted, computed } from 'vue'
 // 1. IMPORTAR INTERFACES DEL SERVICIO para tipar 'dashboardData'
 import {
   estadisticasService,
-  type LowStockProduct,
   type TopMetric,
   type VentaMinimal,
   type TimeSeriesData,
 } from '@/services/estadisticasService'
+import type { HistorialGananciasEstadistica, ProductoBajoStock } from '@/interfaces/estadisticas'
 
 import StatCard from '@/components/home/StatCard.vue'
 import TopRankingCard from '@/components/home/TopRankingCard.vue'
@@ -29,7 +29,7 @@ const user = computed(() => userStore.user)
 interface DashboardData {
   ticketPromedio: number
   margenBrutoMes: number
-  productosBajoStock: LowStockProduct[]
+  productosBajoStock: ProductoBajoStock[]
   topClientes: TopMetric[]
   ultimasVentas: VentaMinimal[]
 }
@@ -56,9 +56,13 @@ const fetchDashboardData = async () => {
     dashboardData.value.ticketPromedio = ticket.monto_promedio_venta
 
     // Obtener el beneficio de la primera entrada (asumiendo que es el mes actual)
-    const margenData: TimeSeriesData[] = margenResult.data
+    const margenData: TimeSeriesData[] = margenResult.data.map((item: HistorialGananciasEstadistica) => ({
+      date: item.periodo_fecha,
+      value: item.beneficio_bruto,
+      label: item.periodo_fecha, // You can adjust the label as needed
+    }))
     dashboardData.value.margenBrutoMes =
-      margenData.length > 0 && margenData[0] ? (margenData[0].beneficio_bruto ?? 0) : 0
+      margenData.length > 0 && margenData[0] ? (margenData[0].value ?? 0) : 0
 
     // 2. Tablas/Listados
     const [stock, clientes, ventas] = await Promise.all([
@@ -69,7 +73,10 @@ const fetchDashboardData = async () => {
 
     // Asignaciones tipadas correctamente
     dashboardData.value.productosBajoStock = stock.data
-    dashboardData.value.topClientes = clientes.data
+    dashboardData.value.topClientes = clientes.data.map(item => ({
+      label: item.nombre_cliente,
+      value: item.monto_total,
+    }))
     dashboardData.value.ultimasVentas = ventas.data
   } catch (error) {
     console.error('Error al cargar el dashboard:', error)

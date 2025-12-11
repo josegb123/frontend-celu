@@ -95,6 +95,7 @@ import { proveedorService } from '@/services/proveedorService'
 import type { Proveedor } from '@/services/proveedorService'
 import type { IPedidoProveedorRequest } from '@/interfaces/IPedidoProveedor'
 import type { IDetallePedidoProveedorRequest } from '@/interfaces/IDetallePedidoProveedor'
+import { isAxiosError } from 'axios'
 
 // Tipado extendido para el detalle para incluir el nombre temporal para el placeholder
 interface DetalleLocal extends IDetallePedidoProveedorRequest {
@@ -200,6 +201,7 @@ const handleSubmit = async () => {
       const { nombre_producto_temporal, ...rest } = producto
       return rest
     }) as IDetallePedidoProveedorRequest[],
+    metodo_pago: null,
   }
 
   try {
@@ -207,14 +209,20 @@ const handleSubmit = async () => {
     emit('success', response)
     successMessage.value = 'Pedido registrado exitosamente!'
 
-    // Reset form
     numeroFacturaProveedor.value = ''
     fechaEntrega.value = new Date().toISOString().split('T')[0] || ''
     selectedProveedorId.value = null
     productos.value = []
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error submitting order:', error)
-    errorMessage.value = error.response?.data?.message || 'Error al registrar el pedido.'
+    if (isAxiosError(error)) {
+      errorMessage.value =
+        error.response?.data?.message || error.message || 'Error de red al registrar el pedido.'
+    } else if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = 'Ocurrió un error inesperado al registrar el pedido.'
+    }
     emit('error', error)
   } finally {
     submitting.value = false
