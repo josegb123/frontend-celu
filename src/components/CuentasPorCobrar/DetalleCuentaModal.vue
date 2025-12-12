@@ -55,29 +55,46 @@
           </div>
 
           <h6 class="mb-3 text-primary">Historial de Abonos ({{ detalleCuenta.abonos.length }})</h6>
-          <div
-            v-if="detalleCuenta.abonos.length > 0"
-            class="abonos-list-wrapper card card-body mb-4"
-          >
-            <ul class="list-group list-group-flush">
-              <li
-                v-for="abono in detalleCuenta.abonos"
-                :key="abono.id"
-                class="list-group-item d-flex justify-content-between align-items-center small py-2"
-              >
-                <!--TODO:  Veruficar que abono user este definido -->
-                <span>
-                  Abono #{{ abono.id }} registrado por
-                  <strong>{{ abono?.user!.name || 'N/A' }}</strong>
-                </span>
-                <span class="fw-bold text-success">
-                  + ${{ Number(abono.monto_abonado).toFixed(2) }} ({{ abono.metodo_pago }})
-                  <small class="text-muted ms-2">{{
-                    new Date(abono.created_at).toLocaleDateString()
-                  }}</small>
-                </span>
-              </li>
-            </ul>
+
+          <div v-if="detalleCuenta.abonos.length > 0">
+            <div class="abonos-list-wrapper card mb-4 p-0 border">
+              <table class="table table-sm mb-0 small">
+                <thead>
+                  <tr>
+                    <th class="border-0 text-muted ps-3 py-2" style="width: 15%">#</th>
+                    <th class="border-0 text-muted py-2" style="width: 40%">
+                      Concepto / Registrado por
+                    </th>
+                    <th class="border-0 text-muted text-end py-2" style="width: 30%">
+                      Monto (Método)
+                    </th>
+                    <th class="border-0 text-muted text-end pe-3 py-2" style="width: 15%">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(abono, index) in detalleCuenta.abonos" :key="abono.id">
+                    <td class="border-top-0 ps-3 pt-2 pb-1 text-primary fw-bold">
+                      #{{ index + 1 }}
+                    </td>
+                    <td class="border-top-0 pt-2 pb-1">
+                      <span class="d-block">{{ abono.referencia_pago || 'Abono a Cartera' }}</span>
+                      <small class="text-muted fst-italic"
+                        >Por: {{ abono?.user?.name || 'Sistema' }}</small
+                      >
+                    </td>
+                    <td class="border-top-0 pt-2 pb-1 text-end fw-bold text-success">
+                      + ${{ Number(abono.monto_abonado).toFixed(2) }}
+                      <span class="badge text-bg-secondary ms-2 small">{{
+                        abono.metodo_pago
+                      }}</span>
+                    </td>
+                    <td class="border-top-0 text-end pe-3 pt-2 pb-1 text-muted">
+                      {{ new Date(abono.created_at).toLocaleDateString() }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
           <div v-else class="alert alert-info small">
             Esta cuenta aún no tiene abonos registrados.

@@ -1,6 +1,6 @@
 <template>
-  <div class="aval-selector mb-3">
-    <label for="avalSelect" class="form-label">Seleccionar Aval (Opcional):</label>
+  <div class="aval-selector mb-2 p-3 border border-info rounded text-bg-primary">
+    <label for="avalSelect" class="form-label">Seleccionar Cliente Aval (Opcional):</label>
     <select
       id="avalSelect"
       class="form-select"
@@ -68,13 +68,3 @@ onMounted(() => {
   fetchClients()
 })
 </script>
-
-<style scoped>
-/* Add any specific styles for AvalSelector here */
-.aval-selector {
-  /* Example styles */
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-</style>

@@ -1,70 +1,77 @@
 <template>
-  <div class="container-fluid p-3">
+  <div class="container-fluid py-3 pe-4 mh-100 mw-90">
     <CajaBloqueador>
-      <div class="pos-view d-flex flex-column">
-        <h2 class="mb-3">🏪 {{ $route.meta.title }}</h2>
-        <div class="pos-content d-flex gap-3 flex-column flex-md-row">
-          <section class="card shadow-sm p-3 w-60 d-flex flex-column border">
-            <h2 class="h6 card-title mb-3 pb-1">Búsqueda Rápida de Productos</h2>
+      <h2 class="mb-3">🏪 {{ $route.meta.title }}</h2>
 
-            <div class="area-busqueda-productos mb-3">
-              <BuscadorProducto
-                @product-selected="handleProductSelected"
-                @search-updated="handleSearchUpdated"
-              />
+      <div class="pos-content d-flex gap-3 flex-column flex-md-row">
+        <section class="card shadow-sm p-3 border col-12 col-md-7">
+          <h2 class="h6 card-title mb-3 pb-1">Búsqueda Rápida de Productos</h2>
+
+          <div class="area-busqueda-productos mb-3">
+            <BuscadorProducto
+              @product-selected="handleProductSelected"
+              @search-updated="handleSearchUpdated"
+            />
+          </div>
+
+          <div :key="gridRefreshKey" class="flex-grow-1">
+            <ProductGridPOS
+              :search-query="searchQueryGrid"
+              @product-selected="handleProductSelected"
+            />
+          </div>
+        </section>
+
+        <aside class="seccion-venta d-flex flex-column card shadow-sm p-3 border col-12 col-md-5">
+          <h2 class="h6 card-title mb-3">Detalle de la Venta</h2>
+
+          <div class="mb-3 d-flex justify-content-between align-items-center">
+            <div class="small">
+              Cliente:
+              <span class="fw-bold text-primary">{{ clienteSeleccionado.nombre }}</span>
+              <small class="text-muted d-block">{{ clienteSeleccionado.cedula || 'N/A' }}</small>
             </div>
+          </div>
 
-            <div :key="gridRefreshKey">
-              <ProductGridPOS
-                :search-query="searchQueryGrid"
-                @product-selected="handleProductSelected"
-              />
-            </div>
-          </section>
-
-          <aside class="seccion-venta d-flex flex-column card shadow-sm p-3 w-40 border">
-            <h2 class="h6 card-title mb-3">Detalle de la Venta</h2>
-
-            <div
-              class="carrito-listado-items flex-grow-1 overflow-auto rounded-3 bg-body-tertiary mb-3"
-            >
+          <div class="carrito-listado-items rounded-3 bg-body-tertiary mb-3">
+            <div class="table-responsive flex-sm-shrink-1 table-wrapper">
               <table class="table table-sm mb-0 table-hover">
                 <thead>
                   <tr>
                     <th class="fs-7">Producto</th>
-                    <th class="text-center fs-7" style="width: 70px">Cant.</th>
+                    <th class="text-center fs-7" style="width: 80px">Cant.</th>
                     <th class="text-end fs-7">Precio</th>
                     <th class="text-end fs-7">Subtotal</th>
-                    <th></th>
+                    <th style="width: 30px"></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="item in itemsVenta" :key="item.id">
-                    <td class="align-middle fs-7">{{ item.nombre }}</td>
+                    <td class="align-middle fs-7 text-truncate" style="max-width: 100px">
+                      {{ item.nombre }}
+                    </td>
+
                     <td class="align-middle text-center">
                       <div class="d-flex justify-content-center align-items-center">
-                        <div class="input-group" style="width: 90px">
+                        <div class="input-group input-group-sm" style="width: 85px">
                           <button
                             type="button"
-                            class="btn btn-sm btn-outline-secondary"
+                            class="btn btn-outline-secondary"
                             @click="item.cantidad > 1 ? item.cantidad-- : null"
                             :disabled="item.cantidad <= 1"
                           >
                             -
                           </button>
-
                           <input
                             type="text"
                             v-model.number="item.cantidad"
-                            class="form-control form-control-sm text-center border-secondary p-0"
-                            style="width: 30px; height: 25px"
+                            class="form-control text-center border-secondary p-0"
                             min="1"
                             :max="item.stock_actual"
                           />
-
                           <button
                             type="button"
-                            class="btn btn-sm btn-outline-secondary"
+                            class="btn btn-outline-secondary"
                             @click="item.cantidad < item.stock_actual ? item.cantidad++ : null"
                             :disabled="item.cantidad >= item.stock_actual"
                           >
@@ -79,19 +86,22 @@
                         >Máx: {{ item.stock_actual }}</span
                       >
                     </td>
-                    <td class="align-middle text-end fs-7 fw-light">
+
+                    <td class="align-middle text-end fs-7 fw-light text-nowrap">
                       ${{ item.precio_venta.toFixed(2) }}
                     </td>
-                    <td class="align-middle text-end fs-7 fw-bold">
+
+                    <td class="align-middle text-end fs-7 fw-bold text-nowrap">
                       ${{ item.subtotal.toFixed(2) }}
                     </td>
-                    <td class="align-middle text-center" style="width: 30px">
+
+                    <td class="align-middle text-center p-1">
                       <button
                         @click="removeItemFromCart(item.id)"
-                        class="btn btn-xs btn-outline-danger p-0"
-                        style="width: 30px; height: 30px"
+                        class="btn btn-sm btn-outline-danger p-0"
+                        style="width: 25px; height: 25px; line-height: 1"
                       >
-                        <i class="bi bi-trash-fill smaller-icon"></i>
+                        <i class="bi bi-trash-fill small"></i>
                       </button>
                     </td>
                   </tr>
@@ -103,23 +113,23 @@
                 </tbody>
               </table>
             </div>
+          </div>
+          <div class="resumen-totales mt-auto pt-2">
+            <table class="w-100" style="border-collapse: collapse; border: none">
+              <tbody>
+                <tr class="small">
+                  <td class="fw-medium text-start pb-2">Subtotal:</td>
+                  <td class="fw-medium text-end pb-2 text-nowrap">
+                    ${{ subtotalGeneral.toFixed(2) }}
+                  </td>
+                </tr>
 
-            <div class="resumen-totales mt-auto pt-2">
-              <table class="w-100" style="border-collapse: collapse; border: none">
-                <tbody>
-                  <tr class="small">
-                    <td class="fw-medium text-start pb-2">Subtotal:</td>
-                    <td class="fw-medium text-end pb-2">${{ subtotalGeneral.toFixed(2) }}</td>
-                  </tr>
-
-                  <tr class="small">
-                    <td
-                      class="fw-medium text-danger text-start pb-2 align-middle"
-                      style="width: 50%"
-                    >
-                      <label for="input-descuento">Descuento (-):</label>
-                    </td>
-                    <td class="fw-medium text-end pb-2 align-middle" style="width: 50%">
+                <tr class="small">
+                  <td class="fw-medium text-danger text-start pb-2 align-middle" style="width: 50%">
+                    <label for="input-descuento">Descuento (-):</label>
+                  </td>
+                  <td class="fw-medium text-end pb-2 align-middle" style="width: 50%">
+                    <div class="d-inline-block w-auto">
                       <input
                         id="input-descuento"
                         type="number"
@@ -127,103 +137,121 @@
                         min="0"
                         :max="subtotalGeneral"
                         @blur="validateDescuento"
-                        class="form-control form-control-xs text-end border-secondary d-inline-block"
-                        style="width: 80px; height: 25px"
+                        class="form-control form-control-sm text-end border-secondary"
+                        style="width: 70px"
                       />
-                    </td>
-                  </tr>
+                    </div>
+                  </td>
+                </tr>
 
-                  <tr class="total-final border-top border-secondary">
-                    <td class="fs-5 fw-bold text-start pt-2">TOTAL A PAGAR:</td>
-                    <td class="fs-5 fw-bold text-end text-primary pt-2">
-                      ${{ totalVenta.toFixed(2) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                <tr class="total-final border-top border-secondary">
+                  <td class="fs-5 fw-bold text-start pt-2">TOTAL A PAGAR:</td>
+                  <td class="fs-5 fw-bold text-end text-primary pt-2 text-nowrap">
+                    ${{ totalVenta.toLocaleString('es-CO') }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="acciones-venta d-grid gap-2 mt-3">
+            <button class="btn btn-danger shadow-sm" @click="handleConfirmCancelacion">
+              <i class="bi bi-x-lg"></i> Cancelar Venta
+            </button>
+            <button class="btn btn-primary shadow-lg" @click="handleProcesarPago">
+              <i class="bi bi-wallet2"></i> Procesar Pago
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      <div
+        v-if="showClienteModal"
+        class="modal d-block fade show"
+        tabindex="-1"
+        style="background-color: rgba(0, 0, 0, 0.6); overflow-y: auto"
+      >
+        <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-bg-primary py-2">
+              <h4 class="modal-title fs-5">Formulario de Pago</h4>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                @click="showClienteModal = false"
+              ></button>
             </div>
 
-            <div class="acciones-venta d-grid gap-2 mt-3">
-              <button class="btn btn-danger shadow-sm" @click="handleConfirmCancelacion">
-                <i class="bi bi-x-lg"></i> Cancelar Venta
-              </button>
-              <button class="btn btn-primary shadow-lg" @click="handleProcesarPago">
-                <i class="bi bi-wallet2"></i> Procesar Pago
-              </button>
-            </div>
-          </aside>
-        </div>
-
-        <div
-          v-if="showClienteModal"
-          class="modal d-block fade show"
-          tabindex="-1"
-          style="background-color: rgba(0, 0, 0, 0.6); overflow-y: auto"
-        >
-          <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg">
-              <div class="modal-header text-bg-primary py-2">
-                <h4 class="modal-title fs-5">Seleccionar Cliente y Pago</h4>
-                <button
-                  type="button"
-                  class="btn-close btn-close-white"
-                  @click="showClienteModal = false"
-                ></button>
+            <div class="modal-body px-1 py-2">
+              <div
+                class="container d-flex justify-content-between align-items-center modal-cliente mb-3"
+              >
+                <div class="col flex-fill">
+                  Cliente:
+                  <span class="fw-bold text-primary">{{ clienteSeleccionado.nombre }}</span>
+                  <small class="text-muted d-block">{{
+                    clienteSeleccionado.cedula || 'N/A'
+                  }}</small>
+                </div>
+                <div>
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    @click="showClienteSelectorModal = true"
+                  >
+                    <i class="bi bi-person-lines-fill"></i> Cambiar
+                  </button>
+                </div>
               </div>
+              <hr class="my-3" />
 
-              <div class="modal-body p-3">
-                <BuscadorCliente
-                  :current-cliente="clienteSeleccionado"
-                  @cliente-selected="handleClienteSelected"
-                  @close="showClienteModal = false"
-                />
-
+              <PaymentForm
+                :subtotal-bruto="subtotalGeneral"
+                :descuento="descuento"
+                :impuesto="0"
+                :total-pagar="totalVenta"
+                :items="itemsVenta"
+                :cliente="clienteSeleccionado"
+                :cliente-generico="clienteGenerico"
+                @update:is-contado="handleContadoChange"
+                @venta-registrada="handleVentaRegistrada"
+              >
                 <AvalSelector @aval-selected="handleAvalSelected" v-if="!isVentaContado" />
-
-                <hr class="my-3" />
-
-                <PaymentForm
-                  :subtotal-bruto="subtotalGeneral"
-                  :descuento="descuento"
-                  :impuesto="0"
-                  :total-pagar="totalVenta"
-                  :items="itemsVenta"
-                  :cliente="clienteSeleccionado"
-                  :cliente-generico="clienteGenerico"
-                  @update:is-contado="handleContadoChange"
-                  @venta-registrada="handleVentaRegistrada"
-                />
-              </div>
+              </PaymentForm>
             </div>
           </div>
         </div>
-
-        <NotificationModal
-          :isVisible="notification.isVisible"
-          :message="notification.message"
-          :isError="notification.isError"
-          @close="closeNotification"
-        />
-
-        <ConfirmationModal
-          :is-visible="showCancelConfirmation"
-          title="Cancelar Venta"
-          message="¿Está seguro de que desea cancelar la venta y limpiar el carrito? Esta acción no se puede deshacer."
-          confirm-text="Sí, Cancelar"
-          @confirm="handleCancelarVenta"
-          @cancel="showCancelConfirmation = false"
-        />
       </div>
+
+      <NotificationModal
+        :isVisible="notification.isVisible"
+        :message="notification.message"
+        :isError="notification.isError"
+        @close="closeNotification"
+      />
+
+      <ConfirmationModal
+        :is-visible="showCancelConfirmation"
+        title="Cancelar Venta"
+        message="¿Está seguro de que desea cancelar la venta y limpiar el carrito? Esta acción no se puede deshacer."
+        confirm-text="Sí, Cancelar"
+        @confirm="handleCancelarVenta"
+        @cancel="showCancelConfirmation = false"
+      />
+
+      <ModalSelectorCliente
+        :is-visible="showClienteSelectorModal"
+        :current-cliente="clienteSeleccionado"
+        @cliente-selected="handleClienteSelected"
+        @update:isVisible="showClienteSelectorModal = $event"
+      />
     </CajaBloqueador>
   </div>
 </template>
-
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted } from 'vue'
 
 // Componentes
 import BuscadorProducto from '../components/VentaPOS/BuscadorProducto.vue'
-import BuscadorCliente from '@/components/VentaPOS/BuscadorCliente.vue'
 import PaymentForm from '@/components/VentaPOS/PaymentForm.vue'
 import ProductGridPOS from '../components/VentaPOS/ProductGridPOS.vue'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
@@ -236,6 +264,7 @@ import { useCajaStore } from '@/store/useCajaStore'
 import type { ItemVenta, ProductoVentaBase, Aval } from '@/interfaces/IPostInterfaces' // Added Aval interface
 import type { ICliente } from '@/interfaces/ICliente'
 import type { Ref } from 'vue'
+import ModalSelectorCliente from '@/components/VentaPOS/ModalSelectorCliente.vue'
 
 // --- Inicialización de Stores ---
 const cajaStore = useCajaStore() // Inicializamos el store de la caja
@@ -251,6 +280,7 @@ interface NotificationState {
   message: string
   isError: boolean
 }
+const showClienteSelectorModal = ref(false) // NUEVO ESTADO para el modal de Cliente
 
 const clienteGenerico: ICliente = {
   id: 0,
@@ -511,53 +541,11 @@ const handleVentaRegistrada = (mensaje: string) => {
 }
 </script>
 
-<style scoped>
-/* 1. Ajuste de Densidad de la Interfaz */
-.fs-7 {
-  font-size: 0.85rem;
-}
-.smaller-icon {
-  font-size: 0.8rem;
-}
-
-/* Input más pequeño */
-.form-control-xs {
-  height: calc(1.5em + 0.3rem + 2px);
-  padding: 0.1rem 0.25rem;
-  font-size: 0.75rem;
-}
-
-/* Botón más pequeño */
-.btn-xs {
-  padding: 0.1rem 0.2rem;
-  font-size: 0.75rem;
-}
-
-/* 2. Ajuste de Ancho Mínimo de Columnas */
-.w-60 {
-  flex: 3;
-}
-.w-40 {
-  flex: 2;
-  min-width: 350px;
-}
-/* Estilo para asegurar que el área POS ocupe toda la altura visible */
-/* .pos-view {
-  height: 100dvh;
-} */
-
-.btn-back-pos {
-  position: absolute;
-  top: 15px; /* Ajusta la posición desde arriba */
-  left: 15px; /* Ajusta la posición desde la izquierda */
-  z-index: 2000; /* Asegura que esté por encima de otros elementos */
-  width: 35px; /* Define el tamaño del círculo */
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-size: 1rem;
-  border-width: 1px; /* Borde fino */
+<style lang="css" scoped>
+.table-wrapper {
+  max-height: calc(100dvh - 440px);
+  overflow: auto;
+  display: inline-block;
+  width: 100%;
 }
 </style>

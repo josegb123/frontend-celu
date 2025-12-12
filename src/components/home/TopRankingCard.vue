@@ -75,12 +75,13 @@ const formatValue = (val: unknown, format: 'currency' | 'integer'): string => {
             >
               #{{ index + 1 }}
             </span>
-            <span class="fw-bold small">{{ item[keyField] }}</span>
+            <span class="fw-bold small">{{ item.label }}</span>
           </div>
           <span class="text-success fw-bold fs-6">
-            {{ formatValue(item[valueField], valueFormat) }}
+            {{ formatValue(item.value, valueFormat) }}
           </span>
         </li>
+
         <li v-if="data.length === 0" class="list-group-item text-center text-muted py-3 small">
           No hay datos suficientes para el ranking.
         </li>

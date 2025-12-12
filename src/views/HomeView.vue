@@ -56,11 +56,13 @@ const fetchDashboardData = async () => {
     dashboardData.value.ticketPromedio = ticket.monto_promedio_venta
 
     // Obtener el beneficio de la primera entrada (asumiendo que es el mes actual)
-    const margenData: TimeSeriesData[] = margenResult.data.map((item: HistorialGananciasEstadistica) => ({
-      date: item.periodo_fecha,
-      value: item.beneficio_bruto,
-      label: item.periodo_fecha, // You can adjust the label as needed
-    }))
+    const margenData: TimeSeriesData[] = margenResult.data.map(
+      (item: HistorialGananciasEstadistica) => ({
+        date: item.periodo_fecha,
+        value: item.beneficio_bruto,
+        label: item.periodo_fecha, // You can adjust the label as needed
+      }),
+    )
     dashboardData.value.margenBrutoMes =
       margenData.length > 0 && margenData[0] ? (margenData[0].value ?? 0) : 0
 
@@ -73,7 +75,7 @@ const fetchDashboardData = async () => {
 
     // Asignaciones tipadas correctamente
     dashboardData.value.productosBajoStock = stock.data
-    dashboardData.value.topClientes = clientes.data.map(item => ({
+    dashboardData.value.topClientes = clientes.data.map((item) => ({
       label: item.nombre_cliente,
       value: item.monto_total,
     }))

@@ -1,9 +1,9 @@
 <template>
-  <div>
+  <div class="container">
     <div class="alert text-bg-warning text-center fs-6 mb-3 py-2">
       Total a Pagar: <strong class="ms-2">${{ props.totalPagar }}</strong>
     </div>
-    <div class="row border-top border-secondary-subtle pt-3 mt-3">
+    <div class="row border-secondary-subtle pt-3 mt-3">
       <div class="col-12">
         <div class="form-check form-switch mb-2">
           <input
@@ -20,19 +20,19 @@
           </label>
         </div>
       </div>
-      <div class="row">
-        <div class="col-md-6 mb-3">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-2 w-100">
+        <div class="col-md-5 mb-3">
           <label class="form-label fw-bold small">Tipo de Venta</label>
-          <select v-model="tipoVentaSeleccionado" class="form-select form-select-sm">
+          <select v-model="tipoVentaSeleccionado" class="form-select form-select-md">
             <option v-for="tipo in TIPO_VENTAS" :key="tipo.id" :value="tipo.id">
               {{ tipo.nombre }}
             </option>
           </select>
         </div>
 
-        <div class="col-md-6 mb-3" v-if="tipoVentaSeleccionado === 1">
+        <div class="col-md-7 mb-3 flex-fill" v-if="tipoVentaSeleccionado === 1">
           <label class="form-label fw-bold small">Método de Pago</label>
-          <select v-model="metodoSeleccionado" class="form-select form-select-sm">
+          <select v-model="metodoSeleccionado" class="form-select form-select-md">
             <option v-for="metodo in METODOS_PAGO_CONTADO" :key="metodo" :value="metodo">
               {{ metodo.charAt(0).toUpperCase() + metodo.slice(1) }}
             </option>
@@ -50,47 +50,58 @@
                 ? 'text-bg-info border-info'
                 : 'text-bg-secondary border-secondary',
             ]"
+            style="height: 40px"
           >
             <i class="bi bi-info-circle me-1"></i> Modalidad:
             <strong>{{ tipoVentaSeleccionado === 2 ? 'CRÉDITO' : 'PLAN SEPARE' }}</strong>
           </div>
         </div>
       </div>
+      <div class="col-12">
+        <slot> </slot>
+      </div>
 
-      <div class="col-md-6 mb-3" v-if="aplicaIva">
-        <label for="ivaInput" class="form-label fw-bold small">Porcentaje IVA (%)</label>
-        <input
-          id="ivaInput"
-          type="number"
-          v-model.number="ivaPorcentajeManual"
-          class="form-control form-control-sm text-end"
-          min="0"
-          max="100"
-          placeholder="0.00"
-        />
+      <div class="mw-90">
+        <div class="row d-flex flex-column flex-md-row justify-content-between gap-2">
+          <div class="col-12 col-md-5 mb-3" v-if="aplicaIva">
+            <label for="ivaInput" class="form-label fw-bold small">Porcentaje IVA (%)</label>
+            <input
+              id="ivaInput"
+              type="number"
+              v-model.number="ivaPorcentajeManual"
+              class="form-control form-control-md text-end"
+              min="0"
+              max="100"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div
+            class="col-12 col-md-5 mb-3"
+            v-if="tipoVentaSeleccionado === 2 || tipoVentaSeleccionado === 3"
+          >
+            <label for="abonoInicialInput" class="form-label fw-bold small">
+              Abono Inicial
+              <span v-if="tipoVentaSeleccionado === 3" class="text-danger ms-1">
+                (Mín: $50,000)
+              </span>
+            </label>
+            <input
+              id="abonoInicialInput"
+              type="number"
+              v-model.number="abonoInicial"
+              class="form-control form-control-md"
+              min="0"
+              :max="props.totalPagar"
+            />
+          </div>
+        </div>
       </div>
     </div>
-    <div
-      class="row border-top border-success-subtle pt-2 mt-2"
-      v-if="tipoVentaSeleccionado === 2 || tipoVentaSeleccionado === 3"
-    >
-      <div class="col-md-6 mb-3">
-        <label for="abonoInicialInput" class="form-label fw-bold small">
-          Abono Inicial
-          <span v-if="tipoVentaSeleccionado === 3" class="text-danger ms-1"> (Mín: $50,000) </span>
-        </label>
-        <input
-          id="abonoInicialInput"
-          type="number"
-          v-model.number="abonoInicial"
-          class="form-control form-control-sm"
-          min="0"
-          :max="props.totalPagar"
-        />
-      </div>
-    </div>
-    <template v-if="tipoVentaSeleccionado === 1">
-      <div class="row border-top border-primary-subtle pt-2 mt-2">
+
+    <div v-if="tipoVentaSeleccionado === 1">
+      <hr />
+      <div class="row border-primary-subtle pt-2 mt-2">
         <div class="col-md-6 mb-3">
           <label class="form-label fw-bold small">
             Monto Recibido
@@ -99,7 +110,7 @@
           <input
             type="number"
             v-model.number="montoRecibido"
-            class="form-control form-control-sm"
+            class="form-control form-control-md"
             :readonly="metodoSeleccionado !== 'efectivo'"
             :min="metodoSeleccionado === 'efectivo' ? props.totalPagar : 0"
           />
@@ -115,7 +126,7 @@
           />
         </div>
       </div>
-    </template>
+    </div>
 
     <div class="mt-2 pt-2 border-top border-primary-subtle">
       <div v-if="cambio > 0" class="alert bg-success-subtle text-success fs-6 py-2">

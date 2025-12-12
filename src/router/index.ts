@@ -55,7 +55,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/pos',
     name: 'pos',
     component: VentaPOS,
-    meta: { requiresAuth: true, layout: 'LayoutPOS', title: 'Venta Nueva - POS' },
+    meta: { requireAuth: true, layout: 'LayoutPOS', title: 'Venta Nueva - POS' },
   },
   {
     path: '/productos',

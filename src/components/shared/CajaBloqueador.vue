@@ -102,7 +102,10 @@ const cajaStore = useCajaStore()
 const fondoInicial = ref<number | null>(null)
 const localError = ref<string | null>(null)
 
-const shouldBlock = computed<boolean>(() => !cajaStore.isCajaAbierta && !cajaStore.isLoading)
+const shouldBlock = computed<boolean>(
+  () =>
+    !cajaStore.isCajaAbierta && !cajaStore.isLoading && router.currentRoute.value.name !== 'auth',
+)
 
 const isFormDisabled = computed<boolean>(
   () => cajaStore.isLoading || fondoInicial.value === null || fondoInicial.value < 0,

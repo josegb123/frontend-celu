@@ -1,11 +1,7 @@
 <template>
-  <div class="product-grid-scroll-area p-1 overflow-scroll">
+  <div class="p-1">
     <div
-      class="row g-3 content"
-      :class="{
-        'row-cols-2': windowWidth < 800,
-        'row-cols-3': windowWidth >= 800,
-      }"
+      class="row g-3 content row-cols-2 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 pos-grid-height"
     >
       <div v-if="isLoading" class="col-12 text-center my-5">
         <div class="spinner-border text-primary" role="status">
@@ -22,22 +18,20 @@
 
       <div v-else v-for="product in products" :key="product.id" class="col">
         <div
-          class="card product-card-pos shadow-sm text-center border"
+          class="card product-card-pos shadow-sm text-center border h-100"
           @click="emit('product-selected', product)"
           :class="{
-            // Alerta de stock bajo (1 a 4 unidades)
             'low-stock-alert': product.stock_actual > 0 && product.stock_actual < 5,
-            // Alerta de stock agotado (0 unidades)
             'out-of-stock': product.stock_actual === 0,
           }"
         >
-          <h6 class="card-title p-1 pt-3 text-truncate" :title="product.nombre">
+          <h6 class="card-title px-1 pt-3 text-truncate-lines" :title="product.nombre">
             {{ product.nombre }}
           </h6>
           <div class="card-body pt-0 d-flex flex-column justify-content-end">
             <img
               :src="product.imagen_url || '/no_image.webp'"
-              class="img-fluid border-0 rounded-3 mb-2 mx-auto"
+              class="img-fluid border-0 rounded-3 mb-2 mx-auto product-image"
               alt=""
             />
             <p class="card-text fw-bold mb-0 fs-5">
@@ -110,6 +104,7 @@ import { ref, onMounted, watch, reactive, computed } from 'vue'
 import { debounce } from 'lodash'
 import ProductoService from '@/services/ProductoService.js'
 import type { IProductoPaginated, IProducto } from '@/interfaces/IProductoInterfaces'
+
 // --- CONSTANTES ---
 const ITEMS_PER_PAGE = 18
 
@@ -125,7 +120,7 @@ const emit = defineEmits<{
 // --- ESTADO LOCAL ---
 const products = ref<IProducto[]>([])
 const isLoading = ref(false)
-const isInitialLoad = ref(true)
+const isInitialLoad = ref(false) // Dejamos como false si no necesitas un estado intermedio en el montaje
 const currentPage = ref(1)
 const pagination = reactive<IProductoPaginated>({
   data: [],
@@ -146,30 +141,41 @@ const pagination = reactive<IProductoPaginated>({
 
 /**
  * Genera un rango simple de páginas (ej. 1, 2, 3, ..., N)
+ * Mantenemos la lógica de elipses para un paginador más limpio.
  */
 const pageRange = computed(() => {
   const pages: (number | string)[] = []
   const lastPage = pagination.meta.last_page
   const current = pagination.meta.current_page
+  const range = 2 // Cuántas páginas mostrar a cada lado de la actual
 
-  if (lastPage <= 5) {
+  if (lastPage <= 7) {
+    // 5 es muy poco, 7 cubre la mayoría de los casos.
     for (let i = 1; i <= lastPage; i++) {
       pages.push(i)
     }
   } else {
+    // Primera y última página siempre
     pages.push(1)
-    if (current > 3) pages.push('...')
 
-    const start = Math.max(2, current - 1)
-    const end = Math.min(lastPage - 1, current + 1)
+    // Elipse al principio
+    if (current > range + 1) pages.push('...')
+
+    // Rango central
+    const start = Math.max(2, current - range + 1)
+    const end = Math.min(lastPage - 1, current + range - 1)
 
     for (let i = start; i <= end; i++) {
       pages.push(i)
     }
 
-    if (current < lastPage - 2) pages.push('...')
+    // Elipse al final
+    if (current < lastPage - range) pages.push('...')
+
+    // Última página
     pages.push(lastPage)
 
+    // Filtrar duplicados y elipses consecutivas
     return pages.filter(
       (value, index, self) =>
         self.indexOf(value) === index && !(value === '...' && self[index - 1] === '...'),
@@ -187,7 +193,7 @@ const pageRange = computed(() => {
  */
 const fetchProducts = async () => {
   isLoading.value = true
-  products.value = []
+  products.value = [] // Limpiar antes de cargar
 
   const params = {
     search: props.searchQuery,
@@ -200,10 +206,7 @@ const fetchProducts = async () => {
 
     products.value = response.data
     // Actualizar el estado reactivo de paginación
-    pagination.meta.current_page = response.meta.current_page
-    pagination.meta.last_page = response.meta.last_page
-    pagination.meta.total = response.meta.total
-    pagination.meta.per_page = response.meta.per_page
+    Object.assign(pagination.meta, response.meta)
   } catch (error) {
     console.error('Error al cargar productos para POS:', error)
   } finally {
@@ -232,51 +235,54 @@ const debouncedFetch = debounce(() => {
 // --- OBSERVADORES ---
 // -------------------------------------------------------------------------
 
-// Observa cambios en el filtro de búsqueda
+// Observa cambios en el filtro de búsqueda (activamos la búsqueda con menos de 3 caracteres)
 watch(
   () => props.searchQuery,
   (newQuery) => {
-    if (newQuery && newQuery.length >= 3) {
-      debouncedFetch()
-    } else {
-      debouncedFetch()
-    }
+    // Permitir la búsqueda inmediata o con debounce si es necesario
+    debouncedFetch()
   },
+  // Ejecutar inmediatamente al montar para la primera carga
+  { immediate: true },
 )
 
 // -------------------------------------------------------------------------
-// --- CICLO DE VIDA Y RESIZE ---
+// --- CICLO DE VIDA ---
 // -------------------------------------------------------------------------
 
 onMounted(fetchProducts)
-
-const windowWidth = ref(window.innerWidth)
-const updateWindowWidth = () => {
-  windowWidth.value = window.innerWidth
-}
-window.addEventListener('resize', updateWindowWidth)
-onMounted(() => {
-  updateWindowWidth()
-})
 </script>
-
 <style scoped>
-.product-grid-pos-container {
-  display: flex;
-  flex-direction: column;
+/* -------------------------------------------------------------------------
+  CONTENEDOR GLOBAL 
+ ------------------------------------------------------------------------- */
+/* Usamos el contenedor .content para gestionar el scroll */
+.content {
+  overflow-y: auto;
+  /* Oculta la barra de desplazamiento en navegadores WebKit (Chrome, Safari) */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
-
-.product-grid-scroll-area::-webkit-scrollbar {
+.content::-webkit-scrollbar {
   display: none;
 }
 
-/* 2. FORZAR DIMENSIONES CUADRADAS PARA LA TARJETA */
+/* -------------------------------------------------------------------------
+  ALTURA DINÁMICA: pos-grid-height
+ ------------------------------------------------------------------------- */
+.pos-grid-height {
+  height: calc(100vh - 255px); /* Ajusta 240px si el layout cambia */
+}
+
+/* -------------------------------------------------------------------------
+  GRID Y TARJETAS 
+ ------------------------------------------------------------------------- */
+
 .product-card-pos {
   cursor: pointer;
   transition:
     transform 0.2s,
     box-shadow 0.2s;
-
   min-height: 280px;
 }
 
@@ -285,60 +291,49 @@ onMounted(() => {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
-.card-footer {
-  flex-shrink: 0;
+.text-truncate-lines {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-wrap: stable;
+  margin-bottom: 5px;
+}
+
+.product-image {
+  max-height: 80px;
+  object-fit: contain;
+  width: 80px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  margin-top: 2px;
 }
 
 .card-body {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
 }
 
 /* -------------------------------------------------------------------------
-  3. ESTILOS DE ALERTA DE STOCK BAJO (LOW STOCK ALERT)
-   ------------------------------------------------------------------------- */
+  ESTILOS DE ALERTA DE STOCK (Sin cambios)
+ ------------------------------------------------------------------------- */
 
-/* Estilo para stock bajo (1 a 4 unidades): Fondo rojo claro y semitransparente */
 .low-stock-alert {
-  /* Fondo ligero para que se vea en modo claro y oscuro. Usamos variables CSS de Bootstrap. */
   background-color: var(--bs-danger-bg-subtle, #f8d7da) !important;
   border-color: var(--bs-danger-border-subtle, #f5c6cb) !important;
-  opacity: 0.8; /* Semitransparente */
+  opacity: 0.9;
 }
 
-/* Estilo para stock agotado (0 unidades): Más opacidad para deshabilitar visualmente */
 .out-of-stock {
-  /* Fondo más apagado */
   background-color: var(--bs-secondary-bg-subtle, #f0f0f0) !important;
   border-color: var(--bs-secondary-border-subtle, #e9ecef) !important;
-  opacity: 0.5; /* Más transparente */
+  opacity: 0.5;
   cursor: not-allowed !important;
 }
 
-/* Asegurar que el texto dentro de las alertas tenga buen contraste */
 .low-stock-alert .card-title,
 .out-of-stock .card-title {
-  /* Forzar color oscuro para que contraste con el fondo claro de la alerta */
   color: var(--bs-dark) !important;
-}
-
-.content {
-  max-height: calc(100vh - 265px);
-}
-
-.img-fluid {
-  max-height: 80px;
-  object-fit: contain;
-  width: auto;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-.text-truncate {
-  text-wrap: stable;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3; /* number of lines to show */
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 </style>
