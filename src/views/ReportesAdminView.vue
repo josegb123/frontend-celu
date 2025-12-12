@@ -200,8 +200,8 @@
             <tbody>
               <tr v-for="item in ventasAgrupadasData" :key="item.periodo_fecha">
                 <td>{{ item.periodo_fecha }}</td>
-                <td>{{ item.ventas_totales.toFixed(2) }}</td>
-                <td>{{ (item.beneficio ?? 0).toFixed(2) }}</td>
+                <td>{{ item.ventas_totales }}</td>
+                <td>{{ item.beneficio ?? 0 }}</td>
               </tr>
             </tbody>
           </table>
@@ -220,7 +220,7 @@
               <tr v-for="item in ventasPorCategoriaData" :key="item.categoria_nombre">
                 <td>{{ item.categoria_nombre }}</td>
                 <td>{{ item.total_unidades_vendidas }}</td>
-                <td>{{ item.total_ventas_categoria.toFixed(2) }}</td>
+                <td>{{ item.total_ventas_categoria }}</td>
               </tr>
             </tbody>
           </table>
@@ -229,7 +229,7 @@
         <div v-else-if="selectedReport === 'ticketPromedio'" class="alert alert-info text-center">
           <h4 class="alert-heading">Ticket Promedio de Venta</h4>
           <p class="display-4 fw-bold">
-            {{ ticketPromedioData.monto_promedio_venta.toFixed(2) }}
+            {{ ticketPromedioData.monto_promedio_venta }}
             <small class="text-muted">{{ ticketPromedioData.unidad }}</small>
           </p>
           <p>Este es el valor promedio de cada transacción de venta.</p>
@@ -246,7 +246,7 @@
             <tbody>
               <tr v-for="item in historialGananciasData" :key="item.periodo_fecha">
                 <td>{{ item.periodo_fecha }}</td>
-                <td>{{ item.beneficio_bruto.toFixed(2) }}</td>
+                <td>{{ item.beneficio_bruto }}</td>
               </tr>
             </tbody>
           </table>
@@ -265,7 +265,7 @@
               <tr v-for="item in topClientesData" :key="item.cliente_id">
                 <td>{{ item.cliente_id }}</td>
                 <td>{{ item.nombre_cliente }}</td>
-                <td>{{ item.monto_total.toFixed(2) }}</td>
+                <td>{{ item.monto_total }}</td>
               </tr>
             </tbody>
           </table>
@@ -317,7 +317,7 @@
           <h4 class="mb-3">
             Total Gastado en Pedidos a Proveedores:
             <span class="badge bg-primary">
-              {{ valorPedidosProveedoresData.total_gasto_proveedores.toFixed(2) }} COP
+              {{ valorPedidosProveedoresData.total_gasto_proveedores }} COP
             </span>
           </h4>
           <p>
@@ -343,7 +343,7 @@
                   :key="item.proveedor_id"
                 >
                   <td>{{ item.nombre_proveedor }}</td>
-                  <td>{{ item.total_gastado.toFixed(2) }}</td>
+                  <td>{{ item.total_gastado }}</td>
                 </tr>
               </tbody>
             </table>
@@ -953,7 +953,7 @@ const exportarPDF = async () => {
       const data = (reportData.value as VentasPorCategoriaEstadistica[]).map((item) => [
         item.categoria_nombre,
         item.total_unidades_vendidas,
-        item.total_ventas_categoria.toFixed(2),
+        item.total_ventas_categoria,
       ])
 
       autoTable(doc, {
@@ -1003,7 +1003,7 @@ const exportarPDF = async () => {
       const headers = [['Período', 'Beneficio Bruto']]
       const data = (reportData.value as HistorialGananciasEstadistica[]).map((item) => [
         item.periodo_fecha,
-        item.beneficio_bruto.toFixed(2),
+        item.beneficio_bruto,
       ])
 
       autoTable(doc, {
@@ -1054,7 +1054,7 @@ const exportarPDF = async () => {
       const data = (reportData.value as TopCliente[]).map((item) => [
         item.cliente_id,
         item.nombre_cliente,
-        item.monto_total.toFixed(2),
+        item.monto_total,
       ])
 
       autoTable(doc, {
@@ -1207,7 +1207,7 @@ const exportarPDF = async () => {
       doc.setFontSize(12)
       doc.setFont('helvetica', 'normal')
       doc.text(
-        `Total Gastado: ${valorPedidosProveedoresData.value.total_gasto_proveedores.toFixed(2)} COP`,
+        `Total Gastado: ${valorPedidosProveedoresData.value.total_gasto_proveedores} COP`,
         14,
         currentY,
       )
@@ -1223,7 +1223,7 @@ const exportarPDF = async () => {
         const headers = [['Proveedor', 'Total Gastado']]
         const data = valorPedidosProveedoresData.value.detalles_por_proveedor.map((item) => [
           item.nombre_proveedor,
-          item.total_gastado.toFixed(2),
+          item.total_gastado,
         ])
 
         autoTable(doc, {

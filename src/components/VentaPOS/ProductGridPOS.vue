@@ -18,7 +18,7 @@
 
       <div v-else v-for="product in products" :key="product.id" class="col">
         <div
-          class="card product-card-pos shadow-sm text-center border h-100"
+          class="card product-card-pos shadow-sm text-center border"
           @click="emit('product-selected', product)"
           :class="{
             'low-stock-alert': product.stock_actual > 0 && product.stock_actual < 5,
@@ -35,7 +35,7 @@
               alt=""
             />
             <p class="card-text fw-bold mb-0 fs-5">
-              ${{ parseFloat(product.precio_venta.toString()).toFixed(2) }}
+              ${{ parseFloat(product.precio_venta.toString()) }}
             </p>
 
             <span
@@ -304,7 +304,7 @@ onMounted(fetchProducts)
 .product-image {
   max-height: 80px;
   object-fit: contain;
-  width: 80px;
+  max-width: 80px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   margin-top: 2px;
 }

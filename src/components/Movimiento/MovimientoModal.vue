@@ -122,6 +122,13 @@ import type { MovimientoFinanciero, TipoMovimiento } from '@/interfaces/IMovimie
 import axios from 'axios'
 import get from 'lodash/get'
 import { tipoMovimientoService } from '@/services/TipoMovimientoService'
+import { useCajaStore } from '@/store/useCajaStore'
+
+const cajaStore = useCajaStore()
+
+onMounted(() => {
+  cajaStore.fetchCajaActiva()
+})
 
 // --- Interfaces Locales/Helpers ---
 
@@ -157,6 +164,7 @@ const initialForm: StoreMovimientoPayload = {
   descripcion: '',
   tipo_movimiento_nombre: '',
   user_id: 0, // ⚠️ Opcional: Asignar el ID del usuario actual si es necesario
+  caja_diaria_id: 0, // ⚠️ Obligatorio: Asignar el ID de la caja diaria actual
 }
 
 const form = ref<StoreMovimientoPayload>({ ...initialForm })
@@ -226,6 +234,7 @@ const submitMovimiento = async () => {
     referencia_tabla: 'manual',
     referencia_id: 0,
     user_id: get(form.value, 'user_id', 0),
+    caja_diaria_id: cajaStore.cajaActiva?.id || 1,
   }
 
   isProcessing.value = true

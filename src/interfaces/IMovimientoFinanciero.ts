@@ -18,7 +18,7 @@ export interface MovimientoFinanciero {
   metodo_pago: string
   referencia_tabla: string | null // Ej: "abono_carteras" o "ventas"
   referencia_id: number | null // El ID del registro en la tabla de referencia
-
+  caja_diaria_id: number
   // Relación: La categoría o tipo del movimiento (e.g., Venta de Productos)
   tipo_movimiento: RelacionMovimiento
 

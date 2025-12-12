@@ -202,6 +202,28 @@
                   </button>
                 </div>
               </div>
+              <div
+                class="col-11 flex-fill p-3"
+                v-if="
+                  clienteSeleccionado.estado_financiero &&
+                  clienteSeleccionado.estado_financiero.length > 0
+                "
+              >
+                <p>
+                  El cliente tiene saldo disponible:
+
+                  <span class="fw-bold text-success">
+                    $
+                    {{
+                      clienteSeleccionado.estado_financiero.reduce((acumulador: number, item) => {
+                        const monto = item.monto_pendiente ?? 0
+                        const total = acumulador + monto
+                        return total
+                      }, 0)
+                    }}
+                  </span>
+                </p>
+              </div>
               <hr class="my-3" />
 
               <PaymentForm

@@ -40,6 +40,7 @@ export interface StoreMovimientoPayload {
   referencia_tabla?: string
   referencia_id?: number
   user_id: number
+  caja_diaria_id: number
 }
 
 class MovimientoFinancieroService {
