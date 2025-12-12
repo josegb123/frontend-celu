@@ -1,8 +1,26 @@
 import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
 
+const baseURL = import.meta.env.VITE_API_URL;
+
+// Comprobación: si baseURL es null, undefined, o una cadena vacía ('')
+if (!baseURL) {
+    // Puedes usar window.alert() para una alerta simple en el navegador,
+    // o console.error() si prefieres una advertencia discreta en la consola
+    // para los desarrolladores.
+
+    // Opción 1: Alerta en el navegador (más intrusiva, ideal para desarrollo)
+    window.alert("¡ERROR DE CONFIGURACIÓN! VITE_API_URL no está definido en el archivo .env.");
+
+    // Opción 2: Mensaje de error en la consola (mejor para producción/desarrollo)
+    console.error("CONFIG ERROR: La variable de entorno VITE_API_URL no está definida o está vacía.");
+
+    // Opcional: Podrías detener la ejecución si es crítica
+    // throw new Error("VITE_API_URL es obligatorio para iniciar la aplicación.");
+}
+
 const laravelApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // Asegúrate de que esta URL sea correcta
+  baseURL: baseURL,
   headers: {
     //'Content-Type': 'application/json',
     Accept: 'application/json',

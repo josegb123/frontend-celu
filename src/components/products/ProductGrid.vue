@@ -111,11 +111,13 @@ const ITEMS_PER_PAGE = 20
 const props = defineProps<{
   searchQuery: string
   categoriaId: number | null
+  // Propiedad para forzar la recarga desde el padre
+  reloadTrigger: number
 }>()
 
 const emit = defineEmits<{
   (e: 'editProduct', product: IProducto): void
-  (e: 'productsUpdated'): void
+
   (e: 'showNotification', result: { message: string; isError: boolean }): void
 }>()
 
@@ -144,7 +146,7 @@ const pagination = reactive<IProductoPaginated>({
   links: null,
 })
 
-//  ESTADO PARA EL MODAL DE PROVEEDORES
+//  ESTADO PARA EL MODAL DE PROVEEDORES
 const isSupplierModalVisible = ref(false)
 const supplierModalData = reactive<{ suppliers: Proveedor[]; productName: string }>({
   suppliers: [],
@@ -273,7 +275,7 @@ const fetchProducts = async () => {
     const response: IProductoPaginated = await ProductoService.getProductos(params)
 
     products.value = response.data
-    console.log(response)
+
     Object.assign(pagination, response)
   } catch (error) {
     console.error('Error al cargar productos:', error)
@@ -324,7 +326,6 @@ const confirmDelete = async () => {
     }
 
     await fetchProducts()
-    emit('productsUpdated')
   } catch (error) {
     console.error(`Error al eliminar el producto ID ${productId}:`, error)
     // Error: Emitir notificación al AdminView
@@ -339,10 +340,22 @@ const confirmDelete = async () => {
 
 // --- OBSERVADORES ---
 
+// 1. Observa cambios en filtros (búsqueda o categoría)
 watch([() => props.searchQuery, () => props.categoriaId], () => {
   currentPage.value = 1
   fetchProducts()
 })
+
+// 2. Observa el trigger de recarga forzada (cuando se guarda un producto)
+watch(
+  () => props.reloadTrigger,
+  (newVal, oldVal) => {
+    if (newVal > oldVal) {
+      console.log(`[ProductGrid] Recarga forzada activada por trigger: ${newVal}.`)
+      fetchProducts()
+    }
+  },
+)
 
 // --- CICLO DE VIDA ---
 onMounted(fetchProducts)

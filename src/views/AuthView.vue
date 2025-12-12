@@ -83,17 +83,6 @@
           >
             {{ authMessage }}
           </div>
-
-          <br />
-          <p class="text-center text-muted mb-0">
-            ¿Eres nuevo por aquí?
-            <router-link
-              :to="{ name: 'register' }"
-              class="text-primary fw-bold text-decoration-none"
-            >
-              Crea una cuenta
-            </router-link>
-          </p>
         </form>
       </div>
     </div>

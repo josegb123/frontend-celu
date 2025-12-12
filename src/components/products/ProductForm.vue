@@ -407,7 +407,7 @@ const submitForm = async () => {
     await ProductoService.saveProducto(formData, productId)
 
     emit('productSaved', { success: true, message: 'Producto guardado con éxito!' })
-    resetAndClose() // 🚨 Cerrar después de guardar exitosamente
+    resetAndClose()
   } catch (err: unknown) {
     let errorMessage = 'Hubo un error desconocido al guardar el producto.'
 
@@ -419,7 +419,7 @@ const submitForm = async () => {
         errorMessage = 'Falló la validación del formulario.'
       } else {
         errorMessage = 'Hubo un error de conexión con el servidor.'
-        console.error('Error al guardar:', axiosErr)
+        console.error('Error al guardar:', axiosErr.message)
       }
     } else {
       console.error('Error al guardar:', err)

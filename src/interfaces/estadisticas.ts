@@ -1,3 +1,5 @@
+import type { VentaIndexResponse } from "@/services/VentaService"
+
 export interface VentaEstadistica {
   periodo_fecha: string
   ventas_totales: number
@@ -17,6 +19,7 @@ export interface VentasPorPeriodoApiRequest {
 export interface VentasPorPeriodoResponse {
   periodo: string
   data: VentaEstadistica[]
+  lista_ventas : VentaIndexResponse[]
 }
 
 export interface TicketPromedioResponse {

@@ -42,6 +42,7 @@
       :categoria-id="selectedCategoriaId"
       @edit-product="startEditing"
       @products-updated="handleGridUpdate"
+      :reload-trigger="gridReloadTrigger"
       @show-notification="handleShowNotification"
     />
   </div>
@@ -58,7 +59,7 @@
     @close="closeCategoryModal"
     @categories-updated="loadCategories"
   />
-  <!-- 
+  <!--
   <ProductFormModal
     :isVisible="productFormModalVisible"
     :product-to-edit="productToEdit"
@@ -171,6 +172,8 @@ const startEditing = (product: IProducto) => {
   openProductFormModal()
 }
 
+const gridReloadTrigger = ref(0)
+
 /**
  * Se llama cuando un producto es creado o actualizado.
  */
@@ -178,6 +181,8 @@ const handleProductSaved = (result: { success: boolean; message: string }) => {
   showNotification(result.message, !result.success)
   if (result.success) {
     closeProductFormModal()
+    // [MODIFICADO] Si el guardado fue exitoso, incrementamos el trigger
+    gridReloadTrigger.value++
   }
 }
 
