@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue' // Agregado 'onMounted'
-import { debounce } from 'lodash'
+import { ref, watch, onMounted } from 'vue' import { debounce } from 'lodash'
 import ClienteService from '@/services/ClienteService'
 import type { ICliente } from '@/interfaces/ICliente'
 

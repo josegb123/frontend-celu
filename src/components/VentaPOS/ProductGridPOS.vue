@@ -106,7 +106,7 @@ import ProductoService from '@/services/ProductoService.js'
 import type { IProductoPaginated, IProducto } from '@/interfaces/IProductoInterfaces'
 
 // --- CONSTANTES ---
-const ITEMS_PER_PAGE = 18
+const ITEMS_PER_PAGE = 10
 
 // --- PROPS y EMITS ---
 const props = defineProps<{
@@ -283,7 +283,7 @@ onMounted(fetchProducts)
   transition:
     transform 0.2s,
     box-shadow 0.2s;
-  min-height: 280px;
+  min-height: 260px;
 }
 
 .product-card-pos:hover {
@@ -302,8 +302,8 @@ onMounted(fetchProducts)
 }
 
 .product-image {
-  max-height: 80px;
-  object-fit: contain;
+  height: 80px;
+  object-fit: cover;
   max-width: 80px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   margin-top: 2px;
