@@ -79,14 +79,3 @@ export interface ProductoBajoStock {
   user: UserLite
   proveedores: Proveedor[]
 }
-
-// --- 4. Interface de la Respuesta Completa de la API ---
-
-/**
- * Interface para la respuesta paginada completa del endpoint /api/productos/bajo-stock
- */
-export interface ProductoBajoStockResponse {
-  data: ProductoBajoStock[]
-  links: LaravelLinks
-  meta: LaravelMeta
-}

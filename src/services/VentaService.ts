@@ -260,31 +260,32 @@ class VentaService {
    * @param id El ID de la venta.
    */
   public async imprimirFacturaPos(id: number): Promise<void> {
-    const url = `${this.endpoint}/${id}/imprimir-pos`; // Use relative path with laravelApi
+    const url = `${this.endpoint}/${id}/imprimir-pos` // Use relative path with laravelApi
 
     try {
       const response = await laravelApi.get(url, {
         responseType: 'blob', // Important: responseType must be 'blob' for binary data
         headers: {
-          'Accept': 'application/pdf', // Request a PDF
+          Accept: 'application/pdf', // Request a PDF
         },
-      });
+      })
 
       // Create a blob URL for the PDF
-      const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      
+      const fileURL = window.URL.createObjectURL(
+        new Blob([response.data], { type: 'application/pdf' }),
+      )
+
       // Open the new URL in a new tab
-      window.open(fileURL, '_blank');
+      window.open(fileURL, '_blank')
 
       // Clean up the URL after a short delay (optional, but good practice)
-      setTimeout(() => window.URL.revokeObjectURL(fileURL), 100);
-
+      setTimeout(() => window.URL.revokeObjectURL(fileURL), 100)
     } catch (error) {
-      console.error(`Error al intentar imprimir la factura POS para la venta ${id}:`, error);
+      console.error(`Error al intentar imprimir la factura POS para la venta ${id}:`, error)
       alert(
         'Error al imprimir la factura. Verifique si la venta existe o si hay problemas de conexión/autenticación.',
-      );
-      throw error; // Re-throw to propagate the error if needed
+      )
+      throw error // Re-throw to propagate the error if needed
     }
   }
 }

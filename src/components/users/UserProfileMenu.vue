@@ -106,7 +106,7 @@ const authStore = useAuthStore()
 const cajaStore = useCajaStore()
 const stockStore = useStockAlertStore()
 
-const defaultAvatar = '/public/avatar.webp'
+const defaultAvatar = '/avatar.webp'
 
 /** Datos del usuario (reactivos desde Pinia) */
 const user = computed(() => authStore.user)

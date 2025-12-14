@@ -5,20 +5,20 @@ import type {
   ProductoBajaRotacion,
   ValorPedidosProveedoresResponse,
   ValorPedidosProveedoresRequest,
-  TopClienteFrecuencia, // Corrected import
+  TopClienteFrecuencia,
   TopClientesFrecuenciaRequest,
-  TopProducto, // Corrected import
-  TopCliente, // Corrected import
+  TopProducto,
+  TopCliente,
   VentasPorPeriodoResponse,
   VentasPorPeriodoApiRequest,
   HistorialGananciasResponse,
+  HistorialGananciasRequest,
   ProductosBajoStockRequest,
   ProductosBajaRotacionRequest,
   TicketPromedioResponse,
   ExportarVentasExcelRequest,
-  VentasPorCategoriaEstadistica,
   VentasPorCategoriaResponse,
-} from '@/interfaces/estadisticas' // Import all interfaces
+} from '@/interfaces/reports/report_types'
 
 // ----------------------------------------------------
 // INTERFACES DE DATOS DE ESTADÍSTICAS
@@ -47,15 +47,6 @@ export interface VentaMinimal {
   created_at: string
   cliente_nombre: string | null
   // Añade aquí más campos que necesites de la venta (ej: estado, metodo_pago)
-}
-
-// Interfaz para productos con bajo stock
-export interface LowStockProduct {
-  id: number
-  nombre: string
-  stock_actual: number
-  stock_minimo: number
-  diferencia: number
 }
 
 // Interfaz para métricas top
@@ -205,7 +196,7 @@ class EstadisticasService {
    * Obtiene el historial de ganancias (margen bruto) por periodo.
    */
   public async getHistorialGanancias(
-    params: VentasPorPeriodoApiRequest = {},
+    params: HistorialGananciasRequest = {},
   ): Promise<HistorialGananciasResponse> {
     try {
       const response: AxiosResponse<HistorialGananciasResponse> = await laravelApi.get(

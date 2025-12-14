@@ -1,12 +1,11 @@
 // --- VARIABLES DE PALETA Y ESTILOS BASE ---
-$background: #212529;             // Darker background (Bootstrap 'dark' color)
-$sidebar-width: 250px;             // Ancho por defecto del sidebar
-$sidebar-width-collapsed: 60px;    // Ancho colapsado
+$background: #212529; // Darker background (Bootstrap 'dark' color)
+$sidebar-width: 250px; // Ancho por defecto del sidebar
+$sidebar-width-collapsed: 60px; // Ancho colapsado
 $header-height: 60px;
-$primary-color: #0d6efd;           // Color primario de Bootstrap
-$secondary-background: #2a2e32;    // Color de hover fijo (evita darken())
-$border-panel: 1px solid #343a40;  // Borde más sutil que el negro puro
-
+$primary-color: #0d6efd; // Color primario de Bootstrap
+$secondary-background: #2a2e32; // Color de hover fijo (evita darken())
+$border-panel: 1px solid #343a40; // Borde más sutil que el negro puro
 
 // --- LAYOUT GENERAL (Evitar Reflows) ---
 .app-layout {
@@ -47,7 +46,9 @@ $border-panel: 1px solid #343a40;  // Borde más sutil que el negro puro
 
   // 💡 Optimización: Usamos 'transform' para transicionar la propiedad 'width'
   // que es la más costosa.
-  transition: width 0.3s ease, transform 0.3s ease;
+  transition:
+    width 0.3s ease,
+    transform 0.3s ease;
 }
 
 .app-sidebar.collapsed {
@@ -67,7 +68,6 @@ $border-panel: 1px solid #343a40;  // Borde más sutil que el negro puro
 }
 
 .app-sidebar.collapsed {
-  
   // 💡 Optimizando la animación para elementos internos:
   .nav-link {
     text-align: center;
@@ -84,7 +84,6 @@ $border-panel: 1px solid #343a40;  // Borde más sutil que el negro puro
   }
 }
 
-
 // --- CONTENIDO PRINCIPAL ---
 .app-content {
   flex-grow: 1;
@@ -97,11 +96,11 @@ $border-panel: 1px solid #343a40;  // Borde más sutil que el negro puro
   /* 1. Definir el comportamiento de bloque */
   display: block; /* o display: inline-block; si necesitas flujo inline */
   /* 2. Forzar una sola línea */
-  white-space: nowrap; 
+  white-space: nowrap;
   /* 3. Ocultar lo que sobra */
-  overflow: hidden; 
+  overflow: hidden;
   /* 4. Mostrar los puntos suspensivos */
-  text-overflow: ellipsis; 
+  text-overflow: ellipsis;
   /* OPCIONAL: Asegura que tenga un ancho fijo o máximo */
-  max-width: 250px; 
+  max-width: 250px;
 }

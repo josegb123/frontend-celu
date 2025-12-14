@@ -39,7 +39,8 @@ const props = defineProps<{
 }>()
 
 const authStore = useAuthStore() // Added
-const isAdmin = computed(() => { // Added
+const isAdmin = computed(() => {
+  // Added
   return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
 })
 

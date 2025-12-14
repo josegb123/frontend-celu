@@ -7,10 +7,6 @@ export interface link {
   active: boolean
 }
 
-export interface links {
-  links: link[]
-}
-
 export interface ICuentaPorCobrar {
   id: number
   venta_id: number

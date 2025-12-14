@@ -8,7 +8,7 @@ import {
   type VentaMinimal,
   type TimeSeriesData,
 } from '@/services/estadisticasService'
-import type { HistorialGananciasEstadistica, ProductoBajoStock } from '@/interfaces/estadisticas'
+import type { HistorialGananciasEstadistica, ProductoBajoStock } from '@/interfaces/reports/report_types'
 
 import StatCard from '@/components/home/StatCard.vue'
 import TopRankingCard from '@/components/home/TopRankingCard.vue'
