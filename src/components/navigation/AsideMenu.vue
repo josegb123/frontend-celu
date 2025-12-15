@@ -1,121 +1,43 @@
 <template>
   <aside
-    :class="['app-sidebar', { collapsed: layoutStore.isSidebarCollapsed }]"
     v-if="isAuthenticated"
+    :class="['app-sidebar', { collapsed: layoutStore.isSidebarCollapsed }]"
   >
-    <div class="sidebar-header d-flex align-items-center justify-content-start p-3">
+    <div class="sidebar-header d-flex align-items-center p-3">
       <button
         class="btn btn-icon text-white"
-        @click="layoutStore.toggleSidebar()"
-        aria-label="Toggle navigation"
+        @click="layoutStore.toggleSidebar"
+        aria-label="Toggle sidebar"
       >
         <i class="bi" :class="layoutStore.isSidebarCollapsed ? 'bi-list' : 'bi-arrow-bar-left'"></i>
       </button>
 
       <router-link
-        :to="{ name: 'home' }"
-        class="navbar-brand fw-bold fs-6 text-uppercase text-white truncate-text ms-3"
         v-if="!layoutStore.isSidebarCollapsed"
+        :to="{ name: 'home' }"
+        class="navbar-brand fw-bold fs-6 text-uppercase text-white ms-3 truncate-text"
       >
         <span class="branding-wrap">{{ nameBranding }}</span>
       </router-link>
     </div>
 
-    <nav class="p-2 flex-grow-1 sidebar-nav-content">
-      <div class="menu-section">
-        <p class="menu-title text-white-50 px-3 py-1 mb-1" v-if="!layoutStore.isSidebarCollapsed">
-          Operaciones
+    <nav class="sidebar-nav-content p-2 flex-grow-1">
+      <div v-for="section in visibleMenu" :key="section.title" class="menu-section">
+        <p v-if="!layoutStore.isSidebarCollapsed" class="menu-title text-white-50 px-3 py-1 mb-1">
+          {{ section.title }}
         </p>
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <router-link :to="{ name: 'home' }" class="nav-link text-white"
-              ><i class="bi bi-house me-2"></i><span>Inicio</span></router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link :to="{ name: 'pos' }" class="nav-link text-white"
-              ><i class="bi bi-cart me-2"></i><span>Punto de Venta</span></router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link :to="{ name: 'ventas' }" class="nav-link text-white"
-              ><i class="bi bi-receipt me-2"></i><span>Historial Ventas</span></router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link :to="{ name: 'notificaciones' }" class="nav-link text-white"
-              ><i class="bi bi-bell me-2"></i><span>Notificaciones</span></router-link
-            >
-          </li>
-        </ul>
-      </div>
 
-      <div class="menu-section">
-        <p class="menu-title text-white-50 px-3 py-1 mb-1" v-if="!layoutStore.isSidebarCollapsed">
-          Inventario & Compras
-        </p>
         <ul class="nav flex-column">
-          <li class="nav-item">
-            <router-link :to="{ name: 'Productos' }" class="nav-link text-white"
-              ><i class="bi bi-box me-2"></i><span>Productos</span></router-link
+          <li v-for="item in section.items" :key="item.name" class="nav-item">
+            <router-link
+              :to="{ name: item.name }"
+              class="nav-link text-white"
+              exact-active-class="router-link-exact-active"
             >
-          </li>
-          <li class="nav-item" v-if="isAdmin">
-            <router-link :to="{ name: 'DevolucionGestion' }" class="nav-link text-white"
-              ><i class="bi bi-arrow-counterclockwise me-2"></i
-              ><span>Devoluciones</span></router-link
-            >
-          </li>
-          <li class="nav-item" v-if="isAdmin">
-            <router-link :to="{ name: 'Proveedores' }" class="nav-link text-white"
-              ><i class="bi bi-truck me-2"></i><span>Proveedores</span></router-link
-            >
-          </li>
-          <li class="nav-item" v-if="isAdmin">
-            <router-link :to="{ name: 'RecibirPedidos' }" class="nav-link text-white"
-              ><i class="bi bi-truck-flatbed me-2"></i><span>Recibir Pedidos</span></router-link
-            >
-          </li>
-        </ul>
-      </div>
-
-      <div class="menu-section">
-        <p class="menu-title text-white-50 px-3 py-1 mb-1" v-if="!layoutStore.isSidebarCollapsed">
-          Finanzas
-        </p>
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <router-link :to="{ name: 'Clientes' }" class="nav-link text-white"
-              ><i class="bi bi-person me-2"></i><span>Clientes</span></router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link :to="{ name: 'cuentas' }" class="nav-link text-white"
-              ><i class="bi bi-wallet2 me-2"></i><span>Cuentas por Cobrar</span></router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link :to="{ name: 'movimientos' }" class="nav-link text-white"
-              ><i class="bi bi-journal-text me-2"></i
-              ><span>Movimientos Financieros</span></router-link
-            >
-          </li>
-        </ul>
-      </div>
-
-      <div class="menu-section" v-if="isAdmin">
-        <p class="menu-title text-white-50 px-3 py-1 mb-1" v-if="!layoutStore.isSidebarCollapsed">
-          Administración
-        </p>
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <router-link :to="{ name: 'Usuarios' }" class="nav-link text-white">
-              <i class="bi bi-people me-2"></i><span>Usuarios</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link :to="{ name: 'AdminReports' }" class="nav-link text-white">
-              <i class="bi bi-graph-up me-2"></i><span>Reportes y Estadísticas</span>
+              <i :class="['bi', item.icon, 'me-2']"></i>
+              <span v-if="!layoutStore.isSidebarCollapsed">
+                {{ item.label }}
+              </span>
             </router-link>
           </li>
         </ul>
@@ -123,69 +45,133 @@
     </nav>
 
     <div
-      class="sidebar-footer p-2 border-top border-secondary d-flex align-items-center justify-content-between"
+      class="sidebar-footer d-flex align-items-center justify-content-between p-2 border-top border-secondary"
     >
       <div class="d-flex align-items-center">
-        <UserProfileMenu v-if="isAuthenticated" @show-cierre-modal="handleShowCierreModal" />
-        <span class="ms-2 text-white truncate-text" v-if="!layoutStore.isSidebarCollapsed">
+        <UserProfileMenu @show-cierre-modal="emit('showCierreModal')" />
+        <span v-if="!layoutStore.isSidebarCollapsed" class="ms-2 text-white truncate-text">
           {{ authStore.user?.name || 'Usuario' }}
         </span>
       </div>
+
       <button
         @click="themeStore.toggleDarkMode"
         class="btn btn-sm"
         :class="themeStore.isDarkMode ? 'btn-outline-light' : 'btn-outline-secondary'"
         title="Cambiar Tema"
       >
-        <i v-if="themeStore.isDarkMode" class="bi bi-sun-fill"></i>
-        <i v-else class="bi bi-moon-fill"></i>
+        <i class="bi" :class="themeStore.isDarkMode ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
       </button>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from '@/store/authStore'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
-import UserProfileMenu from '../users/UserProfileMenu.vue'
 import { useThemeStore } from '@/store/themeStore'
-import { computed } from 'vue' // Added
+import UserProfileMenu from '@/components/users/UserProfileMenu.vue'
 
-// Definiciones
-
+// =========================
+// DEFINICIONES Y EMITS
+// =========================
 const emit = defineEmits(['showCierreModal'])
-const nameBranding = import.meta.env.VITE_BRANDING_NAME
-const layoutStore = useLayoutStore()
+
 const authStore = useAuthStore()
-const { isAuthenticated } = storeToRefs(authStore)
+const layoutStore = useLayoutStore()
 const themeStore = useThemeStore()
 
-// Added computed properties for roles
-const isAdmin = computed(() => {
-  return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
-})
+const { isAuthenticated } = storeToRefs(authStore)
 
-// const isVendedor = computed(() => { // Not used directly in template but good for consistency
-//   return authStore.user?.role === 'vendedor'
-// })
+const nameBranding = import.meta.env.VITE_BRANDING_NAME
 
-function handleShowCierreModal() {
-  emit('showCierreModal')
-}
+// Corrección TS: Asegura que userRole siempre sea un string (o 'guest' por defecto)
+const userRole = computed((): string => authStore.user?.role || 'guest')
+
+// =========================
+// MENÚ DECLARATIVO POR ROLES
+// =========================
+const menu = [
+  {
+    title: 'Operaciones',
+    roles: ['admin', 'seller'],
+    items: [
+      { name: 'home', label: 'Inicio', icon: 'bi-house' },
+      { name: 'pos', label: 'Punto de Venta', icon: 'bi-cart' },
+      { name: 'ventas', label: 'Historial Ventas', icon: 'bi-receipt' },
+      { name: 'notificaciones', label: 'Notificaciones', icon: 'bi-bell' },
+    ],
+  },
+  {
+    title: 'Inventario & Compras',
+    roles: ['admin', 'seller'],
+    items: [
+      { name: 'Productos', label: 'Productos', icon: 'bi-box' },
+      {
+        name: 'DevolucionGestion',
+        label: 'Devoluciones',
+        icon: 'bi-arrow-counterclockwise',
+        roles: ['admin'],
+      },
+      { name: 'Proveedores', label: 'Proveedores', icon: 'bi-truck', roles: ['admin'] },
+      {
+        name: 'RecibirPedidos',
+        label: 'Recibir Pedidos',
+        icon: 'bi-truck-flatbed',
+        roles: ['admin'],
+      },
+    ],
+  },
+  {
+    title: 'Finanzas',
+    roles: ['admin', 'seller'],
+    items: [
+      { name: 'Clientes', label: 'Clientes', icon: 'bi-person' },
+      { name: 'cuentas', label: 'Cuentas por Cobrar', icon: 'bi-wallet2' },
+      {
+        name: 'movimientos',
+        label: 'Movimientos Financieros',
+        icon: 'bi-journal-text',
+        roles: ['admin'],
+      },
+    ],
+  },
+  {
+    title: 'Administración',
+    roles: ['admin'],
+    items: [
+      { name: 'Usuarios', label: 'Usuarios', icon: 'bi-people' },
+      { name: 'AdminReports', label: 'Reportes y Estadísticas', icon: 'bi-graph-up' },
+    ],
+  },
+]
+
+// =========================
+// FILTRADO FINAL POR ROL
+// =========================
+const visibleMenu = computed(() =>
+  menu
+    .filter((section) => section.roles.includes(userRole.value))
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.roles || item.roles.includes(userRole.value)),
+    })),
+)
 </script>
 
 <style scoped>
-/* Estilos para asegurar la estructura de diseño oscuro minimalista */
+/* Estilos para asegurar la estructura de diseño y el control del scroll */
 
 .app-sidebar {
-  /* Estructura principal: Usar flex-direction: column es clave para el header/nav/footer */
+  /* ESTRUCTURA FLEXBOX: Clave para el scroll */
   display: flex;
   flex-direction: column;
-  /* Las propiedades de width y background las estás definiendo en tu SCSS global, lo cual es ideal. */
+  /* El ASIDE necesita una altura definida para que flex-grow: 1 funcione */
+  height: 98%;
 
-  /* 1. Ocultar scrollbar en el ASIDE principal */
-  overflow-y: hidden;
+  overflow-y: hidden; /* Evita scroll en el sidebar completo */
   overflow-x: hidden;
   border-radius: 8px;
   margin: 5px 0px 5px 5px;
@@ -196,7 +182,7 @@ function handleShowCierreModal() {
   min-height: 60px;
   border-bottom: 1px solid var(--bs-secondary);
   padding: 10px 15px !important;
-  flex-shrink: 0; /* Evita que el header se encoja */
+  flex-shrink: 0;
 }
 
 /* FOOTER */
@@ -205,16 +191,18 @@ function handleShowCierreModal() {
   background-color: #212529;
   border-top: 1px solid #343a40;
   padding: 10px 15px !important;
-  flex-shrink: 0; /* Evita que el footer se encoja */
+  flex-shrink: 0;
+  margin-top: auto; /* Empuja el footer hacia abajo */
 }
 
-/* CONTENIDO DE NAVEGACIÓN: Permite el scroll solo en esta área */
+/* CONTENIDO DE NAVEGACIÓN: Única área con scroll */
 .sidebar-nav-content {
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
-  flex-grow: 1;
+  flex-grow: 1; /* Ocupa todo el espacio disponible entre header y footer */
 }
 
+/* Ocultar scrollbar si es necesario (solo en webkit browsers) */
 .sidebar-nav-content::-webkit-scrollbar {
   display: none !important;
   width: 0;
@@ -234,31 +222,46 @@ function handleShowCierreModal() {
 .nav-link {
   display: flex;
   align-items: center;
-  border-radius: 8px; /* Debe coincidir con tu SCSS global */
+  border-radius: 8px;
   padding-left: 0.75rem !important;
 }
 
-/* ESTILOS DE COLAPSO */
+/* ESTILOS DE ESTADO (ACTIVO) */
+.nav-link.router-link-exact-active {
+  background-color: rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+}
+.nav-link.router-link-exact-active i {
+  color: #0d6efd;
+}
 
-/* Aseguran que no haya scroll horizontal al colapsar y centran elementos */
+/* ESTILOS DE COLAPSO */
 .app-sidebar.collapsed .sidebar-header {
   justify-content: center !important;
 }
-
 .app-sidebar.collapsed .sidebar-footer {
   flex-direction: column;
   justify-content: center;
   gap: 10px;
 }
-
 .app-sidebar.collapsed .menu-title {
   display: none !important;
 }
+/* Estilo para el elemento activo en modo colapsado */
+.app-sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding-left: 0.5rem !important;
+}
+.app-sidebar.collapsed .nav-link.router-link-exact-active {
+  border-left: 4px solid #0d6efd;
+  background-color: rgba(13, 110, 253, 0.15);
+}
+
 .branding-wrap {
-  white-space: normal; /* Sobrescribe white-space: nowrap; si lo tienes en truncate-text */
-  word-wrap: break-word; /* Permite que el texto largo se ajuste */
+  white-space: normal;
+  word-wrap: break-word;
   line-height: 1.2;
-  max-height: 3em; /* Limita a 2-3 líneas para evitar que crezca demasiado */
+  max-height: 3em;
   text-align: center;
 }
 </style>

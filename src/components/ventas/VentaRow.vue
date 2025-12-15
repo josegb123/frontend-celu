@@ -6,7 +6,7 @@
     <td>
       <span :class="`badge text-bg-${estadoColor}`">{{ estadoTexto }}</span>
     </td>
-    <td class="fw-bold">${{ venta?.total_venta }}</td>
+    <td class="fw-bold fs-6">{{ formattedCurrency }}</td>
     <td>{{ formattedDate }}</td>
     <td class="text-center">
       <div class="btn-group btn-group-sm">
@@ -64,5 +64,12 @@ const estadoTexto = computed(() => {
 
 const formattedDate = computed(() => {
   return new Date(props.venta.created_at).toLocaleDateString()
+})
+
+const formattedCurrency = computed(() => {
+  return props.venta.total_venta.toLocaleString('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+  })
 })
 </script>

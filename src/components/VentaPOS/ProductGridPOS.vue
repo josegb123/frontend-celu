@@ -34,9 +34,7 @@
               class="img-fluid border-0 rounded-3 mb-2 mx-auto product-image"
               alt=""
             />
-            <p class="card-text fw-bold mb-0 fs-5">
-              ${{ parseFloat(product.precio_venta.toString()) }}
-            </p>
+            <p class="card-text fw-bold mb-0 fs-7">{{ formatCurrency(product.precio_venta) }}</p>
 
             <span
               class="badge mt-1"
@@ -104,6 +102,7 @@ import { ref, onMounted, watch, reactive, computed } from 'vue'
 import { debounce } from 'lodash'
 import ProductoService from '@/services/ProductoService.js'
 import type { IProductoPaginated, IProducto } from '@/interfaces/IProductoInterfaces'
+import { formatCurrency } from '@/utils/formatters'
 
 // --- CONSTANTES ---
 const ITEMS_PER_PAGE = 10

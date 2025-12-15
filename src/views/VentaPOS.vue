@@ -88,11 +88,11 @@
                     </td>
 
                     <td class="align-middle text-end fs-7 fw-light text-nowrap">
-                      ${{ item.precio_venta.toFixed(2) }}
+                      {{ formatCurrency(item.precio_venta) }}
                     </td>
 
                     <td class="align-middle text-end fs-7 fw-bold text-nowrap">
-                      ${{ item.subtotal.toFixed(2) }}
+                      {{ formatCurrency(item.subtotal) }}
                     </td>
 
                     <td class="align-middle text-center p-1">
@@ -120,7 +120,7 @@
                 <tr class="small">
                   <td class="fw-medium text-start pb-2">Subtotal:</td>
                   <td class="fw-medium text-end pb-2 text-nowrap">
-                    ${{ subtotalGeneral.toFixed(2) }}
+                    {{ formatCurrency(subtotalGeneral) }}
                   </td>
                 </tr>
 
@@ -130,15 +130,15 @@
                   </td>
                   <td class="fw-medium text-end pb-2 align-middle" style="width: 50%">
                     <div class="d-inline-block w-auto">
-                      <input
+                      <CurrencyInput
+                        v-model="descuento"
                         id="input-descuento"
-                        type="number"
-                        v-model.number="descuento"
-                        min="0"
-                        :max="subtotalGeneral"
+                        type="text"
+                        :maxValue="subtotalGeneral"
+                        @update:model-value="validateDescuento"
                         @blur="validateDescuento"
-                        class="form-control form-control-sm text-end border-secondary"
-                        style="width: 70px"
+                        class="form-control form-control-sm text-end border-0"
+                        style="min-width: 60px"
                       />
                     </div>
                   </td>
@@ -147,7 +147,7 @@
                 <tr class="total-final border-top border-secondary">
                   <td class="fs-5 fw-bold text-start pt-2">TOTAL A PAGAR:</td>
                   <td class="fs-5 fw-bold text-end text-primary pt-2 text-nowrap">
-                    ${{ totalVenta.toLocaleString('es-CO') }}
+                    {{ formatCurrency(totalVenta) }}
                   </td>
                 </tr>
               </tbody>
@@ -287,6 +287,8 @@ import type { ItemVenta, ProductoVentaBase, Aval } from '@/interfaces/IPostInter
 import type { ICliente } from '@/interfaces/ICliente'
 import type { Ref } from 'vue'
 import ModalSelectorCliente from '@/components/VentaPOS/ModalSelectorCliente.vue'
+import { formatCurrency } from '@/utils/formatters'
+import CurrencyInput from '@/components/shared/CurrencyInput.vue'
 
 // --- Inicialización de Stores ---
 const cajaStore = useCajaStore() // Inicializamos el store de la caja
