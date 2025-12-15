@@ -7,6 +7,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
+import { useAppConfigStore } from '@/store/useAppConfigStore'; // Import the new store
 
 //modo oscuro bootstrap
 //  document.documentElement.setAttribute('data-bs-theme', 'dark')
@@ -17,4 +18,9 @@ const app = createApp(App)
 
 app.use(router)
 app.use(pinia)
+
+// Initialize the app config store
+const appConfigStore = useAppConfigStore();
+appConfigStore.initialize();
+
 app.mount('#app')

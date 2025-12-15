@@ -70,7 +70,7 @@
         </li>
 
         <li>
-          <a class="dropdown-item" href="#" @click.prevent="goToRoute('Settings')">
+          <a class="dropdown-item" href="#" @click.prevent="goToRoute('Config')">
             <i class="bi bi-gear-fill me-2 text-secondary"></i>Configuración
           </a>
         </li>
@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, onUnmounted } from 'vue'
+import { computed, onMounted, ref, watch, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
 import { useCajaStore } from '@/store/useCajaStore'
@@ -154,7 +154,9 @@ const handleOutsideClick = (event: MouseEvent) => {
 watch(isMenuOpen, (isOpen) => {
   if (isOpen) {
     // Esperar un tick para que el menú se renderice en el DOM antes de calcular la posición
-    setTimeout(update, 0)
+    nextTick(() => {
+      update()
+    })
     document.addEventListener('click', handleOutsideClick)
   } else {
     document.removeEventListener('click', handleOutsideClick)

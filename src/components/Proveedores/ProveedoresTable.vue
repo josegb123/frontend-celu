@@ -14,15 +14,18 @@ interface Proveedor {
 }
 
 // 1. Definición de Props: Recibe la lista de proveedores
-defineProps<{
-  proveedores: Proveedor[]
-}>()
+defineProps({
+  proveedores: Array<Proveedor>
+})
 
 // 2. Definición de Emits: Eventos que envían el proveedor/id para la acción
 const emit = defineEmits(['edit', 'delete'])
 
+import { useAppConfigStore } from '@/store/useAppConfigStore'; // Added this import
+const appConfig = useAppConfigStore(); // Added this
+
 // Nombre de la marca para los mensajes (puede venir de una configuración global o .env)
-const branding_name = import.meta.env.VITE_BRANDING_NAME || 'Tu Empresa'
+const branding_name = appConfig.getBusinessName; // Changed here
 
 /**
  * @param telefono Número de teléfono del proveedor (incluye código de país).
@@ -54,7 +57,7 @@ function enviarCorreoProveedor(email: string | null, nombre: string) {
   }
 
   // 1. Definir asunto y cuerpo del mensaje
-  const asunto = encodeURIComponent(`Consulta de Pedido - [Tu Empresa]`)
+  const asunto = encodeURIComponent(`Consulta de Pedido - ${branding_name}`)
   const cuerpo = encodeURIComponent(
     `Estimado(a) ${nombre},\n\nLe escribimos para solicitar información sobre disponibilidad y cotización para un nuevo pedido.\n\nEsperamos su pronta respuesta.\n\nAtentamente,\n${branding_name}`,
   )

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
+import { useAppConfigStore } from '@/store/useAppConfigStore' // Added this import
 
 import AuthView from '@/views/AuthView.vue'
 import HomeView from '@/views/HomeView.vue'
@@ -7,6 +8,8 @@ import VentaPOS from '@/views/VentaPOS.vue'
 import DevolucionFormView from '@/views/devoluciones/DevolucionFormView.vue'
 import DevolucionGestionView from '@/views/devoluciones/DevolucionGestionView.vue'
 import ReportesAdminView from '@/views/ReportesAdminView.vue'
+import ConfigView from '@/views/ConfigView.vue' // Importar ConfigView
+import PedidosView from '@/views/PedidosView.vue' // Importar PedidosView
 
 // --------------------
 // 1. DEFINICIÓN DE RUTAS
@@ -131,12 +134,13 @@ const routes: Array<RouteRecordRaw> = [
       roles: ['admin'],
     },
   },
+  // REMOVED old /recibir-pedidos route
   {
-    path: '/recibir-pedidos',
-    name: 'RecibirPedidos',
-    component: () => import('@/views/RecibirPedidosView.vue'),
+    path: '/pedidos', // New path
+    name: 'Pedidos', // New name
+    component: PedidosView, // New component
     meta: {
-      title: 'Recibir Pedidos',
+      title: 'Gestión de Pedidos', // New title
       requireAuth: true,
       roles: ['admin'],
     },
@@ -171,6 +175,16 @@ const routes: Array<RouteRecordRaw> = [
       roles: ['admin'],
     },
   },
+  {
+    path: '/config',
+    name: 'Config',
+    component: ConfigView,
+    meta: {
+      title: 'Configuración',
+      requireAuth: true,
+      roles: ['admin'],
+    },
+  },
 ]
 
 // --------------------
@@ -186,13 +200,14 @@ const router = createRouter({
 // --------------------
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
+  const appConfig = useAppConfigStore() // Added this
   const isAuthenticated = await authStore.checkSession()
   const userRole = authStore.user?.role
 
   // Título
   document.title = to.meta.title
-    ? `${to.meta.title} : ${import.meta.env.VITE_BRANDING_NAME}`
-    : import.meta.env.VITE_BRANDING_NAME
+    ? `${to.meta.title} : ${appConfig.getBusinessName}` // Changed here
+    : appConfig.getBusinessName // Changed here
 
   // 🔓 Ruta pública (auth)
   if (to.meta.isGuest) {

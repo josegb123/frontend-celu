@@ -14,7 +14,7 @@
         </div>
 
         <router-link :to="{ name: 'home' }" class="navbar-brand p-0 fw-bold fs-6 text-uppercase">{{
-          nameBranding
+          appConfig.getBusinessName // Changed here
         }}</router-link>
 
         <span class="text-white-50 ms-3 d-none d-sm-inline fs-6" v-if="isAuthenticated">{{
@@ -64,11 +64,12 @@ import { storeToRefs } from 'pinia'
 import UserProfileMenu from '../users/UserProfileMenu.vue'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useThemeStore } from '@/store/themeStore'
+import { useAppConfigStore } from '@/store/useAppConfigStore' // Added this import
 
 // 1. Definir los eventos que este componente puede emitir
 const emit = defineEmits(['showCierreModal'])
 
-const nameBranding = import.meta.env.VITE_BRANDING_NAME
+const appConfig = useAppConfigStore(); // Added this
 const layoutStore = useLayoutStore()
 
 const authStore = useAuthStore()

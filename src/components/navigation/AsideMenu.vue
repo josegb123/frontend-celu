@@ -17,7 +17,7 @@
         :to="{ name: 'home' }"
         class="navbar-brand fw-bold fs-6 text-uppercase text-white ms-3 truncate-text"
       >
-        <span class="branding-wrap">{{ nameBranding }}</span>
+        <span class="branding-wrap">{{ appConfig.getBusinessName }}</span>
       </router-link>
     </div>
 
@@ -72,6 +72,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useThemeStore } from '@/store/themeStore'
+import { useAppConfigStore } from '@/store/useAppConfigStore' // Added this import
 import UserProfileMenu from '@/components/users/UserProfileMenu.vue'
 
 // =========================
@@ -82,10 +83,9 @@ const emit = defineEmits(['showCierreModal'])
 const authStore = useAuthStore()
 const layoutStore = useLayoutStore()
 const themeStore = useThemeStore()
+const appConfig = useAppConfigStore() // Added this
 
 const { isAuthenticated } = storeToRefs(authStore)
-
-const nameBranding = import.meta.env.VITE_BRANDING_NAME
 
 // Corrección TS: Asegura que userRole siempre sea un string (o 'guest' por defecto)
 const userRole = computed((): string => authStore.user?.role || 'guest')
@@ -117,8 +117,8 @@ const menu = [
       },
       { name: 'Proveedores', label: 'Proveedores', icon: 'bi-truck', roles: ['admin'] },
       {
-        name: 'RecibirPedidos',
-        label: 'Recibir Pedidos',
+        name: 'Pedidos', // New route name
+        label: 'Gestión de Pedidos', // Updated label
         icon: 'bi-truck-flatbed',
         roles: ['admin'],
       },
@@ -144,6 +144,7 @@ const menu = [
     items: [
       { name: 'Usuarios', label: 'Usuarios', icon: 'bi-people' },
       { name: 'AdminReports', label: 'Reportes y Estadísticas', icon: 'bi-graph-up' },
+      { name: 'Config', label: 'Configuración', icon: 'bi-gear-fill', roles: ['admin'] }, // Added this
     ],
   },
 ]

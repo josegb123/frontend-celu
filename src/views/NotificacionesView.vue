@@ -251,12 +251,14 @@ import { useStockAlertStore } from '@/store/useStockAlertStore'
 import ProveedorContactModal from '@/components/utils/ProveedorContactModal.vue'
 import type { ProductoBajoStock } from '@/interfaces/IProductoBajoStock'
 import type { Proveedor } from '@/services/proveedorService'
+import { useAppConfigStore } from '@/store/useAppConfigStore'; // Added this import
 
 // --- STORES ---
 const stockStore = useStockAlertStore()
+const appConfig = useAppConfigStore(); // Added this
 
 // --- CONFIGURACIÓN DE BRANDING ---
-const enterpriseName = import.meta.env.VITE_BRANDING_NAME || 'Tu Empresa'
+const enterpriseName = appConfig.getBusinessName; // Changed here
 
 // NOTA: Se eliminó clientesMorososSimulados ya que ahora usamos el store.
 

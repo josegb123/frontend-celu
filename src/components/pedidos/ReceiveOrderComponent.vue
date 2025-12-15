@@ -1,7 +1,5 @@
 <template>
-  <div class="container mt-4">
-    <h1 class="mb-4">📦 Registrar Recepción de Pedido</h1>
-
+  <div>
     <form @submit.prevent="handleSubmit">
       <div class="card p-4 mb-4 shadow-sm">
         <h2 class="h5 mb-3">Detalles de la Cabecera</h2>
@@ -206,12 +204,7 @@
         </button>
       </div>
     </form>
-    <NotificationModal
-      :is-visible="modalInitial.isVisible"
-      :message="modalInitial.message"
-      :is-error="modalInitial.isError"
-      @close="modalInitial.isVisible = false"
-    />
+    <!-- NotificationModal se elimina de aquí, el padre lo manejará o se usará otra estrategia -->
   </div>
 </template>
 
@@ -223,13 +216,16 @@ import { proveedorService } from '@/services/proveedorService'
 import type { IPedidoProveedorRequest, IProductoPedido } from '@/interfaces/IPedidoProveedor'
 import type { Proveedor } from '@/interfaces/IProveedores'
 import type { IProducto } from '@/interfaces/IProductoInterfaces'
-import NotificationModal from '@/components/utils/NotificationModal.vue'
+// import NotificationModal from '@/components/utils/NotificationModal.vue' // Eliminado
 
-const modalInitial = ref({
-  isVisible: false,
-  message: '',
-  isError: false,
-})
+// const modalInitial = ref({ // Eliminado
+//   isVisible: false,
+//   message: '',
+//   isError: false,
+// })
+
+// --- Emits ---
+const emit = defineEmits(['order-received', 'close', 'show-notification']); // Añadido emit para notificaciones
 
 // --- Tipos Extendidos ---
 interface DetalleLocal extends IProductoPedido {
@@ -287,17 +283,17 @@ const formatCurrency = (val: number): string => {
   }).format(val)
 }
 
-const productAdded = (type: 'success' | 'error', message: string) => {
-  notificationMessage.value = { type, message }
-  setTimeout(() => {
-    notificationMessage.value = null
-  }, 3000)
-}
+// Reemplazado por emitir a show-notification
+// const productAdded = (type: 'success' | 'error', message: string) => {
+//   notificationMessage.value = { type, message }
+//   setTimeout(() => {
+//     notificationMessage.value = null
+//   }, 3000)
+// }
 
-const showNotification = (type: 'success' | 'error', message: string) => {
-  modalInitial.value.isVisible = true
-  modalInitial.value.message = message
-  modalInitial.value.isError = type === 'error'
+// Esta función ahora emite el evento para que el padre muestre la notificación
+const showLocalNotification = (type: 'success' | 'error', message: string) => {
+  emit('show-notification', { type, message });
 }
 
 onMounted(async () => {
@@ -311,7 +307,7 @@ onMounted(async () => {
       searchRef.value?.focus()
     })
   } catch {
-    showNotification('error', 'Error al cargar proveedores.')
+    showLocalNotification('error', 'Error al cargar proveedores.')
   } finally {
     loadingProveedores.value = false
   }
@@ -336,7 +332,7 @@ const addDetalleFromTemp = () => {
   if (existingIndex !== -1) {
     productos.value[existingIndex]!.cantidad += tempCantidad.value
     productos.value[existingIndex]!.precio_compra = tempPrecio.value
-    showNotification('success', `Cantidad sumada para ${tempProduct.value!.nombre}.`)
+    showLocalNotification('success', `Cantidad sumada para ${tempProduct.value!.nombre}.`)
   } else {
     productos.value.push({
       producto_id: tempProduct.value!.id,
@@ -346,7 +342,7 @@ const addDetalleFromTemp = () => {
       temp_id: Date.now() + Math.random(),
       precio_venta: tempProduct.value!.precio_venta,
     })
-    productAdded('success', `Producto ${tempProduct.value!.nombre} añadido.`)
+    showLocalNotification('success', `Producto ${tempProduct.value!.nombre} añadido.`) // Usar la nueva función
   }
 
   // Resetear estado temporal y enfocar el buscador
@@ -362,7 +358,7 @@ const addDetalleFromTemp = () => {
 const removeDetalle = (index: number) => {
   const nombre = productos.value[index]?.nombre_producto_temporal || 'Producto'
   productos.value.splice(index, 1)
-  showNotification('error', `Ítem ${nombre} eliminado del pedido.`)
+  showLocalNotification('error', `Ítem ${nombre} eliminado del pedido.`) // Usar la nueva función
 }
 
 // --- Lógica de Envío ---
@@ -375,12 +371,12 @@ const handleSubmit = async () => {
   )
 
   if (!numeroFacturaProveedor.value || !selectedProveedorId.value || !metodoPago.value) {
-    showNotification('error', 'Por favor, complete la factura, el proveedor y el método de pago.')
+    showLocalNotification('error', 'Por favor, complete la factura, el proveedor y el método de pago.')
     submitting.value = false
     return
   }
   if (validProductos.length === 0 || montoTotal.value <= 0) {
-    showNotification(
+    showLocalNotification(
       'error',
       'Debe añadir al menos un detalle de pedido válido y con monto total mayor a cero.',
     )
@@ -403,8 +399,9 @@ const handleSubmit = async () => {
   }
 
   try {
-    await PedidoProveedorService.recibirPedido(payload)
-    showNotification('success', '✅ Pedido registrado y recibido exitosamente!')
+    const response = await PedidoProveedorService.recibirPedido(payload)
+    showLocalNotification('success', '✅ Pedido registrado y recibido exitosamente!') // Usar la nueva función
+    emit('order-received', response); // Emitir el evento de éxito
 
     // Reset form
     numeroFacturaProveedor.value = ''
@@ -423,7 +420,7 @@ const handleSubmit = async () => {
         'response' in error &&
         (error as { response: { data?: { message?: string } } }).response?.data?.message) ||
       'Error al registrar el pedido. Revise la consola para más detalles.'
-    showNotification('error', errorMessage.toString())
+    showLocalNotification('error', errorMessage.toString()) // Usar la nueva función
   } finally {
     submitting.value = false
   }
