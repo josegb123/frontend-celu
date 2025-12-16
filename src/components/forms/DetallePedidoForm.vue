@@ -64,7 +64,6 @@ import { ref, watch, nextTick } from 'vue'
 import ProductSearchInput from '../products/ProductSearchInput.vue'
 import type { IProducto } from '@/interfaces/IProductoInterfaces'
 import type { IDetallePedidoProveedorRequest } from '@/interfaces/IDetallePedidoProveedor'
-import { useFocusStore } from '@/store/useFocusStore' // 🎯 Asumiendo un Store para el manejo del foco global (o solo emitimos)
 
 interface DetalleLocal extends IDetallePedidoProveedorRequest {
   nombre_producto_temporal?: string

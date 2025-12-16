@@ -59,14 +59,14 @@
 
         <div class="col-4">
           <div class="stock-item p-2 bg-warning-subtle border border-warning">
-            <small class="text-body-secondary">Reservado</small>
+            <small class="text-body-secondary text-truncate overflow-hidden">Reservado</small>
             <div class="fw-bold text-warning">{{ product.stock_reservado }}</div>
           </div>
         </div>
 
         <div class="col-4">
           <div class="stock-item p-2 bg-danger-subtle border border-danger">
-            <small class="text-body-secondary">Mínimo</small>
+            <small class="text-body-secondary text-truncate overflow-hidden">Mínimo</small>
             <div class="fw-bold text-danger">{{ product.stock_minimo }}</div>
           </div>
         </div>

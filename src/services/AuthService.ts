@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
 import axios from 'axios'
 import laravelApi from '@/http/laravelApi'
+import { v4 as uuidv4 } from 'uuid';
 
 interface AuthResponse {
   success: boolean
@@ -41,9 +42,25 @@ class AuthService {
     }
   }
 
+  /*
+   * Obtiene o genera un ID único persistente para el dispositivo/navegador.
+   */
+  private getDeviceName(): string {
+    let deviceName = localStorage.getItem('device_id')
+
+    if (!deviceName) {
+      // Generar un UUID único
+      deviceName = `web-${uuidv4()}`
+      localStorage.setItem('device_id', deviceName)
+    }
+
+    // Opcional: Podrías añadir información del navegador/SO aquí si fuera relevante
+    return deviceName
+  }
+
   async login(email: string, password: string): Promise<AuthResponse> {
     this.error.value = ''
-    const deviceName = 'pc-desktop'
+    const deviceName = this.getDeviceName()
 
     try {
       const res = await laravelApi.post('/login', {

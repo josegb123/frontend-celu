@@ -237,7 +237,7 @@ const debouncedFetch = debounce(() => {
 // Observa cambios en el filtro de búsqueda (activamos la búsqueda con menos de 3 caracteres)
 watch(
   () => props.searchQuery,
-  (newQuery) => {
+  () => {
     // Permitir la búsqueda inmediata o con debounce si es necesario
     debouncedFetch()
   },
@@ -253,7 +253,7 @@ onMounted(fetchProducts)
 </script>
 <style scoped>
 /* -------------------------------------------------------------------------
-  CONTENEDOR GLOBAL 
+  CONTENEDOR GLOBAL
  ------------------------------------------------------------------------- */
 /* Usamos el contenedor .content para gestionar el scroll */
 .content {
@@ -274,7 +274,7 @@ onMounted(fetchProducts)
 }
 
 /* -------------------------------------------------------------------------
-  GRID Y TARJETAS 
+  GRID Y TARJETAS
  ------------------------------------------------------------------------- */
 
 .product-card-pos {

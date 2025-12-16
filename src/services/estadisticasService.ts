@@ -293,6 +293,46 @@ class EstadisticasService {
       throw error
     }
   }
+
+  /**
+   * Obtiene el reporte de Cuadre de Caja.
+   * @param startDate - Fecha de inicio del periodo (YYYY-MM-DD).
+   * @param endDate - Fecha de fin del periodo (YYYY-MM-DD).
+   */
+  public async getCuadreDeCaja(startDate: string, endDate: string): Promise<CuadreCajaResponse> {
+    try {
+      const response: AxiosResponse<CuadreCajaResponse> = await laravelApi.get(
+        `${this.endpoint}/cuadre-caja`,
+        {
+          params: { start_date: startDate, end_date: endDate },
+        },
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error al obtener el reporte de Cuadre de Caja:', error)
+      throw error
+    }
+  }
+}
+
+// Interface for CuadreCajaResponse - temporarily defined here
+export interface CuadreCajaResponse {
+  periodo: {
+    start_date: string
+    end_date: string
+  }
+  flujo_efectivo_movimientos: {
+    total_ingresos_efectivo: number
+    total_egresos_efectivo: number
+    saldo_neto_movimientos: number
+  }
+  consolidado_cajas_diarias: {
+    total_monto_inicial_cajas_abiertas_en_periodo: number
+    total_balance_final_real_cajas_cerradas_en_periodo: number
+    total_balance_final_esperado_cajas_cerradas_en_periodo: number
+    discrepancia_total_cajas_cerradas_en_periodo: number
+  }
+  descripcion_cuadre: string
 }
 
 // Exportar una instancia para usarla en toda la aplicación (Singleton)

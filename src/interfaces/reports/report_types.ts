@@ -12,6 +12,8 @@ export interface ProductoBajoStock {
 }
 
 export interface VentasPorPeriodoApiRequest {
+  start_date?: string
+  end_date?: string
   periodo?: 'day' | 'month' | 'year'
 }
 
@@ -101,8 +103,8 @@ export interface PedidoProveedorDetalle {
 }
 
 export interface ValorPedidosProveedoresRequest {
-  start_date: string
-  end_date: string
+  start_date?: string
+  end_date?: string
 }
 
 export interface ValorPedidosProveedoresResponse {
@@ -135,5 +137,7 @@ export interface TopClientesFrecuenciaResponse {
 
 // Re-using for export requests, as they share 'periodo'
 export interface ExportarVentasExcelRequest {
+  start_date?: string
+  end_date?: string
   periodo?: 'day' | 'month' | 'year'
 }

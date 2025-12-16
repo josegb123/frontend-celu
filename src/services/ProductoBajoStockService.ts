@@ -1,7 +1,6 @@
+import type { responseProductoBajoStock } from '@/interfaces/IProductoBajoStock'
 import laravelApi from '../http/laravelApi'
 import type { AxiosResponse } from 'axios'
-import type { PaginatedResponse } from '@/interfaces/ILaravelPaginated' // Reusamos la interfaz de paginación
-import type { ProductoBajoStock } from '@/interfaces/IProductoBajoStock'
 
 /**
  * Servicio dedicado a la gestión y consulta de productos con bajo stock.
@@ -17,17 +16,12 @@ class ProductoBajoStockService {
    * @returns Una promesa que resuelve con la respuesta paginada (PaginatedResponse<ProductoBajoStock>).
    */
   public async getBajoStock(
-    params: {
-      page?: number
-      search?: string
-      per_page?: number
-    } = {},
-  ): Promise<PaginatedResponse<ProductoBajoStock>> {
+
+  ): Promise<responseProductoBajoStock> {
     try {
       // La respuesta del backend es la estructura paginada, pero con el tipo de datos ProductoBajoStock
-      const response: AxiosResponse<PaginatedResponse<ProductoBajoStock>> = await laravelApi.get(
+      const response: AxiosResponse<responseProductoBajoStock> = await laravelApi.get(
         this.endpoint,
-        { params },
       )
 
       // Devolvemos el objeto de paginación completo.

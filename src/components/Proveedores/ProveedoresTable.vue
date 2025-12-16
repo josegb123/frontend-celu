@@ -15,17 +15,17 @@ interface Proveedor {
 
 // 1. Definición de Props: Recibe la lista de proveedores
 defineProps({
-  proveedores: Array<Proveedor>
+  proveedores: Array<Proveedor>,
 })
 
 // 2. Definición de Emits: Eventos que envían el proveedor/id para la acción
 const emit = defineEmits(['edit', 'delete'])
 
-import { useAppConfigStore } from '@/store/useAppConfigStore'; // Added this import
-const appConfig = useAppConfigStore(); // Added this
+import { useAppConfigStore } from '@/store/useAppConfigStore' // Added this import
+const appConfig = useAppConfigStore() // Added this
 
 // Nombre de la marca para los mensajes (puede venir de una configuración global o .env)
-const branding_name = appConfig.getBusinessName; // Changed here
+const branding_name = appConfig.getBusinessName // Changed here
 
 /**
  * @param telefono Número de teléfono del proveedor (incluye código de país).
@@ -136,7 +136,7 @@ function enviarCorreoProveedor(email: string | null, nombre: string) {
             </button>
           </td>
         </tr>
-        <tr v-if="proveedores.length === 0">
+        <tr v-if="!proveedores || proveedores.length === 0">
           <td colspan="5" class="text-center py-4 text-muted">
             No se encontraron proveedores que coincidan con la búsqueda.
           </td>

@@ -95,7 +95,6 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
 import { useCajaStore } from '@/store/useCajaStore'
 import { useStockAlertStore } from '@/store/useStockAlertStore'
-// 👉 IMPORTANTE: Floating UI para posicionamiento fuera del flujo normal
 import { useFloating, offset, flip } from '@floating-ui/vue'
 
 // Definir los eventos que este componente puede emitir
@@ -195,7 +194,7 @@ const handleLogout = async () => {
 }
 
 onMounted(() => {
-  stockStore.fetchBajoStock(1)
+  stockStore.fetchBajoStock()
 })
 
 onUnmounted(() => {
@@ -221,6 +220,6 @@ onUnmounted(() => {
 .user-menu .dropdown-toggle {
   /* Asegurar que el ancla tenga un z-index alto en su posición original */
   position: relative;
-  z-index: 5000;
+  z-index: 800;
 }
 </style>

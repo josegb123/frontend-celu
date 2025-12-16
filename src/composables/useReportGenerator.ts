@@ -1,5 +1,5 @@
 import { ref, computed, watch } from 'vue'
-import { estadisticasService } from '@/services/estadisticasService'
+import { estadisticasService, CuadreCajaResponse } from '@/services/estadisticasService' // Added CuadreCajaResponse import
 import type {
   ProductoBajoStock,
   VentasPorPeriodoResponse,
@@ -13,11 +13,11 @@ import type {
   TopProducto,
   ProductoBajaRotacion,
   ProductosBajaRotacionRequest,
-  ValorPedidosProveedoresRequest,
   ValorPedidosProveedoresResponse,
+  ValorPedidosProveedoresRequest,
   TopClienteFrecuencia,
   TopClientesFrecuenciaRequest,
-} from '@/interfaces/reports/report_types' // New import path
+} from '@/interfaces/reports/report_types'
 
 type ReportType =
   | 'bajoStock'
@@ -30,6 +30,7 @@ type ReportType =
   | 'productosBajaRotacion'
   | 'valorPedidosProveedores'
   | 'topClientesFrecuencia'
+  | 'cuadreDeCaja' // Added new report type
 
 export function useReportGenerator() {
   const selectedReport = ref<ReportType>('bajoStock')
@@ -39,6 +40,8 @@ export function useReportGenerator() {
   const periodDays = ref<number>(90)
   const frecuenciaPeriodDays = ref<number>(90)
   const frecuenciaLimit = ref<number>(10)
+  const cuadreCajaStartDate = ref<string>(''); // Added for Cuadre de Caja
+  const cuadreCajaEndDate = ref<string>('');   // Added for Cuadre de Caja
 
   const reportData = ref<
     | ProductoBajoStock[]
@@ -51,6 +54,7 @@ export function useReportGenerator() {
     | ProductoBajaRotacion[]
     | ValorPedidosProveedoresResponse
     | TopClienteFrecuencia[]
+    | CuadreCajaResponse // Added CuadreCajaResponse
     | null
   >(null)
   const loading = ref(false)
@@ -119,6 +123,12 @@ export function useReportGenerator() {
     return selectedReport.value === 'topClientesFrecuencia' && reportData.value
       ? (reportData.value as TopClienteFrecuencia[])
       : []
+  })
+
+  const cuadreCajaData = computed<CuadreCajaResponse | null>(() => { // Added cuadreCajaData
+    return selectedReport.value === 'cuadreDeCaja' && reportData.value
+      ? (reportData.value as CuadreCajaResponse)
+      : null
   })
 
   // --- Fetch functions ---
@@ -245,6 +255,24 @@ export function useReportGenerator() {
     }
   }
 
+  const fetchCuadreCaja = async () => { // Added fetchCuadreCaja
+    if (!cuadreCajaStartDate.value || !cuadreCajaEndDate.value) {
+      alert('Por favor, seleccione las fechas de inicio y fin para el Cuadre de Caja.')
+      reportData.value = null
+      return
+    }
+    try {
+      const response = await estadisticasService.getCuadreDeCaja(
+        cuadreCajaStartDate.value,
+        cuadreCajaEndDate.value
+      )
+      reportData.value = response
+    } catch (e) {
+      error.value = e
+      reportData.value = null
+    }
+  }
+
   const generateReport = async () => {
     loading.value = true
     error.value = null
@@ -281,6 +309,9 @@ export function useReportGenerator() {
         case 'topClientesFrecuencia':
           await fetchTopClientesFrecuencia()
           break
+        case 'cuadreDeCaja': // Added cuadreDeCaja
+          await fetchCuadreCaja()
+          break
         default:
           console.warn('Unknown report type selected:', selectedReport.value)
       }
@@ -300,6 +331,9 @@ export function useReportGenerator() {
     periodDays.value = 90
     frecuenciaPeriodDays.value = 90
     frecuenciaLimit.value = 10
+    cuadreCajaStartDate.value = ''; // Reset cuadreCajaStartDate
+    cuadreCajaEndDate.value = '';   // Reset cuadreCajaEndDate
+
     // Auto-generate reports that don't require additional parameters
     if (
       selectedReport.value === 'bajoStock' ||
@@ -352,6 +386,20 @@ export function useReportGenerator() {
     },
   )
 
+  watch( // Added watcher for cuadreCaja dates
+    [cuadreCajaStartDate, cuadreCajaEndDate],
+    ([newStartDate, newEndDate], [oldStartDate, oldEndDate]) => {
+      if (
+        selectedReport.value === 'cuadreDeCaja' &&
+        (newStartDate !== oldStartDate || newEndDate !== oldEndDate) &&
+        newStartDate &&
+        newEndDate // Only generate if both dates are selected
+      ) {
+        generateReport()
+      }
+    }
+  )
+
   return {
     selectedReport,
     ventasPeriodo,
@@ -359,7 +407,9 @@ export function useReportGenerator() {
     fechaFin,
     periodDays,
     frecuenciaPeriodDays,
-    frecuenciaLimit,
+        frecuenciaLimit,
+    cuadreCajaStartDate, // Added
+    cuadreCajaEndDate,   // Added
     reportData,
     loading,
     error,
@@ -374,5 +424,6 @@ export function useReportGenerator() {
     productosBajaRotacionData,
     valorPedidosProveedoresData,
     topClientesFrecuenciaData,
+    cuadreCajaData, // Added
   }
 }
