@@ -1,21 +1,34 @@
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5)">
+  <div
+    class="modal fade show d-block"
+    tabindex="-1"
+    style="background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px)"
+    :data-bs-backdrop="esObligatorio ? 'static' : true"
+  >
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Cierre de Caja Diario</h5>
+          <h5 class="modal-title">
+            <i
+              class="bi"
+              :class="esObligatorio ? 'bi-exclamation-octagon-fill' : 'bi-cash-stack'"
+            ></i>
+            {{ esObligatorio ? ' Cierre de Caja Pendiente' : ' Cierre de Caja Diario' }}
+          </h5>
           <button
+            v-if="!esObligatorio"
             type="button"
-            class="btn-close btn-close-white"
+            class="btn-close"
             @click="$emit('close')"
-            aria-label="Cerrar"
           ></button>
+          <router-link :to="{ name: 'home' }" v-if="esObligatorio" class="btn-close"></router-link>
         </div>
 
         <div class="modal-body">
-          <p class="text-danger fw-bold">
-            Debe cerrar la caja activa para continuar con el cierre de sesión o finalizar su turno.
-          </p>
+          <div v-if="esObligatorio" class="alert alert-danger d-flex align-items-center small">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Se detectó una caja abierta de una fecha anterior. Debe cerrarla para continuar.
+          </div>
           <p>
             Monto Teórico Actual:
             <span class="fw-bold text-success">{{ montoTeoricoFormateado }}</span>
@@ -78,6 +91,9 @@ const emit = defineEmits(['close', 'closed'])
 
 // Inicialización de Stores y Estado
 const cajaStore = useCajaStore()
+
+const props = defineProps<{ esObligatorio: boolean }>()
+const esObligatorio = computed(() => props.esObligatorio)
 
 // 🚨 CAMBIO CLAVE: Inicializar con el monto teórico actual.
 // Esto permite al usuario ver y potencialmente editar el valor esperado.

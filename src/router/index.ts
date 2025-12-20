@@ -90,6 +90,16 @@ const routes: Array<RouteRecordRaw> = [
       roles: ['admin', 'seller'],
     },
   },
+  {
+    path: '/test',
+    name: 'Test',
+    component: () => import('@/views/TestsView.vue'),
+    meta: {
+      title: 'Test',
+      requireAuth: true,
+      roles: ['admin'],
+    },
+  },
 
   // --------------------
   // 🔐 SOLO ADMIN

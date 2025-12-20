@@ -1,88 +1,81 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-
-// 1. IMPORTAR INTERFACES DEL SERVICIO para tipar 'dashboardData'
+import { storeToRefs } from 'pinia'
 import {
   estadisticasService,
   type TopMetric,
   type VentaMinimal,
-  type TimeSeriesData,
 } from '@/services/estadisticasService'
-import type { HistorialGananciasEstadistica, ProductoBajoStock } from '@/interfaces/reports/report_types'
+import type { HistorialGananciasEstadistica } from '@/interfaces/reports/report_types'
 
 import StatCard from '@/components/home/StatCard.vue'
 import TopRankingCard from '@/components/home/TopRankingCard.vue'
 import LastSalesTable from '@/components/home/LastSalesTable.vue'
-import { useStockAlertStore } from '@/store/useStockAlertStore'
+
+// 1. IMPORTAR EL STORE
+import { useStockStore } from '@/store/useStockAlertStore'
 import { useAuthStore } from '@/store/authStore'
 
-// 2. USAR EL STORE DE ALERTAS DE STOCK
-const storeAlert = useStockAlertStore()
-const bajoStock = computed(() => {
-  return storeAlert.totalStockAlertas
-})
-
+// 2. INSTANCIAR STORES
+const storeAlert = useStockStore()
 const userStore = useAuthStore()
+
+// Usamos storeToRefs para mantener la reactividad al desestructurar
+const { total: totalStock } = storeToRefs(storeAlert)
 const user = computed(() => userStore.user)
 
-// 3. DEFINIR LA INTERFAZ PARA LOS DATOS DEL DASHBOARD
+// 3. DATOS LOCALES (Solo lo que no está en un store)
 interface DashboardData {
   ticketPromedio: number
   margenBrutoMes: number
-  productosBajoStock: ProductoBajoStock[]
   topClientes: TopMetric[]
   ultimasVentas: VentaMinimal[]
 }
 
-// 2. TIPAR EL REF dashboardData con la nueva interfaz
 const loading = ref(true)
 const dashboardData = ref<DashboardData>({
   ticketPromedio: 0,
   margenBrutoMes: 0,
-  productosBajoStock: [],
   topClientes: [],
   ultimasVentas: [],
 })
 
+// 4. FUNCIÓN DE CARGA
 const fetchDashboardData = async () => {
   loading.value = true
   try {
-    // 1. Métricas clave
-    const [ticket, margenResult] = await Promise.all([
-      estadisticasService.getTicketPromedio(),
-      estadisticasService.getHistorialGanancias({ periodo: 'month' }),
+    // Ejecutamos la carga del Dashboard y la del Store de Stock en paralelo
+    await Promise.all([
+      // Peticiones de métricas
+      (async () => {
+        const [ticket, margenResult] = await Promise.all([
+          estadisticasService.getTicketPromedio(),
+          estadisticasService.getHistorialGanancias({ periodo: 'month' }),
+        ])
+
+        dashboardData.value.ticketPromedio = ticket.monto_promedio_venta
+
+        const margenData = margenResult.data.map((item: HistorialGananciasEstadistica) => ({
+          value: item.beneficio_bruto,
+        }))
+        dashboardData.value.margenBrutoMes = margenData[0]?.value ?? 0
+      })(),
+
+      // Peticiones de listados
+      (async () => {
+        const [clientes, ventas] = await Promise.all([
+          estadisticasService.getTopClientesPorMonto(),
+          estadisticasService.getUltimasVentas(),
+        ])
+        dashboardData.value.topClientes = clientes.data.map((item) => ({
+          label: item.nombre_cliente,
+          value: item.monto_total,
+        }))
+        dashboardData.value.ultimasVentas = ventas.data
+      })(),
     ])
-
-    dashboardData.value.ticketPromedio = ticket.monto_promedio_venta
-
-    // Obtener el beneficio de la primera entrada (asumiendo que es el mes actual)
-    const margenData: TimeSeriesData[] = margenResult.data.map(
-      (item: HistorialGananciasEstadistica) => ({
-        date: item.periodo_fecha,
-        value: item.beneficio_bruto,
-        label: item.periodo_fecha, // You can adjust the label as needed
-      }),
-    )
-    dashboardData.value.margenBrutoMes =
-      margenData.length > 0 && margenData[0] ? (margenData[0].value ?? 0) : 0
-
-    // 2. Tablas/Listados
-    const [stock, clientes, ventas] = await Promise.all([
-      estadisticasService.getProductosBajoStock(),
-      estadisticasService.getTopClientesPorMonto(),
-      estadisticasService.getUltimasVentas(),
-    ])
-
-    // Asignaciones tipadas correctamente
-    dashboardData.value.productosBajoStock = stock.data
-    dashboardData.value.topClientes = clientes.data.map((item) => ({
-      label: item.nombre_cliente,
-      value: item.monto_total,
-    }))
-    dashboardData.value.ultimasVentas = ventas.data
   } catch (error) {
     console.error('Error al cargar el dashboard:', error)
-    // Manejo de error
   } finally {
     loading.value = false
   }
@@ -132,7 +125,7 @@ onMounted(fetchDashboardData)
           <StatCard
             icon="bi-exclamation-triangle-fill"
             title="Alerta de Inventario"
-            :value="bajoStock"
+            :value="totalStock"
             format="integer"
             variant="danger"
             tooltip="Productos con stock bajo el umbral configurado."

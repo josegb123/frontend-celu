@@ -63,11 +63,6 @@
         <li v-if="cajaStore.isCajaAbierta">
           <hr class="dropdown-divider" />
         </li>
-        <li>
-          <a class="dropdown-item" href="#" @click.prevent="goToRoute('Profile')">
-            <i class="bi bi-person-circle me-2 text-primary"></i>Mi Perfil
-          </a>
-        </li>
 
         <li>
           <a class="dropdown-item" href="#" @click.prevent="goToRoute('Config')">
@@ -94,7 +89,7 @@ import { computed, onMounted, ref, watch, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
 import { useCajaStore } from '@/store/useCajaStore'
-import { useStockAlertStore } from '@/store/useStockAlertStore'
+import { useStockStore } from '@/store/useStockAlertStore'
 import { useFloating, offset, flip } from '@floating-ui/vue'
 
 // Definir los eventos que este componente puede emitir
@@ -103,7 +98,7 @@ const emit = defineEmits(['showCierreModal'])
 const router = useRouter()
 const authStore = useAuthStore()
 const cajaStore = useCajaStore()
-const stockStore = useStockAlertStore()
+const stockStore = useStockStore()
 
 const defaultAvatar = '/avatar.webp'
 
@@ -112,7 +107,7 @@ const user = computed(() => authStore.user)
 
 /** Cálculo del total de notificaciones */
 const totalNotificaciones = computed(() => {
-  return stockStore.totalNotificaciones
+  return stockStore.total
 })
 
 // --- Lógica de Teleport y Floating UI ---

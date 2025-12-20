@@ -15,14 +15,10 @@ class ProductoBajoStockService {
    * @param params Objeto de parámetros de consulta (page, search, per_page).
    * @returns Una promesa que resuelve con la respuesta paginada (PaginatedResponse<ProductoBajoStock>).
    */
-  public async getBajoStock(
-
-  ): Promise<responseProductoBajoStock> {
+  public async getBajoStock(): Promise<responseProductoBajoStock> {
     try {
       // La respuesta del backend es la estructura paginada, pero con el tipo de datos ProductoBajoStock
-      const response: AxiosResponse<responseProductoBajoStock> = await laravelApi.get(
-        this.endpoint,
-      )
+      const response: AxiosResponse<responseProductoBajoStock> = await laravelApi.get(this.endpoint)
 
       // Devolvemos el objeto de paginación completo.
       return response.data

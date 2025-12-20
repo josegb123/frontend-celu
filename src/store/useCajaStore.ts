@@ -44,6 +44,7 @@ export interface ReporteCierre {
 export const useCajaStore = defineStore('caja', () => {
   // --- ESTADO  ---
   const cajaActiva = ref<CajaDiaria | null>(null)
+  const requiereCierre = ref(false)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -54,7 +55,6 @@ export const useCajaStore = defineStore('caja', () => {
   const isCajaAbierta = computed(() => !!cajaActiva.value && cajaActiva.value.estado === 'abierta')
   const cajaDiariaId = computed(() => cajaActiva.value?.id || null)
   const fondoInicial = computed(() => cajaActiva.value?.fondo_inicial || 0)
-
   const getMontoTeorico = computed(() => montoTeoricoActual.value)
 
   // --- ACTIONS ---
@@ -111,10 +111,13 @@ export const useCajaStore = defineStore('caja', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await laravelApi.get<{ caja: CajaDiaria | null }>('/cajas/activa')
+      const response = await laravelApi.get<{
+        caja: CajaDiaria
+        requiere_cierre_manual: boolean | null
+      }>('/cajas/activa')
 
       const caja = response.data.caja
-
+      requiereCierre.value = !!response.data?.requiere_cierre_manual
       if (caja && caja.estado === 'abierta') {
         cajaActiva.value = caja
         // Llamar al cálculo después de establecer la caja
@@ -278,6 +281,7 @@ export const useCajaStore = defineStore('caja', () => {
     cajaDiariaId,
     fondoInicial,
     montoTeoricoActual: getMontoTeorico,
+    requiereCierre,
     // Actions
     fetchCajaActiva,
     openCaja,

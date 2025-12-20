@@ -13,9 +13,7 @@
         <button class="btn btn-outline-info" @click="$emit('ver-detalle', venta.venta_id)">
           <i class="bi bi-eye"></i>
         </button>
-        <button class="btn btn-outline-secondary" @click="$emit('editar', venta)" v-if="isAdmin">
-          <i class="bi bi-pencil"></i>
-        </button>
+
         <button
           class="btn btn-outline-danger"
           @click="$emit('eliminar', venta.venta_id)"

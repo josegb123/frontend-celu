@@ -102,6 +102,7 @@ const menu = [
       { name: 'pos', label: 'Punto de Venta', icon: 'bi-cart' },
       { name: 'ventas', label: 'Historial Ventas', icon: 'bi-receipt' },
       { name: 'notificaciones', label: 'Notificaciones', icon: 'bi-bell' },
+      { name: 'Test', label: 'Testing', icon: 'bi bi-airplane-engines-fill' },
     ],
   },
   {

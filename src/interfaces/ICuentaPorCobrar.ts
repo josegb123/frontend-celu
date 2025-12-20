@@ -18,6 +18,8 @@ export interface ICuentaPorCobrar {
   created_at: string
   updated_at: string
   deleted_at: string | null
+
+  cliente: ICliente
 }
 
 export interface dataCuentaPorCobrar extends ICuentaPorCobrar {
