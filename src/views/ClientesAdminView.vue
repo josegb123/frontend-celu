@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2>Gestión de Clientes 👨‍💼</h2>
       <div class="d-flex align-items-center">
-        <div class="me-3 p-2 border rounded bg-light small">
+        <div class="me-3 p-2 border rounded small">
           <span class="fw-bold me-2">Leyenda:</span>
           <span class="badge text-bg-info me-2">
             <i class="bi bi-person-badge me-1"></i> Es Aval

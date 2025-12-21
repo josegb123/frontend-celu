@@ -1,114 +1,162 @@
 import { defineStore } from 'pinia'
+import { AxiosError } from 'axios'
+import laravelApi from '@/http/laravelApi'
 
-// --- Interfaces para las configuraciones ---
-interface BusinessDetails {
-  name: string
-  phone: string
-  address: string
-  administrator: string
+// --- INTERFACES ---
+
+export interface BusinessDetails {
+  nombre: string
+  telefono: string
+  direccion: string
+  admin: string
   nit: string
-  logoUrl: string
+  logo: string
 }
 
 interface UIPreferences {
   theme: 'light' | 'dark' | 'system'
   language: 'es' | 'en'
   enableNotifications: boolean
-  playSoundOnAlert: boolean
-}
-
-interface OtherSettings {
-  rowsPerPage: number
 }
 
 interface AppConfigState {
   businessDetails: BusinessDetails
   uiPreferences: UIPreferences
-  otherSettings: OtherSettings
+  isLoading: boolean
+  error: string | null
 }
 
-// --- Valores por defecto (si no hay nada en localStorage o .env) ---
-const defaultBusinessDetails: BusinessDetails = {
-  name: 'El chanchito Feliz', // Usar un valor por defecto claro
-  phone: '',
-  address: '',
-  administrator: '',
-  nit: '',
-  logoUrl: '',
-}
-
-const defaultUiPreferences: UIPreferences = {
-  theme: 'light',
-  language: 'es',
-  enableNotifications: true,
-  playSoundOnAlert: false,
-}
-
-const defaultOtherSettings: OtherSettings = {
-  rowsPerPage: 10,
-}
+// --- STORE ---
 
 export const useAppConfigStore = defineStore('appConfig', {
   state: (): AppConfigState => ({
-    businessDetails: { ...defaultBusinessDetails },
-    uiPreferences: { ...defaultUiPreferences },
-    otherSettings: { ...defaultOtherSettings },
+    businessDetails: {
+      nombre: 'Cargando...',
+      telefono: '',
+      direccion: '',
+      admin: '',
+      nit: '',
+      logo: '',
+    },
+    uiPreferences: {
+      theme: 'light',
+      language: 'es',
+      enableNotifications: true,
+    },
+    isLoading: false,
+    error: null,
   }),
 
   getters: {
-    // Getters para acceder fácilmente a los detalles del negocio
-    getBusinessName: (state) => state.businessDetails.name,
-    getBusinessPhone: (state) => state.businessDetails.phone,
-    getBusinessAddress: (state) => state.businessDetails.address,
-    getBusinessAdministrator: (state) => state.businessDetails.administrator,
-    getBusinessNit: (state) => state.businessDetails.nit,
-    getBusinessLogoUrl: (state) => state.businessDetails.logoUrl,
-
-    // Getters para acceder fácilmente a las preferencias de UI
-    getUiTheme: (state) => state.uiPreferences.theme,
-    getUiLanguage: (state) => state.uiPreferences.language,
-    getEnableNotifications: (state) => state.uiPreferences.enableNotifications,
-    getPlaySoundOnAlert: (state) => state.uiPreferences.playSoundOnAlert,
-
-    // Getters para otras configuraciones
-    getRowsPerPage: (state) => state.otherSettings.rowsPerPage,
+    getBusinessName: (state): string => state.businessDetails.nombre,
+    getBusinessLogo: (state): string => state.businessDetails.logo,
+    getTheme: (state) => state.uiPreferences.theme,
   },
 
   actions: {
-    // Acción para inicializar la configuración desde localStorage
-    initialize() {
-      // Cargar detalles del negocio
-      const savedBusinessDetails = localStorage.getItem('businessDetails')
-      if (savedBusinessDetails) {
-        this.businessDetails = { ...this.businessDetails, ...JSON.parse(savedBusinessDetails) }
-      }
-      // Cargar preferencias de UI
-      const savedUiPreferences = localStorage.getItem('uiPreferences')
-      if (savedUiPreferences) {
-        this.uiPreferences = { ...this.uiPreferences, ...JSON.parse(savedUiPreferences) }
-      }
-      // Cargar otras configuraciones
-      const savedOtherSettings = localStorage.getItem('otherSettings')
-      if (savedOtherSettings) {
-        this.otherSettings = { ...this.otherSettings, ...JSON.parse(savedOtherSettings) }
+    /**
+     * Inicialización global de la configuración
+     */
+    async initialize(): Promise<void> {
+      this.loadUiFromStorage()
+      await this.fetchBusinessSettings()
+    },
+
+    /**
+     * Carga preferencias de interfaz desde LocalStorage (Persistente por navegador)
+     */
+    loadUiFromStorage(): void {
+      const savedUi = localStorage.getItem('app_ui_prefs')
+      if (savedUi) {
+        try {
+          this.uiPreferences = { ...this.uiPreferences, ...JSON.parse(savedUi) }
+          // Aplicar tema al documento al cargar
+          this.applyTheme(this.uiPreferences.theme)
+        } catch {
+          console.error('Error al parsear preferencias de UI locales')
+        }
       }
     },
 
-    // Acciones para actualizar y guardar en localStorage
-    setBusinessDetails(details: Partial<BusinessDetails>) {
-      this.businessDetails = { ...this.businessDetails, ...details }
-      localStorage.setItem('businessDetails', JSON.stringify(this.businessDetails))
+    /**
+     * Obtiene los datos del negocio desde el Backend
+     */
+    async fetchBusinessSettings(): Promise<void> {
+      this.isLoading = true
+      this.error = null
+      try {
+        // GET a la ruta que creamos: /settings/business
+        const { data } = await laravelApi.get<BusinessDetails>('/settings/business')
+
+        // Actualizamos el estado con la respuesta del servidor
+        this.businessDetails = {
+          nombre: data.nombre || 'Mi Negocio',
+          telefono: data.telefono || '',
+          direccion: data.direccion || '',
+          admin: data.admin || '',
+          nit: data.nit || '',
+          logo: data.logo || '',
+        }
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          this.error =
+            err.response?.data?.message || 'No se pudo obtener la configuración del negocio'
+        } else {
+          this.error = 'Error inesperado al cargar configuración'
+        }
+      } finally {
+        this.isLoading = false
+      }
     },
 
-    setUiPreferences(preferences: Partial<UIPreferences>) {
+    /**
+     * Guarda los cambios del negocio en el Backend
+     * Soporta el envío de datos parciales
+     */
+    async updateBusinessDetails(details: Partial<BusinessDetails>): Promise<void> {
+      this.isLoading = true
+      try {
+        // POST a la ruta que creamos
+        const { data } = await laravelApi.post<{ data: BusinessDetails }>(
+          '/settings/business',
+          details,
+        )
+        this.businessDetails = data.data
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          const msg = err.response?.data?.message || 'Error al actualizar configuración'
+          this.error = msg
+          throw new Error(msg) // Re-lanzamos para que el componente maneje la notificación
+        }
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /**
+     * Actualiza preferencias de UI y las guarda localmente
+     */
+    setUiPreferences(preferences: Partial<UIPreferences>): void {
       this.uiPreferences = { ...this.uiPreferences, ...preferences }
-      localStorage.setItem('uiPreferences', JSON.stringify(this.uiPreferences))
-      // Podrías emitir un evento o aplicar los cambios de tema/idioma aquí
+      localStorage.setItem('app_ui_prefs', JSON.stringify(this.uiPreferences))
+
+      if (preferences.theme) {
+        this.applyTheme(preferences.theme)
+      }
     },
 
-    setOtherSettings(settings: Partial<OtherSettings>) {
-      this.otherSettings = { ...this.otherSettings, ...settings }
-      localStorage.setItem('otherSettings', JSON.stringify(this.otherSettings))
+    /**
+     * Aplica el tema de Bootstrap 5 al HTML
+     */
+    applyTheme(theme: 'light' | 'dark' | 'system'): void {
+      const targetTheme =
+        theme === 'system'
+          ? window.matchMedia('(prefers-color-scheme: dark').matches
+            ? 'dark'
+            : 'light'
+          : theme
+
+      document.documentElement.setAttribute('data-bs-theme', targetTheme)
     },
   },
 })

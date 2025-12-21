@@ -34,7 +34,7 @@
             ${{ parseFloat(product.precio_venta.toString()).toFixed(0) }}
           </div>
         </div>
-        <div class="price-box price-compra">
+        <div class="price-box price-compra" v-if="isAdmin">
           <div class="price-label">Compra</div>
           <div class="price-value">
             ${{ parseFloat(product.precio_compra.toString()).toFixed(0) }}
@@ -46,6 +46,7 @@
         class="btn btn-sm btn-info text-white mb-3"
         @click="$emit('showSuppliers', product.proveedores, product.nombre)"
         :disabled="product.proveedores?.length === 0"
+        v-if="authStore.user?.role === 'admin'"
       >
         <i class="bi bi-truck-flatbed"></i> {{ product.proveedores?.length || 0 }} Proveedor(es)
       </button>

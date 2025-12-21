@@ -1,54 +1,76 @@
 <template>
   <div class="container-fluid py-4">
-    <h1 class="mb-4">Gestión de Pedidos a Proveedores</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="h3 mb-0">Gestión de Pedidos a Proveedores</h1>
+      <button @click="openReceiveOrderModal" class="btn btn-success shadow-sm">
+        <i class="bi bi-box-arrow-in-down me-2"></i> Registrar Mercancía
+      </button>
+    </div>
 
-    <div class="card shadow-sm mb-4">
-      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Listado de Pedidos</h5>
-        <div class="d-flex align-items-center">
-          <input
-            type="text"
-            class="form-control me-2"
-            placeholder="Buscar pedido..."
-            v-model="searchQuery"
-          />
-          <button @click="openReceiveOrderModal" class="btn btn-success">
-            <i class="bi bi-box-arrow-in-down me-2"></i> Recibir Pedido
-          </button>
+    <div class="card shadow-sm mb-4 border-0">
+      <div class="card-header py-3">
+        <div class="row align-items-center">
+          <div class="col">
+            <h5 class="mb-0 text-primary fw-bold">Historial de Pedidos</h5>
+          </div>
+          <div class="col-md-4">
+            <div class="input-group">
+              <span class="input-group-text border-end-0"><i class="bi bi-search"></i></span>
+              <input
+                type="text"
+                class="form-control border-start-0"
+                placeholder="Buscar por factura o proveedor..."
+                v-model="searchQuery"
+              />
+            </div>
+          </div>
         </div>
       </div>
-      <div class="card-body">
+      <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>
-                <th>ID Pedido</th>
+                <th class="ps-4">Factura / ID</th>
                 <th>Proveedor</th>
-                <th>Fecha Pedido</th>
+                <th>Fecha Entrega</th>
                 <th>Estado</th>
-                <th class="text-end">Total Estimado</th>
+                <th class="text-end pe-4">Total Pagado</th>
               </tr>
             </thead>
             <tbody>
+              <tr v-if="isLoading">
+                <td colspan="5" class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status"></div>
+                  <p class="mt-2 mb-0 text-muted">Cargando pedidos...</p>
+                </td>
+              </tr>
+
               <tr
                 v-for="pedido in filteredPedidos"
                 :key="pedido.id"
                 @click="openDetailsModal(pedido)"
-                style="cursor: pointer;"
+                style="cursor: pointer"
               >
-                <td>#{{ pedido.id }}</td>
-                <td>{{ pedido.proveedor }}</td>
-                <td>{{ formatDate(pedido.fechaPedido) }}</td>
+                <td class="ps-4">
+                  <span class="fw-bold">{{ pedido.numero_factura_proveedor || pedido.id }}</span>
+                </td>
+                <td>{{ pedido.proveedor?.nombreComercial || 'N/A' }}</td>
+                <td>{{ formatDate(pedido.fecha_entrega) }}</td>
                 <td>
-                  <span :class="['badge', getStatusBadgeClass(pedido.estado)]">
-                    {{ pedido.estado }}
+                  <span :class="['badge rounded-pill', getStatusBadgeClass(pedido.estado)]">
+                    {{ pedido.estado.toUpperCase() }}
                   </span>
                 </td>
-                <td class="text-end">{{ formatCurrency(pedido.totalEstimado) }}</td>
+                <td class="text-end pe-4 fw-bold text-success">
+                  {{ formatCurrency(pedido.monto_total) }}
+                </td>
               </tr>
-              <tr v-if="filteredPedidos.length === 0">
-                <td colspan="5" class="text-center text-muted py-3">
-                  No se encontraron pedidos.
+
+              <tr v-if="!isLoading && filteredPedidos.length === 0">
+                <td colspan="5" class="text-center text-muted py-5">
+                  <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                  No se encontraron registros de pedidos.
                 </td>
               </tr>
             </tbody>
@@ -57,79 +79,92 @@
       </div>
     </div>
 
-    <!-- Modal de Detalles del Pedido -->
     <div
       class="modal fade"
       :class="{ show: showDetailsModal }"
       tabindex="-1"
-      aria-labelledby="pedidoDetailsModalLabel"
-      aria-hidden="true"
       :style="{ display: showDetailsModal ? 'block' : 'none' }"
     >
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
           <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="pedidoDetailsModalLabel">Detalles del Pedido #{{ selectedPedido?.id }}</h5>
-            <button type="button" class="btn-close btn-close-white" @click="closeDetailsModal" aria-label="Close"></button>
+            <h5 class="modal-title">
+              Detalles Pedido #{{ selectedPedido?.numero_factura_proveedor }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              @click="closeDetailsModal"
+            ></button>
           </div>
-          <div class="modal-body" v-if="selectedPedido">
-            <p><strong>Proveedor:</strong> {{ selectedPedido.proveedor }}</p>
-            <p><strong>Fecha del Pedido:</strong> {{ formatDate(selectedPedido.fechaPedido) }}</p>
-            <p><strong>Estado:</strong>
-              <span :class="['badge', getStatusBadgeClass(selectedPedido.estado)]">
-                {{ selectedPedido.estado }}
-              </span>
-            </p>
-            <p><strong>Total Estimado:</strong> {{ formatCurrency(selectedPedido.totalEstimado) }}</p>
-            <hr>
-            <h6>Ítems del Pedido:</h6>
-            <div class="table-responsive">
-              <table class="table table-sm table-bordered">
-                <thead>
+          <div class="modal-body p-4" v-if="selectedPedido">
+            <div class="row mb-4">
+              <div class="col-sm-6">
+                <p class="text-muted mb-1">Proveedor</p>
+                <p class="fw-bold fs-5">{{ selectedPedido.proveedor?.nombreComercial }}</p>
+                <p class="small text-muted mb-0">NIT: {{ selectedPedido.proveedor?.nit }}</p>
+              </div>
+              <div class="col-sm-6 text-sm-end">
+                <p class="text-muted mb-1">Fecha de Recepción</p>
+                <p class="fw-bold">{{ formatDate(selectedPedido.fecha_entrega) }}</p>
+                <span :class="['badge', getStatusBadgeClass(selectedPedido.estado)]">
+                  {{ selectedPedido.estado }}
+                </span>
+              </div>
+            </div>
+
+            <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Productos Recibidos</h6>
+            <div class="table-responsive rounded border">
+              <table class="table table-sm mb-0">
+                <thead class="table-light">
                   <tr>
                     <th>Producto</th>
-                    <th class="text-end">Cantidad Pedida</th>
-                    <th class="text-end">Costo Unitario</th>
+                    <th class="text-end">Cant.</th>
+                    <th class="text-end">Costo Unit.</th>
                     <th class="text-end">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(item, index) in selectedPedido.items" :key="index">
-                    <td>{{ item.producto }}</td>
+                  <tr v-for="item in selectedPedido.detalles" :key="item.id">
+                    <td>{{ item.producto?.nombre }}</td>
                     <td class="text-end">{{ item.cantidad }}</td>
-                    <td class="text-end">{{ formatCurrency(item.costoUnitario) }}</td>
-                    <td class="text-end">{{ formatCurrency(item.cantidad * item.costoUnitario) }}</td>
+                    <td class="text-end">{{ formatCurrency(item.precio_compra) }}</td>
+                    <td class="text-end fw-bold">{{ formatCurrency(item.subtotal) }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <p v-if="selectedPedido.notas"><strong>Notas:</strong> {{ selectedPedido.notas }}</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeDetailsModal">Cerrar</button>
-            <!-- Aquí se podría agregar un botón para editar el pedido si fuera necesario -->
+
+            <div class="d-flex justify-content-end mt-3">
+              <div class="text-end">
+                <span class="text-muted me-2">Total de la operación:</span>
+                <span class="fs-4 fw-bold text-primary">{{
+                  formatCurrency(selectedPedido.monto_total)
+                }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal para Recibir Pedido (Reutilizando RecibirPedidosView como componente) -->
     <div
       class="modal fade"
       :class="{ show: showReceiveOrderModal }"
       tabindex="-1"
-      aria-labelledby="receiveOrderModalLabel"
-      aria-hidden="true"
       :style="{ display: showReceiveOrderModal ? 'block' : 'none' }"
     >
       <div class="modal-dialog modal-xl">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
           <div class="modal-header bg-success text-white">
-            <h5 class="modal-title" id="receiveOrderModalLabel">Registrar Recepción de Pedido</h5>
-            <button type="button" class="btn-close btn-close-white" @click="closeReceiveOrderModal" aria-label="Close"></button>
+            <h5 class="modal-title fw-bold">Nueva Entrada de Mercancía</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              @click="closeReceiveOrderModal"
+            ></button>
           </div>
           <div class="modal-body">
-            <!-- Aquí se montará el contenido del componente RecibirPedidosView -->
             <ReceiveOrderComponent
               @order-received="handleOrderReceived"
               @close="closeReceiveOrderModal"
@@ -150,167 +185,128 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import ReceiveOrderComponent from '@/components/pedidos/ReceiveOrderComponent.vue';
-import NotificationModal from '@/components/utils/NotificationModal.vue';
+import { ref, computed, onMounted } from 'vue'
+import ReceiveOrderComponent from '@/components/pedidos/ReceiveOrderComponent.vue'
+import NotificationModal from '@/components/utils/NotificationModal.vue'
+import PedidoProveedorService from '@/services/PedidoProveedorService'
 
-// Reactive state for notifications
+// --- Estados Reales ---
+const pedidos = ref<any[]>([])
+const isLoading = ref(true)
+const searchQuery = ref('')
+const showDetailsModal = ref(false)
+const selectedPedido = ref<any>(null)
+const showReceiveOrderModal = ref(false)
+
 const notificationMessage = ref({
   isVisible: false,
   message: '',
   isError: false,
-});
+})
 
-function showNotification(payload: { type: 'success' | 'error', message: string }) {
-  notificationMessage.value.message = payload.message;
-  notificationMessage.value.isError = payload.type === 'error';
-  notificationMessage.value.isVisible = true;
-}
-
-interface PedidoItem {
-  producto: string;
-  cantidad: number;
-  costoUnitario: number;
-}
-
-interface Pedido {
-  id: number;
-  proveedor: string;
-  fechaPedido: string; // ISO date string
-  estado: 'Pendiente' | 'Recibido Parcial' | 'Recibido Completo' | 'Cancelado';
-  totalEstimado: number;
-  items: PedidoItem[];
-  notas?: string;
-}
-
-const searchQuery = ref('');
-const pedidos = ref<Pedido[]>([
-  // Datos simulados
-  {
-    id: 1001,
-    proveedor: 'TecnoGlobal S.A.',
-    fechaPedido: '2023-10-26T10:00:00Z',
-    estado: 'Recibido Parcial',
-    totalEstimado: 500000,
-    items: [
-      { producto: 'Smartphone X', cantidad: 10, costoUnitario: 30000 },
-      { producto: 'Tablet Pro', cantidad: 5, costoUnitario: 40000 },
-    ],
-    notas: 'Entrega programada para el 30 de Octubre.',
-  },
-  {
-    id: 1002,
-    proveedor: 'Electro Componentes Ltda.',
-    fechaPedido: '2023-11-01T14:30:00Z',
-    estado: 'Pendiente',
-    totalEstimado: 250000,
-    items: [
-      { producto: 'Audífonos Bluetooth', cantidad: 20, costoUnitario: 5000 },
-      { producto: 'Power Bank 10000mAh', cantidad: 15, costoUnitario: 10000 },
-    ],
-  },
-  {
-    id: 1003,
-    proveedor: 'Distribuidora Móvil',
-    fechaPedido: '2023-11-05T09:00:00Z',
-    estado: 'Recibido Completo',
-    totalEstimado: 120000,
-    items: [
-      { producto: 'Protectores de Pantalla', cantidad: 100, costoUnitario: 500 },
-      { producto: 'Cables USB-C', cantidad: 50, costoUnitario: 1400 },
-    ],
-  },
-]);
-
-const filteredPedidos = computed(() => {
-  const query = searchQuery.value.toLowerCase();
-  return pedidos.value.filter(
-    (pedido) =>
-      pedido.proveedor.toLowerCase().includes(query) ||
-      pedido.id.toString().includes(query) ||
-      pedido.estado.toLowerCase().includes(query) ||
-      pedido.items.some(item => item.producto.toLowerCase().includes(query))
-  );
-});
-
-const showDetailsModal = ref(false);
-const selectedPedido = ref<Pedido | null>(null);
-
-const showReceiveOrderModal = ref(false);
-
-function openDetailsModal(pedido: Pedido) {
-  selectedPedido.value = pedido;
-  showDetailsModal.value = true;
-}
-
-function closeDetailsModal() {
-  showDetailsModal.value = false;
-  selectedPedido.value = null;
-}
-
-function openReceiveOrderModal() {
-  showReceiveOrderModal.value = true;
-}
-
-function closeReceiveOrderModal() {
-  showReceiveOrderModal.value = false;
-  // Opcional: Recargar la lista de pedidos o actualizar el pedido recién recibido
-  // Para la demo, simplemente cerramos el modal.
-}
-
-function handleOrderReceived(receivedData: any) {
-  showNotification({ type: 'success', message: 'Pedido recibido y registrado con éxito!' });
-  // En una aplicación real, aquí recargarías la lista de pedidos desde el backend
-  // o actualizarías el estado localmente con 'receivedData'
-  console.log('Pedido recibido data:', receivedData);
-  // Ejemplo de cómo agregar el pedido recién recibido a la lista (solo para simulación)
-  pedidos.value.unshift({ // Añadir al principio para ver el nuevo
-    id: Math.max(...pedidos.value.map(p => p.id)) + 1, // Nuevo ID
-    proveedor: receivedData.proveedor_nombre || 'Nuevo Proveedor', // Ajustar según la respuesta real
-    fechaPedido: new Date().toISOString(),
-    estado: 'Recibido Completo', // Asumir que se recibe completo por ahora
-    totalEstimado: receivedData.monto_total,
-    items: receivedData.productos.map((p: any) => ({
-      producto: p.nombre_producto_temporal,
-      cantidad: p.cantidad,
-      costoUnitario: p.precio_compra,
-    })),
-    notas: 'Recibido desde formulario',
-  });
-  closeReceiveOrderModal();
-}
-
-function getStatusBadgeClass(estado: Pedido['estado']) {
-  switch (estado) {
-    case 'Pendiente': return 'bg-warning text-dark';
-    case 'Recibido Parcial': return 'bg-info';
-    case 'Recibido Completo': return 'bg-success';
-    case 'Cancelado': return 'bg-danger';
-    default: return 'bg-secondary';
+// --- Carga de Datos desde API ---
+const fetchPedidos = async () => {
+  isLoading.value = true
+  try {
+    // Asumiendo que tienes un método index() en tu service que llama a GET /pedido-proveedores
+    const response = await PedidoProveedorService.getPedidos()
+    pedidos.value = response.data
+  } catch (error) {
+    showNotification({ type: 'error', message: 'Error al cargar el historial de pedidos.' })
+  } finally {
+    isLoading.value = false
   }
 }
 
+onMounted(() => {
+  fetchPedidos()
+})
+
+// --- Lógica de Búsqueda ---
+const filteredPedidos = computed(() => {
+  const query = searchQuery.value.toLowerCase()
+  return pedidos.value.filter(
+    (p) =>
+      p.proveedor?.nombreComercial?.toLowerCase().includes(query) ||
+      p.numero_factura_proveedor?.toLowerCase().includes(query) ||
+      p.id.toString().includes(query),
+  )
+})
+
+// --- Handlers ---
+function openDetailsModal(pedido: any) {
+  selectedPedido.value = pedido
+  showDetailsModal.value = true
+}
+
+function closeDetailsModal() {
+  showDetailsModal.value = false
+  selectedPedido.value = null
+}
+
+function openReceiveOrderModal() {
+  showReceiveOrderModal.value = true
+}
+
+function closeReceiveOrderModal() {
+  showReceiveOrderModal.value = false
+}
+
+function handleOrderReceived() {
+  showNotification({ type: 'success', message: 'Inventario actualizado correctamente.' })
+  closeReceiveOrderModal()
+  fetchPedidos() // Recargar lista real del servidor
+}
+
+function showNotification(payload: { type: 'success' | 'error'; message: string }) {
+  notificationMessage.value = {
+    message: payload.message,
+    isError: payload.type === 'error',
+    isVisible: true,
+  }
+}
+
+// --- Formateadores ---
+const getStatusBadgeClass = (estado: string) => {
+  const e = estado.toLowerCase()
+  if (e.includes('recibido')) return 'bg-success'
+  if (e.includes('pendiente')) return 'bg-warning text-dark'
+  if (e.includes('cancelado')) return 'bg-danger'
+  return 'bg-secondary'
+}
+
 const formatCurrency = (value: number) => {
-  return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP' });
-};
+  return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(value)
+}
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
-};
+  if (!dateString) return '---'
+  return new Date(dateString).toLocaleDateString('es-CO', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  })
+}
 </script>
 
 <style scoped>
 .modal.show {
   display: block !important;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
 }
-.modal-dialog {
-  margin-top: 50px; /* Ajuste para centrar mejor o dar espacio */
+.card {
+  border-radius: 15px;
+  overflow: hidden;
 }
-.table tbody tr {
-    transition: background-color 0.2s ease-in-out;
+.table thead th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
 }
-.table tbody tr:hover {
-    background-color: #f8f9fa; /* Color de fondo al pasar el ratón */
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.8em;
 }
 </style>

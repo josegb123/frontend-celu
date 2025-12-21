@@ -77,7 +77,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: 'Registrar Devolución',
       requireAuth: true,
-      roles: ['admin', 'seller'],
+      roles: ['admin'],
     },
   },
   {
@@ -87,10 +87,10 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: 'Gestión de Devoluciones',
       requireAuth: true,
-      roles: ['admin', 'seller'],
+      roles: ['admin'],
     },
   },
-  {
+  /* { Ruta de testing
     path: '/test',
     name: 'Test',
     component: () => import('@/views/TestsView.vue'),
@@ -99,7 +99,7 @@ const routes: Array<RouteRecordRaw> = [
       requireAuth: true,
       roles: ['admin'],
     },
-  },
+  }, */
 
   // --------------------
   // 🔐 SOLO ADMIN
@@ -192,7 +192,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: 'Configuración',
       requireAuth: true,
-      roles: ['admin'],
+      roles: ['admin', 'seller'],
     },
   },
 ]

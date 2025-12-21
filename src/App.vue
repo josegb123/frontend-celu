@@ -17,6 +17,7 @@
     </template>
 
     <CerrarCajaModal
+      :es-obligatorio="false"
       v-if="showCerrarCajaModal"
       @close="showCerrarCajaModal = false"
       @closed="handleCajaClosed"
@@ -54,7 +55,7 @@ function applyThemeAttribute(isDark: boolean) {
 // Lógica de chequeo de sesión al inicio
 onMounted(() => {
   authStore.checkSession()
-  if (!cajaStore.isCajaAbierta && !cajaStore.isLoading) {
+  if (!cajaStore.isCajaAbierta && !cajaStore.isLoading && authStore.isAuthenticated) {
     cajaStore.fetchCajaActiva()
   }
 })

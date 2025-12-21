@@ -2,12 +2,13 @@ import { defineStore } from 'pinia'
 import laravelApi from '@/http/laravelApi'
 import AuthService from '@/services/AuthService'
 import { useCajaStore } from './useCajaStore'
+import { AxiosError } from 'axios'
 
 interface User {
   id: number | null
   name: string | null
   email: string | null
-  role: string | null // Added role
+  role: string | null
 }
 
 interface AuthResponse {
@@ -16,77 +17,100 @@ interface AuthResponse {
   token: string | null
 }
 
+interface AuthState {
+  isAuthenticated: boolean
+  accessToken: string | null
+  user: User
+  isLoading: boolean // Estado añadido
+}
+
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    isAuthenticated: false as boolean,
-    accessToken: localStorage.getItem('access_token') || null,
-    user: { id: null, name: null, email: null, role: null } as User, // Initialize role
+  state: (): AuthState => ({
+    isAuthenticated: !!localStorage.getItem('access_token'),
+    accessToken: localStorage.getItem('access_token'),
+    user: { id: null, name: null, email: null, role: null },
+    isLoading: false,
   }),
 
   actions: {
     async login(email: string, password: string): Promise<AuthResponse> {
+      this.isLoading = true // Iniciar carga
       const authService = new AuthService()
-      const response = await authService.login(email, password)
 
-      if (response.success && response.token) {
-        this.accessToken = response.token
-        localStorage.setItem('access_token', response.token)
-        this.isAuthenticated = true
+      try {
+        const response = await authService.login(email, password)
 
-        await this.checkSession()
+        if (response.success && response.token) {
+          this.accessToken = response.token
+          localStorage.setItem('access_token', response.token)
+          this.isAuthenticated = true
+
+          await this.checkSession()
+        }
+        return response
+      } catch (err: unknown) {
+        // Manejo de error estricto
+        const message =
+          err instanceof AxiosError
+            ? err.response?.data?.message
+            : 'Error inesperado durante el login'
+
+        return { success: false, message, token: null }
+      } finally {
+        this.isLoading = false // Finalizar carga
       }
-      return response
     },
 
-    /**
-     * @description Intenta cerrar sesión. Si hay una caja abierta, aborta y retorna false.
-     * @returns {Promise<boolean>} Retorna true si el cierre de sesión fue exitoso, false si fue bloqueado.
-     */
     async logout(): Promise<boolean> {
-      // CAMBIO DE RETORNO a Promise<boolean>
-
-      // 1. Verificar el estado de la caja
       const cajaStore = useCajaStore()
 
       if (cajaStore.isCajaAbierta) {
-        console.warn('AuthStore: Cierre de sesión bloqueado. Hay una caja diaria activa.')
-        // Debugging: Retornar falso para que el componente sepa que el logout falló.
+        console.warn('AuthStore: Logout bloqueado por caja abierta.')
         return false
       }
 
-      // 2. Ejecutar el cierre de sesión si no hay caja abierta
+      this.isLoading = true
       try {
         const authService = new AuthService()
         await authService.logout()
-      } catch (e) {
-        // Un error en el logout del backend no debe impedir el borrado local
-        console.error('Error al notificar el cierre de sesión al backend:', e)
+      } catch (err: unknown) {
+        console.error('Error al cerrar sesión en el backend:', err)
       } finally {
-        // 3. Limpieza de estado local y almacenamiento
+        // Limpieza obligatoria de estado local
         this.accessToken = null
         localStorage.removeItem('access_token')
         this.isAuthenticated = false
-        this.user = { id: null, name: null, email: null, role: null } // Clear role
+        this.user = { id: null, name: null, email: null, role: null }
+        this.isLoading = false
       }
       return true
     },
 
-    async checkSession() {
+    async checkSession(): Promise<boolean> {
       if (!this.accessToken) {
-        this.isAuthenticated = false
-        this.user = { id: null, name: null, email: null, role: null } // Clear role
+        this.clearLocalSession()
         return false
       }
 
+      this.isLoading = true
       try {
-        const response = await laravelApi.get('/user')
+        const response = await laravelApi.get<User>('/user')
         this.user = response.data
         this.isAuthenticated = true
         return true
       } catch {
-        await this.logout()
+        this.clearLocalSession()
         return false
+      } finally {
+        this.isLoading = false
       }
+    },
+
+    clearLocalSession(): void {
+      this.accessToken = null
+      localStorage.removeItem('access_token')
+      this.isAuthenticated = false
+      this.user = { id: null, name: null, email: null, role: null }
     },
   },
 })

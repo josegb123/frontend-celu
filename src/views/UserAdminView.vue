@@ -28,7 +28,6 @@
               <option value="">Todos los Roles</option>
               <option value="admin">Administrador</option>
               <option value="seller">Vendedor</option>
-              <option value="editor">Editor</option>
             </select>
           </div>
         </div>
@@ -133,6 +132,7 @@ import UserForm from '@/components/users/UserForm.vue'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
 import ConfirmationModal from '@/components/utils/ConfirmationModal.vue'
 import { isAxiosError } from 'axios'
+import type { PaginatedResponse } from '@/interfaces/ILaravelPaginated'
 
 // --- ESTADO ---
 
@@ -151,11 +151,11 @@ const confirmation = ref({
 /**
  * Datos paginados de usuarios obtenidos de la API.
  */
-const paginatedUsers = ref<any>({
+const paginatedUsers = ref<PaginatedResponse<IUser>>({
   data: [],
   links: {
-    first: null,
-    last: null,
+    first: '',
+    last: '',
     prev: null,
     next: null,
   },
@@ -265,8 +265,8 @@ const fetchUsers = async () => {
     paginatedUsers.value = {
       data: [],
       links: {
-        first: null,
-        last: null,
+        first: '',
+        last: '',
         prev: null,
         next: null,
       },

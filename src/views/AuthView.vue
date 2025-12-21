@@ -12,48 +12,40 @@
     </div>
 
     <div class="login-card-wrapper">
-      <div
-        class="card rounded-3 text-black overflow-hidden shadow-lg"
-        :class="!isDarkMode ? 'border border-subtle' : 'border border-light-subtle'"
-      >
+      <div class="card rounded-3 overflow-hidden shadow-lg border-0">
         <div class="row g-0">
           <div class="col-12 col-md-7 col-lg-6">
             <div class="card-body p-4 p-md-5 mx-md-4">
               <div class="text-center mb-4 d-lg-none">
-                <h1 class="h3 fw-bold mb-3">{{ brandingName }}</h1>
+                <h1 class="h3 fw-bold mb-3">{{ appConfig.getBusinessName }}</h1>
                 <img
-                  :src="appConfig.getBusinessLogoUrl || defaultLogo"
-                  alt="Logo de la empresa"
-                  style="max-width: 150px"
-                  class="mb-3"
+                  :src="appConfig.getBusinessLogo || defaultLogo"
+                  alt="Logo"
+                  style="max-width: 120px"
+                  class="mb-3 rounded"
                 />
-                <p class="text-muted">Inicia sesión para continuar</p>
               </div>
 
-              <h2
-                class="h4 fw-bold text-center text-lg-start mb-5 pb-3 d-none d-lg-block"
-                :class="{ 'text-white': isDarkMode, 'text-dark': !isDarkMode }"
-              >
+              <h2 class="h4 fw-bold text-center text-lg-start mb-5 pb-3 d-none d-lg-block">
                 Ingresar al sistema
               </h2>
 
               <form @submit.prevent="authUser">
-                <div class="my-4 pt-4">
-                  <label for="inputEmail" class="form-label fw-semibold text-muted">
+                <div class="mb-4">
+                  <label class="form-label fw-semibold text-muted small uppercase">
                     <i class="bi bi-envelope me-2 text-primary"></i>Correo Electrónico
                   </label>
                   <input
                     type="email"
                     class="form-control form-control-lg rounded-3 form-control-minimal"
-                    id="inputEmail"
-                    placeholder="nombre@ejemplo.com"
+                    placeholder="correo@ejemplo.com"
                     v-model="email"
                     required
                   />
                 </div>
 
                 <div class="mb-4">
-                  <label for="inputPassword" class="form-label fw-semibold text-muted">
+                  <label class="form-label fw-semibold text-muted small">
                     <i class="bi bi-lock me-2 text-primary"></i>Contraseña
                   </label>
 
@@ -61,41 +53,48 @@
                     <input
                       :type="passwordVisible ? 'text' : 'password'"
                       class="form-control rounded-start-3 form-control-minimal"
-                      id="inputPassword"
-                      placeholder="Ingresa tu contraseña"
+                      placeholder="••••••••"
                       v-model="password"
                       required
                     />
                     <button
                       class="btn btn-outline-primary rounded-end-3 input-group-btn-minimal"
                       type="button"
-                      @click="togglePasswordVisibility"
+                      @click="passwordVisible = !passwordVisible"
                     >
-                      <i
-                        :class="passwordVisible ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"
-                        class="text-primary"
-                      ></i>
+                      <i :class="passwordVisible ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
                     </button>
                   </div>
                 </div>
 
-                <div class="text-center pt-3 mt-4 pb-1">
+                <div class="text-center pt-3 mt-4">
                   <button
                     type="submit"
                     class="btn btn-primary btn-lg rounded-3 fw-bold shadow-sm w-100"
-                    :disabled="!email || !password"
+                    :disabled="!email || !password || authStore.isLoading"
                   >
-                    Ingresar <i class="bi bi-arrow-right-circle-fill ms-3"></i>
+                    <span
+                      v-if="authStore.isLoading"
+                      class="spinner-border spinner-border-sm me-2"
+                    ></span>
+                    {{ authStore.isLoading ? 'Verificando...' : 'Ingresar' }}
+                    <i v-if="!authStore.isLoading" class="bi bi-arrow-right-circle-fill ms-2"></i>
                   </button>
                 </div>
 
                 <div
                   v-if="authMessage"
-                  :class="[
-                    'alert mt-3 text-center',
-                    authMessageType === 'success' ? 'alert-success' : 'alert-danger',
-                  ]"
+                  class="alert mt-4 text-center small py-2"
+                  :class="authMessageType === 'success' ? 'alert-success' : 'alert-danger'"
                 >
+                  <i
+                    class="bi"
+                    :class="
+                      authMessageType === 'success'
+                        ? 'bi-check-circle-fill'
+                        : 'bi-exclamation-octagon-fill'
+                    "
+                  ></i>
                   {{ authMessage }}
                 </div>
               </form>
@@ -107,17 +106,14 @@
           >
             <div class="text-white px-3 py-4 p-md-5 mx-md-4 text-center">
               <img
-                :src="appConfig.getBusinessLogoUrl || defaultLogo"
-                alt="Logo de la empresa"
-                style="max-width: 180px"
-                class="mb-4"
+                :src="appConfig.getBusinessLogo || defaultLogo"
+                alt="Logo Negocio"
+                style="max-width: 180px; filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2))"
+                class="mb-4 rounded"
               />
-              <h4 class="mb-3 fw-bold">
-                {{ brandingName }}
-              </h4>
-              <p class="small mb-0">
-                Optimiza tu negocio. Mantén tu stock, ventas y finanzas bajo control en una sola
-                plataforma.
+              <h4 class="mb-3 fw-bold">{{ appConfig.getBusinessName }}</h4>
+              <p class="small mb-0 opacity-75">
+                Plataforma integral de gestión: Stock, Ventas y Auditoría en tiempo real.
               </p>
             </div>
           </div>
@@ -128,8 +124,7 @@
 </template>
 
 <script setup lang="ts">
-// (El bloque <script setup> se mantiene igual)
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
 import { useAppConfigStore } from '@/store/useAppConfigStore'
@@ -145,83 +140,53 @@ const passwordVisible = ref(false)
 const authMessage = ref<string | null>(null)
 const authMessageType = ref<'success' | 'danger'>('danger')
 
-// --- Lógica del Branding y Tema ---
-const brandingName = appConfig.getBusinessName
+// Computada para saber si estamos en modo oscuro basado en el store central
+const isDarkMode = computed(() => appConfig.uiPreferences.theme === 'dark')
 
-// Por defecto, tema oscuro (true)
-const isDarkMode = ref(true)
-
-const applyTheme = (isDark: boolean) => {
-  if (isDark) {
-    document.documentElement.setAttribute('data-bs-theme', 'dark')
-  } else {
-    document.documentElement.removeAttribute('data-bs-theme')
-  }
+/**
+ * Alterna el tema usando el método centralizado del Store.
+ * Este método ya guarda en localStorage y aplica el atributo al HTML.
+ */
+const toggleTheme = (): void => {
+  const newTheme = isDarkMode.value ? 'light' : 'dark'
+  appConfig.setUiPreferences({ theme: newTheme })
 }
 
-const toggleTheme = () => {
-  isDarkMode.value = !isDarkMode.value
-  localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
-  applyTheme(isDarkMode.value)
+const authUser = async (): Promise<void> => {
+  authMessage.value = null
+
+  const success = await authStore.login(email.value, password.value)
+
+  if (success) {
+    authMessage.value = 'Acceso concedido. Redirigiendo...'
+    authMessageType.value = 'success'
+    setTimeout(() => router.push({ name: 'home' }), 1000)
+  } else {
+    authMessage.value = 'Credenciales inválidas o error de servidor.'
+    authMessageType.value = 'danger'
+  }
 }
 
 onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
-  isDarkMode.value = savedTheme === 'light' ? false : true
-
-  applyTheme(isDarkMode.value)
+  // Aseguramos que los datos del negocio estén cargados al entrar al login
+  if (appConfig.businessDetails.nombre === 'Cargando...') {
+    appConfig.fetchBusinessSettings()
+  }
 })
-
-// --- Lógica de la Vista ---
-const togglePasswordVisibility = () => {
-  passwordVisible.value = !passwordVisible.value
-}
-
-const authUser = async () => {
-  authMessage.value = null
-
-  if (!email.value.trim() || !password.value.trim()) {
-    authMessage.value = 'El correo electrónico y la contraseña son obligatorios.'
-    authMessageType.value = 'danger'
-    return
-  }
-
-  const authResponse = await authStore.login(email.value, password.value)
-
-  if (authResponse.success) {
-    authMessage.value = '¡Éxito! Redirigiendo al panel de control...'
-    authMessageType.value = 'success'
-
-    router.push({ name: 'home' })
-  } else {
-    const errorMessage = authResponse.message || 'Fallo de conexión o credenciales inválidas.'
-
-    authMessage.value = errorMessage
-    authMessageType.value = 'danger'
-  }
-}
 </script>
 
 <style scoped>
-/* --- Estilos de Fondo y Contenedor --- */
-
-/* Fondo base (será afectado por data-bs-theme) */
 .login-background-modern {
   height: 100vh;
   background-color: var(--bs-body-bg);
   transition: background-color 0.3s ease;
 }
 
-/* Contenedor principal para simular el centrado y el ancho máximo del col-xl-10 */
 .login-card-wrapper {
-  max-width: 950px; /* Ancho cómodo para el diseño de dos columnas */
+  max-width: 950px;
   width: 90%;
 }
-.card {
-  background-color: var(--bs-card-bg);
-}
 
-/* Posicionamiento del Botón de Tema */
 .theme-switch-container {
   position: absolute;
   top: 1.5rem;
@@ -229,59 +194,35 @@ const authUser = async () => {
   z-index: 1000;
 }
 
-/* GRADIENTE PERSONALIZADO (Azul Primario de BS5 y Cian/Purpura para elegancia) */
 .gradient-custom {
-  /* Gradiente base (Claro) */
-  background: linear-gradient(
-    to top left,
-    var(--bs-primary),
-    #00bcd4
-  ); /* Azul primario a Cian claro */
+  background: linear-gradient(to top left, var(--bs-primary), #00bcd4);
+  transition: all 0.5s ease;
 }
 
-/* Manejo del gradiente en Modo Oscuro */
+/* Ajuste de gradiente para modo oscuro mediante el atributo de BS5 */
 :root[data-bs-theme='dark'] .gradient-custom {
-  /* Gradiente más oscuro para el modo dark (Azul oscuro a un púrpura/magenta profundo) */
   background: linear-gradient(to top left, #1e3a8a, #4c1d95);
 }
 
-/* ESTILOS ESPECÍFICOS DE BOOTSTRAP */
-
-.rounded-3 {
-  border-radius: 0.3rem !important;
+.form-control-minimal {
+  background-color: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
 }
 
-/* Asegura que los bordes del gradiente se redondeen correctamente en pantallas grandes */
+.form-control-minimal:focus {
+  background-color: var(--bs-body-bg);
+  border-color: var(--bs-primary);
+  box-shadow: none;
+}
+
+.input-group-btn-minimal {
+  border-left: none !important;
+}
+
 @media (min-width: 992px) {
   .gradient-custom {
     border-top-right-radius: 0.3rem;
     border-bottom-right-radius: 0.3rem;
   }
-}
-
-/* --- Estilos de Formulario --- */
-
-.form-control-minimal {
-  border-width: 1px;
-  transition:
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
-}
-.form-control-minimal:focus {
-  border-color: var(--bs-primary);
-  box-shadow: 0 0 0 0.1rem rgba(var(--bs-primary-rgb), 0.25);
-}
-
-.input-group-btn-minimal {
-  border-width: 1px !important;
-  border-color: var(--bs-border-color) !important;
-  border-left: none !important;
-}
-.input-group-btn-minimal:hover {
-  border-color: var(--bs-primary) !important;
-  background-color: var(--bs-primary) !important;
-}
-.input-group-btn-minimal:hover .text-primary {
-  color: var(--bs-white) !important;
 }
 </style>

@@ -15,68 +15,55 @@
         width="28px"
         height="28px"
       />
-
-      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-        {{ totalNotificaciones > 99 ? '99+' : totalNotificaciones || '' }}
+      <span
+        v-if="totalNotificaciones > 0"
+        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+      >
+        {{ totalNotificaciones > 99 ? '99+' : totalNotificaciones }}
       </span>
     </a>
 
-    <Teleport to="#teleported-layer">
+    <Teleport to="#teleported-layer" v-if="isMenuOpen">
       <ul
-        v-if="isMenuOpen"
-        class="dropdown-menu dropdown-menu-end border rounded shadow-lg"
-        :class="{ show: isMenuOpen }"
+        class="dropdown-menu border rounded shadow-lg show"
         :style="menuPositionStyle"
         ref="dropdownMenuRef"
         aria-labelledby="userDropdownAnchor"
       >
         <li class="dropdown-header">
-          <span class="d-block fw-bold fs-6 text-truncate text-primary">{{
-            user.name || 'Usuario'
-          }}</span>
-          <small class="text-muted text-truncate" :title="user.email ?? undefined">{{
-            user.email
-          }}</small>
+          <span class="d-block fw-bold fs-6 text-truncate text-primary">
+            {{ user.name || 'Usuario' }}
+          </span>
+          <small class="text-muted text-truncate d-block">{{ user.email }}</small>
         </li>
-        <li>
-          <hr class="dropdown-divider" />
-        </li>
-
+        <li><hr class="dropdown-divider" /></li>
         <li>
           <a class="dropdown-item" href="#" @click.prevent="goToRoute('notificaciones')">
             <i class="bi bi-bell-fill me-2 text-warning"></i>Notificaciones
-            <span v-if="totalNotificaciones > 0" class="badge rounded-pill bg-danger">
-              {{ totalNotificaciones }}
-            </span>
           </a>
         </li>
-
-        <li v-if="totalNotificaciones > 0 || cajaStore.isCajaAbierta">
-          <hr class="dropdown-divider" />
-        </li>
-
         <li v-if="cajaStore.isCajaAbierta">
           <a class="dropdown-item text-danger fw-bold" href="#" @click.prevent="handleCierreManual">
             <i class="bi bi-cash-coin me-2"></i>Cerrar Caja Diaria
           </a>
         </li>
-        <li v-if="cajaStore.isCajaAbierta">
-          <hr class="dropdown-divider" />
-        </li>
-
+        <li><hr class="dropdown-divider" /></li>
         <li>
           <a class="dropdown-item" href="#" @click.prevent="goToRoute('Config')">
             <i class="bi bi-gear-fill me-2 text-secondary"></i>Configuración
           </a>
         </li>
-
+        <li><hr class="dropdown-divider" /></li>
         <li>
-          <hr class="dropdown-divider" />
-        </li>
-
-        <li>
-          <a class="dropdown-item text-danger" href="#" @click.prevent="handleLogout">
-            <i class="bi bi-box-arrow-right me-2"></i><strong>Cerrar Sesión</strong>
+          <a
+            class="dropdown-item text-danger"
+            href="#"
+            :class="{ disabled: authStore.isLoading }"
+            @click.prevent="handleLogout"
+          >
+            <i v-if="!authStore.isLoading" class="bi bi-box-arrow-right me-2"></i>
+            <span v-else class="spinner-border spinner-border-sm me-2"></span>
+            <strong>{{ authStore.isLoading ? 'Saliendo...' : 'Cerrar Sesión' }}</strong>
           </a>
         </li>
       </ul>
@@ -85,136 +72,112 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, onUnmounted, nextTick } from 'vue'
+import { computed, ref, watch, onUnmounted, nextTick, type CSSProperties } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
 import { useCajaStore } from '@/store/useCajaStore'
 import { useStockStore } from '@/store/useStockAlertStore'
-import { useFloating, offset, flip } from '@floating-ui/vue'
+import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/vue'
 
-// Definir los eventos que este componente puede emitir
 const emit = defineEmits(['showCierreModal'])
-
 const router = useRouter()
 const authStore = useAuthStore()
 const cajaStore = useCajaStore()
 const stockStore = useStockStore()
 
 const defaultAvatar = '/avatar.webp'
-
-/** Datos del usuario (reactivos desde Pinia) */
 const user = computed(() => authStore.user)
+const totalNotificaciones = computed(() => stockStore.total)
 
-/** Cálculo del total de notificaciones */
-const totalNotificaciones = computed(() => {
-  return stockStore.total
-})
-
-// --- Lógica de Teleport y Floating UI ---
 const isMenuOpen = ref(false)
-const dropdownAnchorRef = ref<HTMLElement | null>(null) // El botón/avatar
-const dropdownMenuRef = ref<HTMLElement | null>(null) // El menú <ul> (teletransportado)
+const isPositioned = ref(false) // Control para evitar el salto visual
+const dropdownAnchorRef = ref<HTMLElement | null>(null)
+const dropdownMenuRef = ref<HTMLElement | null>(null)
 
-// Configuración de Floating UI para calcular la posición
+// autoUpdate asegura que si haces scroll o cambias el tamaño, el menú siga al botón
 const { floatingStyles, update } = useFloating(dropdownAnchorRef, dropdownMenuRef, {
-  // Cuando el sidebar está colapsado, queremos que el menú aparezca a la DERECHA del ícono.
-  placement: 'right-start',
-  middleware: [
-    offset(5), // 5px de separación
-    flip(), // Permite que el menú se voltee si no cabe
-  ],
+  placement: 'bottom-end',
+  whileElementsMounted: autoUpdate,
+  middleware: [offset(8), flip(), shift()],
 })
 
-// Estilos dinámicos para el menú
-const menuPositionStyle = computed(() => ({
-  // Floating UI provee 'top', 'left' y 'position: absolute'
-  ...floatingStyles.value,
-  zIndex: '9999', // Asegura que esté por encima de cualquier otro elemento
-}))
+/**
+ * CORRECCIÓN DE ERROR DE TIPADO:
+ * Definimos el retorno como CSSProperties para que TS acepte 'visibility'
+ */
+const menuPositionStyle = computed(
+  (): CSSProperties => ({
+    ...floatingStyles.value,
+    zIndex: 9999,
+    opacity: isPositioned.value ? 1 : 0,
+    visibility: (isPositioned.value ? 'visible' : 'hidden') as CSSProperties['visibility'],
+    transition: 'opacity 0.15s ease-out',
+  }),
+)
 
-// Lógica para cerrar al hacer clic fuera
 const handleOutsideClick = (event: MouseEvent) => {
-  if (!isMenuOpen.value) return
-
   const target = event.target as Node
-  const isAnchor = dropdownAnchorRef.value?.contains(target)
-  const isMenu = dropdownMenuRef.value?.contains(target)
-  if (!isAnchor && !isMenu) {
+  if (!dropdownAnchorRef.value?.contains(target) && !dropdownMenuRef.value?.contains(target)) {
     isMenuOpen.value = false
   }
 }
 
-// Observar el cambio de isMenuOpen para actualizar la posición
-watch(isMenuOpen, (isOpen) => {
+watch(isMenuOpen, async (isOpen) => {
   if (isOpen) {
-    // Esperar un tick para que el menú se renderice en el DOM antes de calcular la posición
-    nextTick(() => {
-      update()
-    })
+    isPositioned.value = false // Ocultar mientras se calcula
+    await nextTick()
+    await update()
+    isPositioned.value = true // Mostrar ya posicionado
     document.addEventListener('click', handleOutsideClick)
   } else {
     document.removeEventListener('click', handleOutsideClick)
   }
 })
-// --- FIN Lógica de Teleport y Floating UI ---
 
-/**
- * Maneja la navegación a otras rutas.
- * @param routeName - Nombre de la ruta a navegar.
- */
-const goToRoute = (routeName: string) => {
-  isMenuOpen.value = false // Cierra el menú al navegar
+const goToRoute = async (routeName: string) => {
+  isMenuOpen.value = false
+  await nextTick()
   router.push({ name: routeName })
 }
 
-/** Maneja el cierre de caja manual */
 const handleCierreManual = () => {
-  isMenuOpen.value = false // Cierra el menú
-  if (cajaStore.isCajaAbierta) {
-    emit('showCierreModal')
-  }
+  isMenuOpen.value = false
+  emit('showCierreModal')
 }
 
-/** Maneja el cierre de sesión */
 const handleLogout = async () => {
-  isMenuOpen.value = false // Cierra el menú
+  if (authStore.isLoading) return
+  isMenuOpen.value = false
+  await nextTick()
   const loggedOut = await authStore.logout()
-
-  if (!loggedOut) {
-    emit('showCierreModal')
-    return
-  }
-
-  router.push({ name: 'auth' })
+  if (loggedOut) router.push({ name: 'auth' })
+  else emit('showCierreModal')
 }
-
-onMounted(() => {
-  stockStore.fetchBajoStock()
-})
 
 onUnmounted(() => {
-  // Limpiar el listener por si acaso
   document.removeEventListener('click', handleOutsideClick)
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+/* Elimina la flecha/caret en todos los estados */
+.dropdown-toggle::after {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+}
+
+/* Opcional: Si Bootstrap añade un margen a la derecha del texto por el toggle */
+.dropdown-toggle {
+  padding-right: 0.5rem; /* Ajusta según prefieras el espaciado del avatar */
+}
+
 .profile-avatar {
   object-fit: cover;
+  transition: transform 0.2s ease;
 }
 
-/* Se mantiene para eliminar el caret de Bootstrap, aunque ya no se usa data-bs-toggle */
-.dropdown-toggle::after {
-  display: none;
-}
-
-.dropdown-item {
-  cursor: pointer;
-}
-
-.user-menu .dropdown-toggle {
-  /* Asegurar que el ancla tenga un z-index alto en su posición original */
-  position: relative;
-  z-index: 800;
+.profile-avatar:hover {
+  transform: scale(1.3);
 }
 </style>

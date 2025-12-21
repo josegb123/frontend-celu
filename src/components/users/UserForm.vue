@@ -37,7 +37,6 @@
             <option disabled value="">Seleccione Rol</option>
             <option value="admin">Administrador</option>
             <option value="seller">Vendedor</option>
-            <option value="editor">Editor</option>
           </select>
           <div
             v-if="errors.role || clientErrors.role.length > 0"

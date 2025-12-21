@@ -28,7 +28,7 @@
                 <th>Producto</th>
                 <th>Stock Actual</th>
                 <th>Mínimo</th>
-                <th class="text-center">Acciones</th>
+                <th class="text-center" v-if="isAdmin">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -43,6 +43,7 @@
                     class="btn btn-sm btn-success"
                     @click="abrirModalContacto(producto)"
                     :disabled="!producto.proveedores?.length"
+                    v-if="isAdmin"
                   >
                     <i class="bi bi-whatsapp"></i> Pedir Stock
                   </button>
@@ -144,10 +145,17 @@ import ProductoBajoStockService from '@/services/ProductoBajoStockService'
 import type { ProductoBajoStock } from '@/interfaces/IProductoBajoStock'
 import type { Proveedor } from '@/services/proveedorService'
 import type { ICuentaPorCobrar } from '@/interfaces/ICuentaPorCobrar'
+import { useAuthStore } from '@/store/authStore'
+import { computed } from 'vue'
 
 const appConfig = useAppConfigStore()
 const cuentaStore = useCuentaAlertaStore()
 const enterpriseName = appConfig.getBusinessName
+const authStore = useAuthStore()
+
+const isAdmin = computed(() => {
+  return authStore.user?.role === 'administrador' || authStore.user?.role === 'admin'
+})
 
 // --- ESTADO LOCAL STOCK ---
 const productosBajoStock = ref<ProductoBajoStock[]>([])
