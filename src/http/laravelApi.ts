@@ -53,7 +53,8 @@ laravelApi.interceptors.response.use(
 
     // Manejo de Sesión Expirada (401)
     if (error.response?.status === 401) {
-      authStore.logout()
+      // Forzamos el cierre de sesión ignorando el estado de la caja
+      authStore.logout(true)
 
       if (router.currentRoute.value.name !== 'auth') {
         router.push({ name: 'auth' })

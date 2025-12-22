@@ -61,10 +61,11 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async logout(): Promise<boolean> {
+    async logout(force = false): Promise<boolean> {
       const cajaStore = useCajaStore()
 
-      if (cajaStore.isCajaAbierta) {
+      // Si no es forzado y la caja está abierta, bloqueamos el cierre manual
+      if (!force && cajaStore.isCajaAbierta) {
         console.warn('AuthStore: Logout bloqueado por caja abierta.')
         return false
       }
@@ -76,11 +77,8 @@ export const useAuthStore = defineStore('auth', {
       } catch (err: unknown) {
         console.error('Error al cerrar sesión en el backend:', err)
       } finally {
-        // Limpieza obligatoria de estado local
-        this.accessToken = null
-        localStorage.removeItem('access_token')
-        this.isAuthenticated = false
-        this.user = { id: null, name: null, email: null, role: null }
+        // ESTO DEBE PASAR SIEMPRE
+        this.clearLocalSession()
         this.isLoading = false
       }
       return true

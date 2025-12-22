@@ -211,8 +211,13 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
   const appConfig = useAppConfigStore() // Added this
-  const isAuthenticated = await authStore.checkSession()
+  const isAuthenticated = authStore.isAuthenticated
   const userRole = authStore.user?.role
+
+  // 1. Si hay token pero no hay datos de usuario, verificamos sesión
+  if (authStore.accessToken && !authStore.user.id) {
+    await authStore.checkSession()
+  }
 
   // Título
   document.title = to.meta.title
