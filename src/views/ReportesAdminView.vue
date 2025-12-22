@@ -380,10 +380,10 @@ interface GananciaHist {
 const appConfig = useAppConfigStore()
 
 // --- ESTADOS ---
-const startDate = ref<string>('')
-const endDate = ref<string>('')
-const cuadreCajaStartDate = ref<string>('')
-const cuadreCajaEndDate = ref<string>('')
+const startDate = ref<string | undefined>('')
+const endDate = ref<string | undefined>('')
+const cuadreCajaStartDate = ref<string | undefined>('')
+const cuadreCajaEndDate = ref<string | undefined>('')
 
 const ventasResult = ref<{ totalVentas: number; ticketPromedio: number } | null>(null)
 const productosBajaRotacion = ref<ProductoRotacion[]>([])
