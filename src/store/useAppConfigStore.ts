@@ -51,6 +51,12 @@ export const useAppConfigStore = defineStore('appConfig', {
     getBusinessName: (state): string => state.businessDetails.nombre,
     getBusinessLogo: (state): string => state.businessDetails.logo,
     getTheme: (state) => state.uiPreferences.theme,
+    getBusinessAdmin: (state) => state.businessDetails.admin,
+    getBusinessNit: (state) => state.businessDetails.nit,
+    getBusinessPhone: (state) => state.businessDetails.telefono,
+    getBusinessAddress: (state) => state.businessDetails.direccion,
+    getLanguage: (state) => state.uiPreferences.language,
+    getNotificationsEnabled: (state) => state.uiPreferences.enableNotifications,
   },
 
   actions: {
@@ -111,28 +117,43 @@ export const useAppConfigStore = defineStore('appConfig', {
 
     /**
      * Guarda los cambios del negocio en el Backend
-     * Soporta el envío de datos parciales
+     * Soporta el envío de FormData (con archivos) o JSON parcial
      */
-    async updateBusinessDetails(details: Partial<BusinessDetails>): Promise<void> {
+    async updateBusinessDetails(details: FormData | Partial<BusinessDetails>): Promise<void> {
       this.isLoading = true
+      this.error = null // Limpiamos errores previos
+
       try {
-        // POST a la ruta que creamos
+        // Configuramos los headers dinámicamente según el tipo de dato
+        const isFormData = details instanceof FormData
+
         const { data } = await laravelApi.post<{ data: BusinessDetails }>(
           '/settings/business',
           details,
+          {
+            headers: {
+              // Si es FormData, dejamos que el navegador ponga el Content-Type con el boundary correcto
+              // NO forzamos 'application/json'
+              'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+            },
+          },
         )
+
+        // Actualizamos el estado con la respuesta fresca del servidor
         this.businessDetails = data.data
       } catch (err: unknown) {
         if (err instanceof AxiosError) {
+          // Capturamos el mensaje detallado de Laravel
           const msg = err.response?.data?.message || 'Error al actualizar configuración'
           this.error = msg
-          throw new Error(msg) // Re-lanzamos para que el componente maneje la notificación
+          // Re-lanzamos para que el componente (View) pueda mostrar la notificación
+          throw err
         }
+        throw new Error('Error inesperado')
       } finally {
         this.isLoading = false
       }
     },
-
     /**
      * Actualiza preferencias de UI y las guarda localmente
      */

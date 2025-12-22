@@ -17,7 +17,7 @@
       />
       <span
         v-if="totalNotificaciones > 0"
-        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        class="position-absolute top-0 start-80 translate-middle badge rounded-pill bg-danger"
       >
         {{ totalNotificaciones > 99 ? '99+' : totalNotificaciones }}
       </span>
@@ -40,6 +40,9 @@
         <li>
           <a class="dropdown-item" href="#" @click.prevent="goToRoute('notificaciones')">
             <i class="bi bi-bell-fill me-2 text-warning"></i>Notificaciones
+            <span v-if="totalNotificaciones > 0" class="badge rounded-pill bg-danger">
+              {{ totalNotificaciones > 99 ? '99+' : totalNotificaciones }}
+            </span>
           </a>
         </li>
         <li v-if="cajaStore.isCajaAbierta">
@@ -87,7 +90,7 @@ const stockStore = useStockStore()
 
 const defaultAvatar = '/avatar.webp'
 const user = computed(() => authStore.user)
-const totalNotificaciones = computed(() => stockStore.total)
+const totalNotificaciones = computed(() => stockStore.badgeCount)
 
 const isMenuOpen = ref(false)
 const isPositioned = ref(false) // Control para evitar el salto visual

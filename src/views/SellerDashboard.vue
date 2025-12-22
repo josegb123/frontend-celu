@@ -2,7 +2,7 @@
   <div class="container py-4">
     <div class="row mb-5 mt-2">
       <div class="col-12 text-center text-md-start">
-        <h1 class="display-5 fw-bold text-gradient">Panel de Ventas</h1>
+        <h1 class="display-5 fw-bold text-gradient">Panel de Vendedor</h1>
         <p class="text-muted fs-5">Bienvenido de nuevo, {{ authStore.user?.name || 'Vendedor' }}</p>
       </div>
     </div>
@@ -68,8 +68,15 @@
 
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
+import { useStockStore } from '@/store/useStockAlertStore'
+import { onMounted } from 'vue'
 
 const authStore = useAuthStore()
+const stockStore = useStockStore()
+
+onMounted(() => {
+  stockStore.fetchBajoStock()
+})
 </script>
 
 <style scoped>

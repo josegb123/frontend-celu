@@ -232,7 +232,7 @@ onMounted(async () => {
   loadingProveedores.value = true
   try {
     proveedores.value = await proveedorService.getAllProveedoresNoPaginado()
-    if (proveedores.value.length > 0) selectedProveedorId.value = proveedores.value[0].id
+    if (proveedores.value.length > 0) selectedProveedorId.value = proveedores.value[0]!.id
   } catch {
     showLocalNotification('error', 'Error al cargar proveedores.')
   } finally {

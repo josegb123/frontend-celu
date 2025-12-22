@@ -132,8 +132,9 @@ import { useAppConfigStore } from '@/store/useAppConfigStore'
 const router = useRouter()
 const authStore = useAuthStore()
 const appConfig = useAppConfigStore()
-const defaultLogo = '/logo.webp'
+const defaultLogo = appConfig.getBusinessLogo === '' ? '/logo.webp' : appConfig.getBusinessLogo
 
+console.log(appConfig.getBusinessLogo)
 const email = ref('')
 const password = ref('')
 const passwordVisible = ref(false)

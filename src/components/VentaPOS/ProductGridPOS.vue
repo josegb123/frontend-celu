@@ -105,7 +105,7 @@ import type { IProductoPaginated, IProducto } from '@/interfaces/IProductoInterf
 import { formatCurrency } from '@/utils/formatters'
 
 // --- CONSTANTES ---
-const ITEMS_PER_PAGE = 10
+const ITEMS_PER_PAGE = 12
 
 // --- PROPS y EMITS ---
 const props = defineProps<{
@@ -198,6 +198,7 @@ const fetchProducts = async () => {
     search: props.searchQuery,
     page: currentPage.value,
     per_page: ITEMS_PER_PAGE,
+    pos: 1,
   }
 
   try {

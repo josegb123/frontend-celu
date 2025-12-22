@@ -15,8 +15,8 @@
           </div>
           <div class="card-body">
             <div v-if="isSeller" class="alert alert-info py-2 small">
-              <i class="bi bi-info-circle me-2"></i> Como vendedor, puedes ver la información del
-              negocio pero no editarla.
+              <i class="bi bi-info-circle me-2"></i> Como vendedor, puedes ver la información pero
+              no editarla.
             </div>
 
             <form @submit.prevent="handleSaveBusiness">
@@ -75,36 +75,43 @@
 
               <div class="mb-3">
                 <label class="form-label fw-bold">Logo del Negocio</label>
-                <div class="d-flex align-items-start gap-3">
+                <div class="d-flex align-items-center gap-3">
                   <div
                     v-if="appConfig.businessDetails.logo || logoPreview"
-                    class="border p-2 rounded bg-light"
+                    class="border p-1 rounded bg-white shadow-sm"
                   >
                     <img
                       :src="logoPreview || appConfig.businessDetails.logo"
-                      alt="Logo"
-                      class="img-preview"
+                      alt="Logo Preview"
+                      style="width: 60px; height: 60px; object-fit: contain"
                     />
                   </div>
+
                   <div class="flex-grow-1" v-if="!isSeller">
                     <input
                       type="file"
                       class="form-control"
                       @change="onFileSelected"
                       accept="image/*"
+                      ref="fileInput"
                     />
-                    <small class="text-muted">Se recomienda formato PNG o JPG (Máx 2MB).</small>
+                    <small class="text-muted">Formatos sugeridos: PNG, WebP o JPG (Máx 2MB).</small>
                   </div>
                 </div>
               </div>
 
-              <div class="d-grid" v-if="!isSeller">
-                <button type="submit" class="btn btn-primary" :disabled="appConfig.isLoading">
+              <div class="d-grid mt-4" v-if="!isSeller">
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-lg"
+                  :disabled="appConfig.isLoading"
+                >
                   <span
                     v-if="appConfig.isLoading"
                     class="spinner-border spinner-border-sm me-2"
                   ></span>
-                  <i v-else class="bi bi-cloud-arrow-up me-2"></i>Guardar Cambios en Servidor
+                  <i v-else class="bi bi-cloud-arrow-up me-2"></i>
+                  {{ appConfig.isLoading ? 'Guardando...' : 'Guardar Cambios' }}
                 </button>
               </div>
             </form>
@@ -140,26 +147,8 @@
                   <option value="en">Inglés</option>
                 </select>
               </div>
-              <div class="col-12 mt-4">
-                <div class="form-check form-switch">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="notifSwitch"
-                    v-model="appConfig.uiPreferences.enableNotifications"
-                    @change="handleUiUpdate"
-                  />
-                  <label class="form-check-label" for="notifSwitch"
-                    >Activar notificaciones visuales en el navegador</label
-                  >
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-
-        <div v-if="appConfig.error" class="alert alert-danger mt-4 shadow-sm">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ appConfig.error }}
         </div>
       </div>
     </div>
@@ -175,20 +164,17 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
-import { useAppConfigStore, type BusinessDetails } from '@/store/useAppConfigStore'
-import { useAuthStore } from '@/store/authStore' // Importamos el authStore
+import { useAppConfigStore } from '@/store/useAppConfigStore'
+import { useAuthStore } from '@/store/authStore'
 import NotificationModal from '@/components/utils/NotificationModal.vue'
 import { AxiosError } from 'axios'
 
 const appConfig = useAppConfigStore()
 const authStore = useAuthStore()
 
-/**
- * Lógica de permisos
- */
 const isSeller = computed(() => authStore.user.role === 'seller')
 
-// --- ESTADO PARA MODALES DE NOTIFICACIÓN ---
+// Notificaciones
 const mostrarModalNotificacion = ref(false)
 const notificationMessage = ref('')
 const notificationIsError = ref(false)
@@ -199,13 +185,12 @@ const showNotification = (message: string, isError: boolean = false) => {
   mostrarModalNotificacion.value = true
 }
 
-const closeNotificationModal = () => {
-  mostrarModalNotificacion.value = false
-}
+const closeNotificationModal = () => (mostrarModalNotificacion.value = false)
 
-// Estado local para el formulario
+// Manejo de Archivos
 const logoFile = ref<File | null>(null)
 const logoPreview = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const formBusiness = reactive({
   nombre: appConfig.businessDetails.nombre,
@@ -215,6 +200,7 @@ const formBusiness = reactive({
   admin: appConfig.businessDetails.admin,
 })
 
+// Sincronizar formulario cuando cargan los datos del store
 watch(
   () => appConfig.businessDetails,
   (newVal) => {
@@ -224,42 +210,54 @@ watch(
 )
 
 const onFileSelected = (event: Event) => {
-  if (isSeller.value) return // Seguridad extra en el frontend
-
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
-    const file = target.files[0]
-    logoFile.value = file
-    logoPreview.value = URL.createObjectURL(file)
+    logoFile.value = target.files[0]
+    logoPreview.value = URL.createObjectURL(logoFile.value)
   }
 }
 
 const handleSaveBusiness = async () => {
-  // Verificación de seguridad antes de proceder
-  if (isSeller.value) {
-    showNotification('No tienes permisos para realizar esta acción.', true)
-    return
-  }
+  if (isSeller.value) return
 
   try {
     const data = new FormData()
-    data.append('nombre', formBusiness.nombre)
+
+    // TRUCO LARAVEL: Para que detecte archivos en actualización (Simulamos PUT)
+    data.append('_method', 'PUT')
+
+    // Append de campos de texto
+    data.append('nombre', formBusiness.nombre || '')
     data.append('nit', formBusiness.nit || '')
     data.append('telefono', formBusiness.telefono || '')
     data.append('direccion', formBusiness.direccion || '')
     data.append('admin', formBusiness.admin || '')
 
+    // Append del archivo
     if (logoFile.value) {
-      data.append('logo_file', logoFile.value)
+      data.append('logo', logoFile.value)
     }
 
-    await appConfig.updateBusinessDetails(data as unknown as BusinessDetails)
-    showNotification('✅ Configuración del negocio actualizada exitosamente.', false)
+    // Siguiendo el ejemplo del post: Header con boundary dinámico
+
+    await appConfig.updateBusinessDetails(data)
+
+    showNotification('✅ Configuración actualizada con éxito.', false)
+
+    // Resetear input de archivo
     logoFile.value = null
     logoPreview.value = null
+    if (fileInput.value) fileInput.value.value = ''
   } catch (err) {
     if (err instanceof AxiosError) {
-      showNotification('❌ Error al actualizar la configuración: ' + err.message, true)
+      let msg = 'Error al actualizar.'
+      if (err.response?.data?.errors) {
+        // Formatear errores de validación de Laravel (como en el post)
+        msg = Object.values(err.response.data.errors).flat().join(' ')
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message
+      }
+      showNotification(`❌ ${msg}`, true)
     }
   }
 }

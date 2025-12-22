@@ -1,5 +1,5 @@
 import { ref, computed, watch } from 'vue'
-import { estadisticasService, CuadreCajaResponse } from '@/services/estadisticasService' // Added CuadreCajaResponse import
+import { estadisticasService, type CuadreCajaResponse } from '@/services/estadisticasService' // Added CuadreCajaResponse import
 import type {
   ProductoBajoStock,
   VentasPorPeriodoResponse,
@@ -40,8 +40,8 @@ export function useReportGenerator() {
   const periodDays = ref<number>(90)
   const frecuenciaPeriodDays = ref<number>(90)
   const frecuenciaLimit = ref<number>(10)
-  const cuadreCajaStartDate = ref<string>(''); // Added for Cuadre de Caja
-  const cuadreCajaEndDate = ref<string>('');   // Added for Cuadre de Caja
+  const cuadreCajaStartDate = ref<string>('') // Added for Cuadre de Caja
+  const cuadreCajaEndDate = ref<string>('') // Added for Cuadre de Caja
 
   const reportData = ref<
     | ProductoBajoStock[]
@@ -125,7 +125,8 @@ export function useReportGenerator() {
       : []
   })
 
-  const cuadreCajaData = computed<CuadreCajaResponse | null>(() => { // Added cuadreCajaData
+  const cuadreCajaData = computed<CuadreCajaResponse | null>(() => {
+    // Added cuadreCajaData
     return selectedReport.value === 'cuadreDeCaja' && reportData.value
       ? (reportData.value as CuadreCajaResponse)
       : null
@@ -255,7 +256,8 @@ export function useReportGenerator() {
     }
   }
 
-  const fetchCuadreCaja = async () => { // Added fetchCuadreCaja
+  const fetchCuadreCaja = async () => {
+    // Added fetchCuadreCaja
     if (!cuadreCajaStartDate.value || !cuadreCajaEndDate.value) {
       alert('Por favor, seleccione las fechas de inicio y fin para el Cuadre de Caja.')
       reportData.value = null
@@ -264,7 +266,7 @@ export function useReportGenerator() {
     try {
       const response = await estadisticasService.getCuadreDeCaja(
         cuadreCajaStartDate.value,
-        cuadreCajaEndDate.value
+        cuadreCajaEndDate.value,
       )
       reportData.value = response
     } catch (e) {
@@ -331,8 +333,8 @@ export function useReportGenerator() {
     periodDays.value = 90
     frecuenciaPeriodDays.value = 90
     frecuenciaLimit.value = 10
-    cuadreCajaStartDate.value = ''; // Reset cuadreCajaStartDate
-    cuadreCajaEndDate.value = '';   // Reset cuadreCajaEndDate
+    cuadreCajaStartDate.value = '' // Reset cuadreCajaStartDate
+    cuadreCajaEndDate.value = '' // Reset cuadreCajaEndDate
 
     // Auto-generate reports that don't require additional parameters
     if (
@@ -386,7 +388,8 @@ export function useReportGenerator() {
     },
   )
 
-  watch( // Added watcher for cuadreCaja dates
+  watch(
+    // Added watcher for cuadreCaja dates
     [cuadreCajaStartDate, cuadreCajaEndDate],
     ([newStartDate, newEndDate], [oldStartDate, oldEndDate]) => {
       if (
@@ -397,7 +400,7 @@ export function useReportGenerator() {
       ) {
         generateReport()
       }
-    }
+    },
   )
 
   return {
@@ -407,9 +410,9 @@ export function useReportGenerator() {
     fechaFin,
     periodDays,
     frecuenciaPeriodDays,
-        frecuenciaLimit,
+    frecuenciaLimit,
     cuadreCajaStartDate, // Added
-    cuadreCajaEndDate,   // Added
+    cuadreCajaEndDate, // Added
     reportData,
     loading,
     error,

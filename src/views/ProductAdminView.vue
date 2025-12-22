@@ -59,15 +59,6 @@
     @close="closeCategoryModal"
     @categories-updated="loadCategories"
   />
-  <!--
-  <ProductFormModal
-    :isVisible="productFormModalVisible"
-    :product-to-edit="productToEdit"
-    :categories="categories"
-    @close="closeProductFormModal"
-    @product-saved="handleProductSaved"
-    @open-category-modal="openCategoryModal"
-  /> -->
 
   <ProductForm
     :isVisible="productFormModalVisible"

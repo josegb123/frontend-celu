@@ -11,8 +11,9 @@ if (!baseURL && import.meta.env.DEV) {
 const laravelApi = axios.create({
   baseURL: baseURL,
   headers: {
-    'Content-Type': 'application/json',
+    // Eliminamos el Content-Type de aquí para que sea dinámico por petición
     Accept: 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
 })
 
@@ -22,8 +23,21 @@ laravelApi.interceptors.request.use(
     const authStore = useAuthStore()
     const token = authStore.accessToken
 
+    // Inyectar Token de seguridad
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+
+    /**
+     * LÓGICA DINÁMICA DE HEADERS:
+     * Si enviamos FormData (archivos), eliminamos cualquier Content-Type previo.
+     * Esto permite que Axios y el Navegador calculen el "boundary" correcto.
+     * Si es un objeto normal, Axios pondrá 'application/json' por defecto.
+     */
+    if (config.data instanceof FormData) {
+      if (config.headers) {
+        delete config.headers['Content-Type']
+      }
     }
 
     return config
@@ -33,21 +47,25 @@ laravelApi.interceptors.request.use(
 
 // 2. INTERCEPTOR DE RESPUESTA (Response)
 laravelApi.interceptors.response.use(
-  (response) => response, // Si la respuesta es exitosa, solo la pasamos
+  (response) => response,
   async (error) => {
     const authStore = useAuthStore()
 
-    // Si el servidor responde 401 (Token expirado o inválido)
+    // Manejo de Sesión Expirada (401)
     if (error.response?.status === 401) {
-      authStore.logout() // Limpiamos el estado de Pinia y el localStorage
+      authStore.logout()
 
-      // Redirigir al login si no estamos ya ahí
       if (router.currentRoute.value.name !== 'auth') {
         router.push({ name: 'auth' })
       }
     }
 
-    // Manejo de errores de conexión o servidor (500)
+    // Errores de validación de Laravel (422) - Opcional: Logging para debug
+    if (error.response?.status === 422) {
+      console.warn('Error de validación detectado:', error.response.data.errors)
+    }
+
+    // Manejo de errores de conexión
     if (!error.response) {
       console.error('Error de red o servidor no disponible')
     }

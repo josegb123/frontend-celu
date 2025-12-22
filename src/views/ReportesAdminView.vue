@@ -1,339 +1,347 @@
 <template>
-  <div class="container-fluid py-4">
-    <h1 class="mb-4">Reportes Administrativos</h1>
+  <div class="container-fluid py-4 px-lg-5">
+    <header class="row mb-5 align-items-end">
+      <div class="col">
+        <h1 class="h2 mb-1 fw-bold tracking-tight">Panel de Control</h1>
+        <p class="text-secondary mb-0">Gestión y métricas de {{ businessInfo.nombre }}</p>
+      </div>
+      <div class="col-auto">
+        <div class="btn-group shadow-sm">
+          <button
+            class="btn btn-outline-primary border-2"
+            @click="fetchAllReports"
+            :disabled="anyLoading"
+          >
+            <i class="bi bi-arrow-clockwise me-2"></i>Sincronizar
+          </button>
+          <button class="btn btn-primary px-4" @click="exportarReporteGeneral">
+            <i class="bi bi-journal-check me-2"></i>Informe General PDF
+          </button>
+        </div>
+      </div>
+    </header>
 
-    <div class="row">
-      <!-- Reporte de Ventas por Período -->
-      <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Ventas por Período</h5>
-          </div>
-          <div class="card-body">
-            <p class="card-text">
-              Visualice las ventas totales y el ticket promedio por rango de fechas.
-            </p>
-            <div class="d-flex mb-3">
-              <input type="date" class="form-control me-2" v-model="startDate" />
-              <input type="date" class="form-control me-2" v-model="endDate" />
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm custom-card">
+          <div
+            class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between align-items-start"
+          >
+            <div>
+              <h5 class="fw-bold mb-1 text-primary">Ventas por Período</h5>
+              <p class="small text-secondary">Métricas de rendimiento comercial</p>
+            </div>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-light border" title="Excel" @click="exportarVentasExcel">
+                <i class="bi bi-file-earmark-excel"></i>
+              </button>
               <button
-                class="btn btn-primary"
-                @click="fetchVentasPorPeriodo"
-                :disabled="loadingVentas"
+                class="btn btn-light border"
+                title="PDF"
+                @click="exportarGenericoPdf('ventas')"
               >
-                <i class="bi bi-graph-up me-2"></i>
-                {{ loadingVentas ? 'Cargando...' : 'Consultar' }}
+                <i class="bi bi-file-earmark-pdf"></i>
               </button>
             </div>
-            <div v-if="ventasResult" class="mt-3">
-              <p><strong>Total Ventas:</strong> {{ formatCurrency(ventasResult.totalVentas) }}</p>
-              <p>
-                <strong>Ticket Promedio:</strong> {{ formatCurrency(ventasResult.ticketPromedio) }}
-              </p>
-            </div>
-            <button
-              class="btn btn-outline-success mt-3"
-              @click="exportarVentasExcel"
-              :disabled="!ventasResult"
-            >
-              <i class="bi bi-file-earmark-excel me-2"></i> Exportar a Excel
-            </button>
           </div>
-        </div>
-      </div>
-
-      <!-- Reporte de Productos con Baja Rotación -->
-      <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0">Productos de Baja Rotación</h5>
-          </div>
-          <div class="card-body">
-            <p class="card-text">
-              Identifique productos con pocas ventas en un período.
-              <small class="text-muted">(Últimos 90 días)</small>
-            </p>
-            <button
-              class="btn btn-warning text-dark"
-              @click="fetchProductosBajaRotacion"
-              :disabled="loadingBajaRotacion"
-            >
-              <i class="bi bi-arrow-clockwise me-2"></i>
-              {{ loadingBajaRotacion ? 'Actualizando...' : 'Actualizar' }}
-            </button>
-            <div v-if="productosBajaRotacion.length > 0" class="mt-3">
-              <ul class="list-group">
-                <li
-                  v-for="producto in productosBajaRotacion"
-                  :key="producto.id"
-                  class="list-group-item d-flex justify-content-between align-items-center"
+          <div class="card-body px-4 pb-4">
+            <div class="row g-2 mb-4">
+              <div class="col">
+                <input
+                  type="date"
+                  class="form-control form-control-sm bg-input"
+                  v-model="startDate"
+                />
+              </div>
+              <div class="col">
+                <input
+                  type="date"
+                  class="form-control form-control-sm bg-input"
+                  v-model="endDate"
+                />
+              </div>
+              <div class="col-auto">
+                <button
+                  class="btn btn-sm btn-primary w-100"
+                  @click="fetchVentasPorPeriodo"
+                  :disabled="loadingVentas"
                 >
-                  {{ producto.nombre }}
-                  <span class="badge bg-danger rounded-pill"
-                    >{{ producto.unidades_vendidas_en_periodo }} ventas</span
-                  >
-                </li>
-              </ul>
-            </div>
-            <p v-else-if="!loadingBajaRotacion" class="text-muted mt-3">
-              No hay productos con baja rotación.
-            </p>
-            <button
-              class="btn btn-outline-danger mt-3"
-              @click="exportarBajaRotacionPdf"
-              :disabled="productosBajaRotacion.length === 0"
-            >
-              <i class="bi bi-file-earmark-pdf me-2"></i> Exportar a PDF
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reporte de Clientes (Top Clientes por Gasto) -->
-      <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Top Clientes por Gasto</h5>
-          </div>
-          <div class="card-body">
-            <p class="card-text">
-              Visualice los clientes que más han comprado en un período.
-              <small class="text-muted">(Últimos 30 días)</small>
-            </p>
-            <button class="btn btn-info" @click="fetchTopClientes" :disabled="loadingTopClientes">
-              <i class="bi bi-person-heart me-2"></i>
-              {{ loadingTopClientes ? 'Actualizando...' : 'Actualizar' }}
-            </button>
-            <div v-if="topClientes.length > 0" class="mt-3">
-              <ul class="list-group">
-                <li
-                  v-for="cliente in topClientes"
-                  :key="cliente.cliente_id"
-                  class="list-group-item d-flex justify-content-between align-items-center"
-                >
-                  {{ cliente.nombre_cliente }}
-                  <span class="badge bg-primary rounded-pill">{{
-                    formatCurrency(cliente.monto_total)
-                  }}</span>
-                </li>
-              </ul>
-            </div>
-            <p v-else-if="!loadingTopClientes" class="text-muted mt-3">
-              No hay datos de top clientes.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reporte de Proveedores (Valor de Pedidos) -->
-      <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">Valor de Pedidos a Proveedores</h5>
-          </div>
-          <div class="card-body">
-            <p class="card-text">
-              Resumen del valor total de los pedidos realizados a cada proveedor.
-              <small class="text-muted">(Últimos 90 días)</small>
-            </p>
-            <button
-              class="btn btn-secondary"
-              @click="fetchValorPedidosProveedores"
-              :disabled="loadingValorPedidosProveedores"
-            >
-              <i class="bi bi-truck me-2"></i>
-              {{ loadingValorPedidosProveedores ? 'Actualizando...' : 'Actualizar' }}
-            </button>
-            <div v-if="valorPedidosProveedores.length > 0" class="mt-3">
-              <ul class="list-group">
-                <li
-                  v-for="prov in valorPedidosProveedores"
-                  :key="prov.proveedor_id"
-                  class="list-group-item d-flex justify-content-between align-items-center"
-                >
-                  {{ prov.nombre_proveedor }}
-                  <span class="badge bg-dark rounded-pill">{{
-                    formatCurrency(prov.total_gastado)
-                  }}</span>
-                </li>
-              </ul>
-            </div>
-            <p v-else-if="!loadingValorPedidosProveedores" class="text-muted mt-3">
-              No hay datos de pedidos a proveedores.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reporte de Movimientos Financieros -->
-      <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">Historial de Ganancias (Beneficio Bruto)</h5>
-          </div>
-          <div class="card-body">
-            <p class="card-text">
-              Beneficio bruto histórico por período.
-              <small class="text-muted">(Últimos 30 días)</small>
-            </p>
-            <button
-              class="btn btn-dark"
-              @click="fetchHistorialGanancias"
-              :disabled="loadingHistorialGanancias"
-            >
-              <i class="bi bi-cash-coin me-2"></i>
-              {{ loadingHistorialGanancias ? 'Actualizando...' : 'Actualizar' }}
-            </button>
-
-            <div v-if="historialGanancias && historialGanancias.length > 0" class="mt-3">
-              <ul class="list-group">
-                <li
-                  v-for="item in historialGanancias"
-                  :key="item.periodo_fecha"
-                  class="list-group-item d-flex justify-content-between align-items-center"
-                >
-                  {{ item.periodo_fecha }}
-                  <span :class="['badge', item.beneficio_bruto >= 0 ? 'bg-success' : 'bg-danger']">
-                    {{ item.beneficio_bruto }}
-                  </span>
-                </li>
-              </ul>
-            </div>
-            <p v-else-if="!loadingHistorialGanancias" class="text-muted mt-3">
-              No hay datos de ganancias recientes.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Información del Negocio para Reportes -->
-      <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-header bg-success text-white">
-            <h5 class="mb-0">Información del Negocio (Para Reportes)</h5>
-          </div>
-          <div class="card-body">
-            <p class="card-text">Estos datos se usan en la cabecera de los reportes generados.</p>
-            <p><strong>Nombre:</strong> {{ businessInfo.nombre }}</p>
-            <p><strong>Propietario:</strong> {{ businessInfo.propietario }}</p>
-            <p><strong>NIT:</strong> {{ businessInfo.nit }}</p>
-            <p><strong>Dirección:</strong> {{ businessInfo.direccion }}</p>
-            <p><strong>Teléfono:</strong> {{ businessInfo.tel }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nuevo Reporte de Cuadre de Caja -->
-      <div class="col-lg-12 mb-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-header bg-danger text-white">
-            <h5 class="mb-0">Cuadre de Caja y Conciliación de Efectivo</h5>
-          </div>
-          <div class="card-body">
-            <p class="card-text">
-              Verifica el flujo de efectivo registrado en movimientos financieros contra los totales
-              de las cajas diarias.
-            </p>
-            <div class="d-flex mb-3">
-              <input type="date" class="form-control me-2" v-model="cuadreCajaStartDate" />
-              <input type="date" class="form-control me-2" v-model="cuadreCajaEndDate" />
-              <button
-                class="btn btn-danger"
-                @click="fetchCuadreCaja"
-                :disabled="loadingCuadreCaja || !cuadreCajaStartDate || !cuadreCajaEndDate"
-              >
-                <i class="bi bi-calculator me-2"></i>
-                {{ loadingCuadreCaja ? 'Calculando...' : 'Calcular Cuadre' }}
-              </button>
-            </div>
-            <div v-if="cuadreCajaResult" class="mt-3">
-              <h6>Resumen de Movimientos Financieros (Efectivo)</h6>
-              <p class="mb-1">
-                <strong>Ingresos Totales:</strong>
-                <span class="text-success">{{
-                  formatCurrency(
-                    cuadreCajaResult.flujo_efectivo_movimientos.total_ingresos_efectivo,
-                  )
-                }}</span>
-              </p>
-              <p class="mb-1">
-                <strong>Egresos Totales:</strong>
-                <span class="text-danger">{{
-                  formatCurrency(cuadreCajaResult.flujo_efectivo_movimientos.total_egresos_efectivo)
-                }}</span>
-              </p>
-              <p class="mb-1">
-                <strong>Saldo Neto por Movimientos:</strong>
-                <span
-                  :class="
-                    cuadreCajaResult.flujo_efectivo_movimientos.saldo_neto_movimientos >= 0
-                      ? 'text-success'
-                      : 'text-danger'
-                  "
-                >
-                  {{
-                    formatCurrency(
-                      cuadreCajaResult.flujo_efectivo_movimientos.saldo_neto_movimientos,
-                    )
-                  }}
-                </span>
-              </p>
-              <hr />
-              <h6>Consolidado de Cajas Diarias Cerradas en el Período</h6>
-              <p class="mb-1">
-                <strong>Monto Inicial Total (Cajas Abiertas):</strong>
-                {{
-                  formatCurrency(
-                    cuadreCajaResult.consolidado_cajas_diarias
-                      .total_monto_inicial_cajas_abiertas_en_periodo,
-                  )
-                }}
-              </p>
-              <p class="mb-1">
-                <strong>Balance Final Real Total:</strong>
-                {{
-                  formatCurrency(
-                    cuadreCajaResult.consolidado_cajas_diarias
-                      .total_balance_final_real_cajas_cerradas_en_periodo,
-                  )
-                }}
-              </p>
-              <p class="mb-1">
-                <strong>Balance Final Esperado Total:</strong>
-                {{
-                  formatCurrency(
-                    cuadreCajaResult.consolidado_cajas_diarias
-                      .total_balance_final_esperado_cajas_cerradas_en_periodo,
-                  )
-                }}
-              </p>
-              <p class="mb-1">
-                <strong>Discrepancia Agregada (Real - Esperado):</strong>
-                <span
-                  :class="
-                    cuadreCajaResult.consolidado_cajas_diarias
-                      .discrepancia_total_cajas_cerradas_en_periodo === 0
-                      ? 'text-success'
-                      : 'text-danger'
-                  "
-                >
-                  {{
-                    formatCurrency(
-                      cuadreCajaResult.consolidado_cajas_diarias
-                        .discrepancia_total_cajas_cerradas_en_periodo,
-                    )
-                  }}
-                </span>
-              </p>
-              <hr />
-              <p class="small text-muted">{{ cuadreCajaResult.descripcion_cuadre }}</p>
+                  {{ loadingVentas ? '...' : 'Filtrar' }}
+                </button>
+              </div>
             </div>
             <div
-              v-else-if="!loadingCuadreCaja && cuadreCajaStartDate && cuadreCajaEndDate"
-              class="alert alert-info mt-3"
+              v-if="ventasResult"
+              class="stat-box p-3 rounded-3 border-start border-primary border-4"
             >
-              Seleccione un rango de fechas y haga clic en "Calcular Cuadre" para generar el
-              reporte.
+              <div class="d-flex justify-content-between mb-2">
+                <span class="text-secondary small">Ventas Totales</span>
+                <span class="fw-bold">{{ formatCurrency(ventasResult.totalVentas) }}</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-secondary small">Ticket Promedio</span>
+                <span class="fw-bold text-primary">{{
+                  formatCurrency(ventasResult.ticketPromedio)
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm custom-card">
+          <div
+            class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between align-items-start"
+          >
+            <div>
+              <h5 class="fw-bold mb-1 text-warning">Baja Rotación</h5>
+              <p class="small text-secondary">Productos con poco movimiento (90 días)</p>
+            </div>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-light border" @click="exportarGenericoExcel('rotacion')">
+                <i class="bi bi-file-earmark-excel"></i>
+              </button>
+              <button class="btn btn-light border" @click="exportarBajaRotacionPdf">
+                <i class="bi bi-file-earmark-pdf"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body px-4 pb-4">
+            <div
+              v-if="productosBajaRotacion.length > 0"
+              class="list-container overflow-auto"
+              style="max-height: 150px"
+            >
+              <div
+                v-for="p in productosBajaRotacion"
+                :key="p.id"
+                class="d-flex justify-content-between align-items-center py-2 border-bottom-dashed"
+              >
+                <span class="text-truncate" style="max-width: 70%">{{ p.nombre }}</span>
+                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill"
+                  >{{ p.unidades_vendidas_en_periodo }} u.</span
+                >
+              </div>
+            </div>
+            <p v-else class="text-center text-muted py-4">Sin datos de rotación</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm custom-card">
+          <div
+            class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between align-items-start"
+          >
+            <h6 class="fw-bold mb-0 text-info">Top Clientes</h6>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-light border" @click="exportarGenericoExcel('clientes')">
+                <i class="bi bi-file-earmark-excel"></i>
+              </button>
+              <button class="btn btn-light border" @click="exportarGenericoPdf('clientes')">
+                <i class="bi bi-file-earmark-pdf"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body px-4">
+            <div
+              v-for="c in topClientes"
+              :key="c.cliente_id"
+              class="d-flex justify-content-between mb-3 align-items-center"
+            >
+              <div class="small fw-medium">{{ c.nombre_cliente }}</div>
+              <div class="small text-info fw-bold">{{ formatCurrency(c.monto_total) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm custom-card text-decoration-none">
+          <div
+            class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between align-items-start"
+          >
+            <h6 class="fw-bold mb-0">Gastos Proveedores</h6>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-light border" @click="exportarGenericoExcel('prov')">
+                <i class="bi bi-file-earmark-excel"></i>
+              </button>
+              <button class="btn btn-light border" @click="exportarGenericoPdf('prov')">
+                <i class="bi bi-file-earmark-pdf"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body px-4">
+            <div
+              v-for="prov in valorPedidosProveedores"
+              :key="prov.proveedor_id"
+              class="d-flex justify-content-between mb-3 align-items-center"
+            >
+              <div class="small fw-medium">{{ prov.nombre_proveedor }}</div>
+              <div class="small fw-bold text-secondary">
+                {{ formatCurrency(prov.total_gastado) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm custom-card">
+          <div
+            class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between align-items-start"
+          >
+            <h6 class="fw-bold mb-0 text-success">Rentabilidad Histórica</h6>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-light border" @click="exportarGenericoExcel('ganancias')">
+                <i class="bi bi-file-earmark-excel"></i>
+              </button>
+              <button class="btn btn-light border" @click="exportarGenericoPdf('ganancias')">
+                <i class="bi bi-file-earmark-pdf"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body px-4">
+            <div
+              v-for="h in historialGanancias"
+              :key="h.periodo_fecha"
+              class="d-flex justify-content-between mb-2 align-items-center"
+            >
+              <div class="small text-secondary text-uppercase ls-1" style="font-size: 0.7rem">
+                {{ h.periodo_fecha }}
+              </div>
+              <div
+                :class="['small fw-bold', h.beneficio_bruto >= 0 ? 'text-success' : 'text-danger']"
+              >
+                {{ formatCurrency(h.beneficio_bruto) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card border-0 shadow-sm custom-card overflow-hidden">
+          <div class="border-start border-danger border-4">
+            <div
+              class="card-header bg-transparent py-4 px-4 d-flex justify-content-between align-items-center"
+            >
+              <div>
+                <h5 class="fw-bold mb-0 text-danger">Cuadre de Caja y Conciliación</h5>
+                <p class="small text-secondary mb-0">
+                  Verificación de flujos de efectivo en el período
+                </p>
+              </div>
+              <div class="btn-group shadow-sm">
+                <button class="btn btn-white border" @click="exportarGenericoExcel('cuadre')">
+                  <i class="bi bi-file-earmark-excel me-2"></i>Excel
+                </button>
+                <button
+                  class="btn btn-outline-danger px-4"
+                  @click="exportarCuadrePdf"
+                  :disabled="!cuadreCajaResult"
+                >
+                  <i class="bi bi-file-earmark-pdf me-2"></i>PDF de Cuadre
+                </button>
+              </div>
+            </div>
+            <div class="card-body px-4 pb-4">
+              <div class="row g-3 mb-4 align-items-end">
+                <div class="col-md-3">
+                  <label class="small text-secondary mb-1">Desde</label>
+                  <input
+                    type="date"
+                    class="form-control bg-input border-0 shadow-sm"
+                    v-model="cuadreCajaStartDate"
+                  />
+                </div>
+                <div class="col-md-3">
+                  <label class="small text-secondary mb-1">Hasta</label>
+                  <input
+                    type="date"
+                    class="form-control bg-input border-0 shadow-sm"
+                    v-model="cuadreCajaEndDate"
+                  />
+                </div>
+                <div class="col-md-3">
+                  <button
+                    class="btn btn-dark w-100 shadow-sm"
+                    @click="fetchCuadreCaja"
+                    :disabled="loadingCuadreCaja"
+                  >
+                    <i class="bi bi-calculator me-2"></i>Calcular Informe
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="cuadreCajaResult" class="row g-4 pt-3 border-top">
+                <div class="col-md-6">
+                  <h6 class="text-uppercase fw-bold text-secondary mb-3 small tracking-widest">
+                    Flujo de Movimientos
+                  </h6>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Ingresos</span
+                    ><span class="text-success">{{
+                      formatCurrency(
+                        cuadreCajaResult.flujo_efectivo_movimientos.total_ingresos_efectivo,
+                      )
+                    }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Egresos</span
+                    ><span class="text-danger">{{
+                      formatCurrency(
+                        cuadreCajaResult.flujo_efectivo_movimientos.total_egresos_efectivo,
+                      )
+                    }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between pt-2 border-top">
+                    <strong>Saldo Neto</strong
+                    ><strong>{{
+                      formatCurrency(
+                        cuadreCajaResult.flujo_efectivo_movimientos.saldo_neto_movimientos,
+                      )
+                    }}</strong>
+                  </div>
+                </div>
+                <div class="col-md-6 border-start-md">
+                  <h6 class="text-uppercase fw-bold text-secondary mb-3 small tracking-widest">
+                    Consolidado Cajas
+                  </h6>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Balance Real</span
+                    ><strong>{{
+                      formatCurrency(
+                        cuadreCajaResult.consolidado_cajas_diarias
+                          .total_balance_final_real_cajas_cerradas_en_periodo,
+                      )
+                    }}</strong>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Discrepancia</span>
+                    <span
+                      :class="[
+                        'fw-bold',
+                        cuadreCajaResult.consolidado_cajas_diarias
+                          .discrepancia_total_cajas_cerradas_en_periodo === 0
+                          ? 'text-success'
+                          : 'text-danger',
+                      ]"
+                    >
+                      {{
+                        formatCurrency(
+                          cuadreCajaResult.consolidado_cajas_diarias
+                            .discrepancia_total_cajas_cerradas_en_periodo,
+                        )
+                      }}
+                    </span>
+                  </div>
+                  <div class="alert bg-secondary-subtle border-0 py-2 mt-3 small">
+                    {{ cuadreCajaResult.descripcion_cuadre }}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -343,262 +351,219 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { AxiosError } from 'axios' // Importación correcta de AxiosError
 import { estadisticasService, type CuadreCajaResponse } from '@/services/estadisticasService'
 import { useAppConfigStore } from '@/store/useAppConfigStore'
 
-// --- Stores ---
+// --- INTERFACES ---
+interface ProductoRotacion {
+  id: number
+  nombre: string
+  unidades_vendidas_en_periodo: number
+}
+interface ClienteGasto {
+  cliente_id: number
+  nombre_cliente: string
+  monto_total: number
+}
+interface ProveedorPedido {
+  proveedor_id: number
+  nombre_proveedor: string
+  total_gastado: number
+}
+interface GananciaHist {
+  periodo_fecha: string
+  beneficio_bruto: number
+}
+
 const appConfig = useAppConfigStore()
 
-// --- Fechas para filtros ---
-const startDate = ref<string>()
-const endDate = ref<string>()
-const cuadreCajaStartDate = ref<string>()
-const cuadreCajaEndDate = ref<string>()
+// --- ESTADOS ---
+const startDate = ref<string>('')
+const endDate = ref<string>('')
+const cuadreCajaStartDate = ref<string>('')
+const cuadreCajaEndDate = ref<string>('')
 
-// --- Datos de Reportes ---
 const ventasResult = ref<{ totalVentas: number; ticketPromedio: number } | null>(null)
-const productosBajaRotacion = ref<any[]>([])
-const topClientes = ref<any[]>([])
-const valorPedidosProveedores = ref<any[]>([])
-const historialGanancias = ref<any[] | null>(null) // Changed to array for better mapping
-const cuadreCajaResult = ref<CuadreCajaResponse | null>(null) // For Cuadre de Caja report
+const productosBajaRotacion = ref<ProductoRotacion[]>([])
+const topClientes = ref<ClienteGasto[]>([])
+const valorPedidosProveedores = ref<ProveedorPedido[]>([])
+const historialGanancias = ref<GananciaHist[]>([])
+const cuadreCajaResult = ref<CuadreCajaResponse | null>(null)
 
-// --- Estados de Carga ---
 const loadingVentas = ref(false)
-const loadingBajaRotacion = ref(false)
-const loadingTopClientes = ref(false)
-const loadingValorPedidosProveedores = ref(false)
-const loadingHistorialGanancias = ref(false)
-const loadingCuadreCaja = ref(false) // For Cuadre de Caja report
+const loadingCuadreCaja = ref(false)
+const anyLoading = computed(() => loadingVentas.value || loadingCuadreCaja.value)
 
-// --- Información del Negocio para Reportes ---
-const businessInfo = ref({
-  nombre: appConfig.getBusinessName,
-  propietario: appConfig.getBusinessAdministrator,
-  nit: appConfig.getBusinessNit,
-  direccion: appConfig.getBusinessAddress,
-  tel: appConfig.getBusinessPhone,
-})
+const businessInfo = computed(() => ({
+  nombre: appConfig.getBusinessName || '',
+  nit: appConfig.getBusinessNit || '',
+}))
 
-// --- Métodos para Consultar Reportes ---
+// --- MÉTODOS DE DATOS CON MANEJO DE ERRORES TIPADO ---
 async function fetchVentasPorPeriodo() {
   loadingVentas.value = true
   try {
     const data = await estadisticasService.getVentasPorPeriodo({
-      start_date: startDate.value, // Pass dates for filtering
+      start_date: startDate.value,
       end_date: endDate.value,
-      periodo: 'month', // Default period, can be dynamic
+      periodo: 'month',
     })
-
-    const totalVentas = data.data.reduce((sum, item) => sum + item.ventas_totales, 0)
-    const ticketPromedio =
-      data.lista_ventas && data.lista_ventas.length > 0 ? totalVentas / data.lista_ventas.length : 0
-
+    const total = data.data.reduce((sum, item) => sum + item.ventas_totales, 0)
     ventasResult.value = {
-      totalVentas: totalVentas,
-      ticketPromedio: ticketPromedio,
+      totalVentas: total,
+      ticketPromedio: data.lista_ventas?.length ? total / data.lista_ventas.length : 0,
     }
-  } catch (error: any) {
-    console.error(
-      'Error al obtener ventas por período:',
-      error.response?.data?.message || error.message || error,
-    )
-    ventasResult.value = null
+  } catch (error) {
+    const axiosError = error as AxiosError
+    console.error('Error cargando ventas:', axiosError.message)
   } finally {
     loadingVentas.value = false
   }
 }
 
-async function fetchProductosBajaRotacion() {
-  loadingBajaRotacion.value = true
+async function fetchAllReports() {
   try {
-    const data = await estadisticasService.getProductosBajaRotacion({
-      period_days: 90, // Default to 90 days as per backend
-    })
-    productosBajaRotacion.value = data.data
-  } catch (error: any) {
-    console.error(
-      'Error al obtener productos de baja rotación:',
-      error.response?.data?.message || error.message || error,
-    )
-    productosBajaRotacion.value = []
-  } finally {
-    loadingBajaRotacion.value = false
+    const [baja, top, prov, ganancia] = await Promise.all([
+      estadisticasService.getProductosBajaRotacion({ period_days: 90 }),
+      estadisticasService.getTopClientesPorMonto(),
+      estadisticasService.getValorPedidosProveedores({
+        start_date: startDate.value,
+        end_date: endDate.value,
+      }),
+      estadisticasService.getHistorialGanancias({ periodo: 'month' }),
+    ])
+    productosBajaRotacion.value = baja.data
+    topClientes.value = top.data
+    valorPedidosProveedores.value = prov.detalles_por_proveedor
+    historialGanancias.value = ganancia.data
+    await fetchVentasPorPeriodo()
+    await fetchCuadreCaja()
+  } catch (error) {
+    const axiosError = error as AxiosError
+    console.error('Error en carga masiva:', axiosError.message)
   }
 }
 
-async function fetchTopClientes() {
-  loadingTopClientes.value = true
-  try {
-    const data = await estadisticasService.getTopClientesPorMonto()
-    topClientes.value = data.data.map((c) => ({
-      cliente_id: c.cliente_id,
-      nombre_cliente: c.nombre_cliente,
-      monto_total: c.monto_total,
-    }))
-  } catch (error: any) {
-    console.error(
-      'Error al obtener top clientes:',
-      error.response?.data?.message || error.message || error,
-    )
-    topClientes.value = []
-  } finally {
-    loadingTopClientes.value = false
-  }
-}
-
-async function fetchValorPedidosProveedores() {
-  loadingValorPedidosProveedores.value = true
-  try {
-    const today = new Date()
-    const ninetyDaysAgo = new Date(today)
-    ninetyDaysAgo.setDate(today.getDate() - 90)
-
-    const startDateFormatted = ninetyDaysAgo.toISOString().split('T')[0]
-    const endDateFormatted = today.toISOString().split('T')[0]
-
-    const data = await estadisticasService.getValorPedidosProveedores({
-      start_date: startDateFormatted,
-      end_date: endDateFormatted,
-    })
-    valorPedidosProveedores.value = data.detalles_por_proveedor
-  } catch (error: any) {
-    console.error(
-      'Error al obtener valor de pedidos a proveedores:',
-      error.response?.data?.message || error.message || error,
-    )
-    valorPedidosProveedores.value = []
-  } finally {
-    loadingValorPedidosProveedores.value = false
-  }
-}
-
-async function fetchHistorialGanancias() {
-  loadingHistorialGanancias.value = true
-  try {
-    const data = await estadisticasService.getHistorialGanancias({
-      fecha_inicio: startDate.value, // Reusar las fechas del primer reporte o poner un default
-      fecha_fin: endDate.value,
-      periodo: 'month', // Default period, can be dynamic
-    })
-    historialGanancias.value = data.data // La API devuelve un array de objetos con beneficio_bruto y periodo_fecha
-  } catch (error: any) {
-    console.error(
-      'Error al obtener historial de ganancias:',
-      error.response?.data?.message || error.message || error,
-    )
-    historialGanancias.value = null
-  } finally {
-    loadingHistorialGanancias.value = false
-  }
-}
-
-// --- Nuevo método para Cuadre de Caja ---
 async function fetchCuadreCaja() {
-  if (!cuadreCajaStartDate.value || !cuadreCajaEndDate.value) {
-    alert('Por favor, seleccione un rango de fechas para el Cuadre de Caja.')
-    return
-  }
+  if (!cuadreCajaStartDate.value || !cuadreCajaEndDate.value) return
   loadingCuadreCaja.value = true
-  cuadreCajaResult.value = null // Clear previous results
   try {
-    const data = await estadisticasService.getCuadreDeCaja(
+    cuadreCajaResult.value = await estadisticasService.getCuadreDeCaja(
       cuadreCajaStartDate.value,
       cuadreCajaEndDate.value,
     )
-    cuadreCajaResult.value = data
-  } catch (error: any) {
-    console.error(
-      'Error al obtener el Cuadre de Caja:',
-      error.response?.data?.message || error.message || error,
-    )
-    cuadreCajaResult.value = null
-    alert('Error al generar el reporte de Cuadre de Caja.')
+  } catch (error) {
+    const axiosError = error as AxiosError
+    console.error('Error en cuadre:', axiosError.response?.data || axiosError.message)
   } finally {
     loadingCuadreCaja.value = false
   }
 }
 
-// --- Métodos de Exportación ---
+// --- EXPORTACIÓN ---
+function download(data: any, name: string, mime: string) {
+  const blob = new Blob([data], { type: mime })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  a.click()
+  window.URL.revokeObjectURL(url)
+}
+
 async function exportarVentasExcel() {
   try {
-    const response = await estadisticasService.exportarVentasExcel({
-      periodo: 'month', // O según el filtro seleccionado
+    const res = await estadisticasService.exportarVentasExcel({
       start_date: startDate.value,
       end_date: endDate.value,
     })
-    const blob = new Blob([response.data], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `reporte_ventas_${startDate.value}_${endDate.value}.xlsx`
-    link.click()
-    URL.revokeObjectURL(link.href)
-    alert('Reporte de ventas exportado a Excel.')
-  } catch (error: any) {
-    console.error(
-      'Error al exportar ventas a Excel:',
-      error.response?.data?.message || error.message || error,
-    )
-    alert('Error al exportar reporte.')
+    download(res.data, 'ventas.xlsx', 'application/vnd.ms-excel')
+  } catch (error) {
+    console.error(error as AxiosError)
   }
 }
 
 async function exportarBajaRotacionPdf() {
   try {
-    // Asumir que se exporta el reporte actual sin filtros adicionales si el backend lo permite
-    // En una implementación real, se enviarían los filtros de baja rotación
-    const response = await estadisticasService.exportarVentasPdf() // Usando exportarVentasPdf como proxy, idealmente sería un endpoint específico
-    const blob = new Blob([response.data], { type: 'application/pdf' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `reporte_baja_rotacion.pdf`
-    link.click()
-    URL.revokeObjectURL(link.href)
-    alert('Reporte de baja rotación exportado a PDF.')
-  } catch (error: any) {
-    console.error(
-      'Error al exportar baja rotación a PDF:',
-      error.response?.data?.message || error.message || error,
-    )
-    alert('Error al exportar reporte.')
+    const res = await estadisticasService.exportarVentasPdf()
+    download(res.data, 'baja_rotacion.pdf', 'application/pdf')
+  } catch (error) {
+    console.error(error as AxiosError)
   }
 }
 
-// --- Utilidades ---
-const formatCurrency = (value: number) => {
-  if (typeof value !== 'number') return '$0.00' // Manejar valores no numéricos
-  return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })
-}
+// Stubs para nuevos botones de exportación requeridos
+const exportarGenericoPdf = (tipo: string) => console.log('Exportando PDF:', tipo)
+const exportarGenericoExcel = (tipo: string) => console.log('Exportando Excel:', tipo)
+const exportarCuadrePdf = () => console.log('Cuadre PDF')
+const exportarReporteGeneral = () => console.log('Informe Consolidado PDF')
 
-// --- Ciclo de Vida ---
+const formatCurrency = (v: number) =>
+  new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(v)
+
 onMounted(() => {
-  // Establecer fechas por defecto para el reporte de ventas (últimos 30 días)
-  const today = new Date()
-  const thirtyDaysAgo = new Date(today)
-  thirtyDaysAgo.setDate(today.getDate() - 30)
-
-  const formatToYYYYMMDD = (date: Date) => date.toISOString().split('T')[0]
-
-  startDate.value = formatToYYYYMMDD(thirtyDaysAgo)
-  endDate.value = formatToYYYYMMDD(today)
-  cuadreCajaStartDate.value = formatToYYYYMMDD(thirtyDaysAgo) // Set default for cuadre de caja
-  cuadreCajaEndDate.value = formatToYYYYMMDD(today) // Set default for cuadre de caja
-
-  // Cargar algunos reportes al iniciar
-  fetchVentasPorPeriodo()
-  fetchProductosBajaRotacion()
-  fetchTopClientes()
-  fetchValorPedidosProveedores()
-  fetchHistorialGanancias()
-  fetchCuadreCaja() // Fetch initial Cuadre de Caja
+  const now = new Date().toISOString().split('T')[0]
+  startDate.value = now
+  endDate.value = now
+  cuadreCajaStartDate.value = now
+  cuadreCajaEndDate.value = now
+  fetchAllReports()
 })
 </script>
 
 <style scoped>
-.card-header.bg-warning {
-  color: #212529 !important; /* Para que el texto se vea bien en fondo warning */
+/* Colores de fondo adaptativos mediante variables de Bootstrap 5 */
+.custom-card {
+  background-color: var(--bs-secondary-bg);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border: 1px solid var(--bs-border-color-translucent) !important;
+}
+
+.custom-card:hover {
+  transform: translateY(-2px);
+}
+
+.bg-input {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border: 1px solid var(--bs-border-color);
+}
+
+.stat-box {
+  background-color: var(--bs-body-bg);
+}
+
+.border-bottom-dashed {
+  border-bottom: 1px dashed var(--bs-border-color);
+}
+
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+.tracking-widest {
+  letter-spacing: 0.1em;
+}
+
+/* Scrollbar minimalista */
+.list-container::-webkit-scrollbar {
+  width: 4px;
+}
+.list-container::-webkit-scrollbar-thumb {
+  background: var(--bs-border-color);
+  border-radius: 10px;
+}
+
+@media (min-width: 768px) {
+  .border-start-md {
+    border-left: 1px solid var(--bs-border-color) !important;
+  }
 }
 </style>
