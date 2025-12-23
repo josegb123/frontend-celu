@@ -13,6 +13,9 @@
         <button class="btn btn-outline-info" @click="$emit('ver-detalle', venta.venta_id)">
           <i class="bi bi-eye"></i>
         </button>
+        <button class="btn btn-outline-primary" @click="imprimirFactura" title="Imprimir Factura">
+          <i class="bi bi-printer"></i>
+        </button>
 
         <button
           class="btn btn-outline-danger"
@@ -21,13 +24,6 @@
           v-if="isAdmin"
         >
           <i class="bi bi-trash"></i>
-        </button>
-        <button class="btn btn-outline-primary" @click="imprimirFactura" title="Imprimir Factura">
-          <i class="bi bi-printer"></i>
-        </button>
-
-        <button class="btn btn-outline-info" @click="$emit('ver-detalle', venta.venta_id)">
-          <i class="bi bi-eye"></i>
         </button>
       </div>
     </td>
