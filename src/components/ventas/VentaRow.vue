@@ -22,6 +22,13 @@
         >
           <i class="bi bi-trash"></i>
         </button>
+        <button class="btn btn-outline-primary" @click="imprimirFactura" title="Imprimir Factura">
+          <i class="bi bi-printer"></i>
+        </button>
+
+        <button class="btn btn-outline-info" @click="$emit('ver-detalle', venta.venta_id)">
+          <i class="bi bi-eye"></i>
+        </button>
       </div>
     </td>
   </tr>
@@ -54,6 +61,18 @@ const estadoColor = computed(() => {
       return 'secondary'
   }
 })
+
+const imprimirFactura = () => {
+  // 1. Obtener la URL base de tu API (ajusta según tu configuración de Vite)
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://tu-dominio.com/api'
+
+  // 2. Construir la ruta al endpoint que definimos en Laravel
+  // Asegúrate de que coincida con la ruta definida en routes/web.php o api.php
+  const url = `${baseUrl}/factura/imprimir/${props.venta.venta_id}`
+
+  // 3. Abrir en una pestaña nueva
+  window.open(url, '_blank')
+}
 
 const estadoTexto = computed(() => {
   // Primera letra mayúscula
